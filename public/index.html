@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Burgas Map</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="controls">
+    <h3>Filters</h3>
+    <ul>
+        <li>
+            <label class="checkbox" for="toggle-air-quality">
+                <input type="checkbox" id="toggle-air-quality">
+                <span class="checkbox__checkmark"></span>
+                <span class="checkbox__body">Air Quality Sensors</span>
+                <span id="air-quality" class="timestamp">-</span>
+            </label>
+        </li>
+        <li>
+            <label class="checkbox" for="toggle-air-quality-time">
+                <input type="checkbox" id="toggle-air-quality-time">
+                <span class="checkbox__checkmark"></span>
+                <span class="checkbox__body">Air Quality Time Sensors</span>
+                <span id="air-quality-time" class="timestamp">-</span>
+            </label>
+        </li>
+        <li>
+            <label class="checkbox" for="toggle-traffic">
+                <input type="checkbox" id="toggle-traffic">
+                <span class="checkbox__checkmark"></span>
+                <span class="checkbox__body">Traffic Detectors</span>
+                <span id="traffic-time" class="timestamp">-</span>
+            </label>
+        </li>
+    </ul>
+</div>
+
+<div id="map"></div>
+
+<div id="info-panel" class="off-screen">
+    <button id="close-panel">×</button>
+    <div id="info-content">
+        <p></p>
+    </div>
+    <div id="chart-container">
+        <p id="no-chart-data" class="hidden">No data for chart.</p>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
+
+<script>
+    // Simple shim to make exports work in browser without bundler for this specific example
+    var exports = {};
+</script>
+<script src="/js/client.js"></script>
+</body>
+</html>
