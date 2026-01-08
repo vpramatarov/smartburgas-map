@@ -2,7 +2,7 @@
   "name": "smartburgas-map",
   "version": "1.0.0",
   "scripts": {
-    "start": "concurrently \"tsc -w\" \"nodemon dist/server.js\"",
+    "start": "concurrently \"tsc -w\" \"nodemon -L dist/server.js\"",
     "build": "tsc"
   },
   "dependencies": {
