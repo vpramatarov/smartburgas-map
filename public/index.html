@@ -51,15 +51,12 @@
     <div id="chart-container">
         <p id="no-chart-data" class="hidden">No data for chart.</p>
     </div>
+    <button id="btn-download-csv" class="action-btn">Download CSV</button>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
 
-<script>
-    // Simple shim to make exports work in browser without bundler for this specific example
-    var exports = {};
-</script>
-<script src="/js/client.js"></script>
+<script type="module" src="/js/client.js"></script>
 </body>
 </html>
