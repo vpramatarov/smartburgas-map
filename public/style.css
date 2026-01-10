@@ -187,3 +187,22 @@ ul li {
     display: block;
     margin-bottom: 10px;
 }
+
+.action-btn {
+    display: block;
+    width: 100%;
+    margin-top: 15px;
+    padding: 10px;
+    background-color: #27ae60;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: background 0.2s;
+}
+
+.action-btn:hover {
+    background-color: #219150;
+}
