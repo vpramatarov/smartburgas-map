@@ -1,3 +1,4 @@
+import { CsvExporter } from './CsvExporter.js';
 // Declare L (Leaflet) as global since we load it via CDN
 declare const L: any;
 declare const Plotly: any; // Declare Plotly.js global
@@ -12,6 +13,8 @@ class SmartMap {
     private lastAirFetch: number = 0;
     private lastAirQualityTimeFetch: number = 0;
     private lastTrafficFetch: number = 0;
+
+    private currentSensorData: any = null;
 
     // 5 Minutes in milliseconds
     private readonly REFRESH_RATE = 5 * 60 * 1000;
@@ -45,9 +48,9 @@ class SmartMap {
         }).addTo(this.map);
 
         // Initialize Layer Groups (empty initially)
-        this.airLayer = L.layerGroup();
-        this.airQualityTimeLayer = L.layerGroup();
-        this.trafficLayer = L.layerGroup();
+        this.airLayer = L.layerGroup([], {name: "airLayer"});
+        this.airQualityTimeLayer = L.layerGroup([], {name: "airQualityTimeLayer"});
+        this.trafficLayer = L.layerGroup([], {name: "trafficLayer"});
     }
 
     private initListeners(): void {
@@ -86,6 +89,17 @@ class SmartMap {
         // Close button for the panel
         closePanel.addEventListener('click', () => {
             document.getElementById('info-panel')?.classList.add('off-screen');
+        });
+
+        const csvDownloadBtn = document.getElementById('btn-download-csv') as HTMLInputElement;
+        csvDownloadBtn.addEventListener('click', () => {
+            if (this.currentSensorData) {
+                // Use the new class
+                CsvExporter.download(
+                    this.currentSensorData,
+                    this.currentSensorData.name || 'sensor_data'
+                );
+            }
         });
     }
 
@@ -328,17 +342,18 @@ class SmartMap {
                 });
 
                 layer.on('click', () => {
-                    this.showDetailsInPanel(feature.properties);
+                    this.showDetailsInPanel(feature.properties, targetLayer.options.name);
                 });
             }
         }).addTo(targetLayer);
     }
 
-    private showDetailsInPanel(props: SensorProperties) {
+    private showDetailsInPanel(props: SensorProperties, layerName: string) {
         const panel = document.getElementById('info-panel');
         const content = document.getElementById('info-content');
         if (!panel || !content) return;
 
+        this.currentSensorData = props;
         let html = `<h2>${props.name || 'Details'}</h2>`;
 
         // data for chart
