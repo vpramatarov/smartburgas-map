@@ -1,6 +1,7 @@
 {
   "name": "smartburgas-map",
   "version": "1.0.0",
+  "type": "module",
   "scripts": {
     "start": "concurrently \"tsc -w\" \"nodemon -L dist/server.js\"",
     "build": "tsc"
