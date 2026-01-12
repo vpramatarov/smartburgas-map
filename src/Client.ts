@@ -1,9 +1,20 @@
 import { CsvExporter } from './CsvExporter.js';
+import { IDetailsStrategy } from './strategies/IDetailsStrategy.js';
+import { TrafficSensorStrategy } from './strategies/TrafficSensorStrategy.js';
+import { DefaultStrategy } from "./strategies/DefaultStrategy.js";
+import { AirQualityTimeSensorStrategy } from "./strategies/AirQualityTimeSensorStrategy.js";
+import {
+    GeoFeature, GeoJSONInput, LayerStyleOptions, SensorProperties
+} from './Types.js'
+
+
 // Declare L (Leaflet) as global since we load it via CDN
 declare const L: any;
-declare const Plotly: any; // Declare Plotly.js global
 
 class SmartMap {
+    private trafficSensorStrategy = new TrafficSensorStrategy();
+    private airQualityTimeSensorStrategy = new AirQualityTimeSensorStrategy();
+    private defaultSensorStrategy = new DefaultStrategy();
     private map: any;
     private airLayer: any;
     private airQualityTimeLayer: any;
@@ -14,6 +25,7 @@ class SmartMap {
     private lastAirQualityTimeFetch: number = 0;
     private lastTrafficFetch: number = 0;
 
+    /** @var SensorProperties|null */
     private currentSensorData: any = null;
 
     // 5 Minutes in milliseconds
@@ -48,9 +60,9 @@ class SmartMap {
         }).addTo(this.map);
 
         // Initialize Layer Groups (empty initially)
-        this.airLayer = L.layerGroup([], {name: "airLayer"});
-        this.airQualityTimeLayer = L.layerGroup([], {name: "airQualityTimeLayer"});
-        this.trafficLayer = L.layerGroup([], {name: "trafficLayer"});
+        this.airLayer = L.layerGroup();
+        this.airQualityTimeLayer = L.layerGroup();
+        this.trafficLayer = L.layerGroup();
     }
 
     private initListeners(): void {
@@ -159,10 +171,12 @@ class SmartMap {
             // --- DEBUGGING: Print the data structure to browser console ---
             console.log("Air Quality API Response:", data);
 
-            this.addGeoJsonToLayer(data, this.airLayer, {
-                color: "#3498db",
-                radius: 8
-            });
+            this.addGeoJsonToLayer(
+                data,
+                this.airLayer,
+                {color: "#3498db", radius: 8},
+                this.defaultSensorStrategy
+            );
             this.airLayer.addTo(this.map);
         } catch (err) {
             console.error("Failed to load air data", err);
@@ -202,10 +216,12 @@ class SmartMap {
             console.log("Air Quality Time API Response:", data);
 
             // Create GeoJSON layer with custom styles and popups
-            this.addGeoJsonToLayer(data, this.airQualityTimeLayer, {
-                color: "#008000",
-                radius: 8
-            });
+            this.addGeoJsonToLayer(
+                data,
+                this.airQualityTimeLayer,
+                {color: "#008000", radius: 8},
+                this.airQualityTimeSensorStrategy
+            );
             this.airQualityTimeLayer.addTo(this.map);
         } catch (err) {
             console.error("Failed to load Air Quality Time data", err);
@@ -244,10 +260,12 @@ class SmartMap {
             console.log("Traffic API Response:", data);
 
             // Create GeoJSON layer with custom styles and popups
-            this.addGeoJsonToLayer(data, this.trafficLayer, {
-                color: "#e74c3c",
-                radius: 8
-            });
+            this.addGeoJsonToLayer(
+                data,
+                this.trafficLayer,
+                {color: "#e74c3c", radius: 8},
+                this.trafficSensorStrategy
+            );
             this.trafficLayer.addTo(this.map);
         } catch (err) {
             console.error("Failed to load traffic data", err);
@@ -272,8 +290,9 @@ class SmartMap {
      * @param inputData - The typed GeoJSON data (Collection or Array)
      * @param targetLayer - The Leaflet LayerGroup to add markers to
      * @param options - Styling configuration
+     * @param detailStrategy - Show details panel based on layer
      */
-    private addGeoJsonToLayer(inputData: GeoJSONInput, targetLayer: any, options: LayerStyleOptions) {
+    private addGeoJsonToLayer(inputData: GeoJSONInput, targetLayer: any, options: LayerStyleOptions, detailStrategy: IDetailsStrategy) {
         let features: GeoFeature[] = [];
 
         if (Array.isArray(inputData)) {
@@ -302,9 +321,9 @@ class SmartMap {
                     return;
                 }
 
-                const name = feature.properties.name || 'Sensor';
-                const description = feature.properties.description || "No description available.";
-
+                const props = feature.properties;
+                const name = props.name || 'Sensor';
+                const description = props.description || "No description available.";
                 const popupContent = `
                     <div class="marker-popup-hover">
                         <h4>${name}</h4>
@@ -342,128 +361,22 @@ class SmartMap {
                 });
 
                 layer.on('click', () => {
-                    this.showDetailsInPanel(feature.properties, targetLayer.options.name);
+                    this.currentSensorData = props;
+                    this.executeStrategy(detailStrategy, props);
+
+                    document.getElementById('info-panel')?.classList.remove('off-screen');
                 });
             }
         }).addTo(targetLayer);
     }
 
-    private showDetailsInPanel(props: SensorProperties, layerName: string) {
-        const panel = document.getElementById('info-panel');
-        const content = document.getElementById('info-content');
-        if (!panel || !content) return;
+    private executeStrategy(strategy: IDetailsStrategy, data: SensorProperties) {
+        const content = document.getElementById('info-content') as HTMLElement;
+        const chart = document.getElementById('chart-container') as HTMLElement;
 
-        this.currentSensorData = props;
-        let html = `<h2>${props.name || 'Details'}</h2>`;
-
-        // data for chart
-        const labels: string[] = [];
-        const values: number[] = [];
-
-        let date = '';
-
-        if (props.data) {
-            let obj = props.data[0];
-            if (obj.hasOwnProperty('car_count')) {
-                props.data.forEach((item) => {
-                    // Since we don't know the keys, we can loop through them
-                    Object.keys(item).forEach(key => {
-                        let value = item[key];
-                        if (key === 'car_count') {
-                            values.push(value);
-                        } else if (key === 'time') {
-                            let timeData = value.replace(/_/g, ' ').split(' ');
-                            if (!date.length) {
-                                date = timeData[0];
-                            }
-
-                            labels.push(timeData[1]);
-                        }
-                    });
-                });
-            } else {
-                console.log(obj);
-                for (const p in obj) {
-                    let value = obj[p];
-                    if (p.endsWith('_unit')) {
-                        continue;
-                    }
-
-                    if (!value) {
-                        continue;
-                    }
-
-                    html += `
-                        <div class="data-row">
-                            <p>${p}</p>
-                            <span>${value} ${p !== 'time' ? obj[p+'_unit'] : ''}</span>
-                        </div>`;
-                }
-            }
+        if (content && chart) {
+            strategy.render(content, chart, data);
         }
-
-        for (const key in props) {
-            const val = props[key];
-            if (typeof val !== 'object' && key !== 'name' && key !== 'data') {
-                html += `
-                <div class="data-row">
-                    <p>${date.length ? date : key.replace(/_/g, ' ')}</p>
-                    <span>${val}</span>
-                </div>`;
-            }
-        }
-
-        content.innerHTML = html;
-        panel.classList.remove('off-screen');
-
-        // Render chart using Plotly
-        this.renderChart(labels, values);
-    }
-
-    private renderChart(labels: string[], values: number[]) {
-        const noChartData = document.getElementById('no-chart-data');
-        noChartData?.classList.add('hidden');
-
-        if (labels.length === 0 || values.length === 0) {
-            Plotly.purge('chart-container');
-            noChartData?.classList.remove('hidden');
-            return;
-        }
-
-        const trace = {
-            x: labels,
-            y: values,
-            type: 'scatter', // 'scatter' with 'lines+markers' creates a line chart
-            mode: 'lines+markers',
-            marker: { color: '#3498db', size: 8 },
-            line: { shape: 'spline', color: '#3498db', width: 2 },
-            fill: 'tozeroy',
-            fillcolor: 'rgba(52, 152, 219, 0.1)'
-        };
-
-        const layout = {
-            autosize: true,
-            height: 250,
-            margin: { l: 40, r: 20, t: 10, b: 80 }, // Tighter margins
-            font: { family: 'Arial, sans-serif', size: 10 },
-            xaxis: {
-                tickangle: -45,
-                automargin: true
-            },
-            yaxis: {
-                gridcolor: '#eee',
-                zerolinecolor: '#ccc'
-            },
-            paper_bgcolor: 'rgba(0,0,0,0)',
-            plot_bgcolor: 'rgba(0,0,0,0)'
-        };
-
-        const config = {
-            responsive: true,
-            displayModeBar: false // shows tools on hover
-        };
-
-        Plotly.newPlot('chart-container', [trace], layout, config);
     }
 }
 

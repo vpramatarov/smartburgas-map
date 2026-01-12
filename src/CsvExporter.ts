@@ -1,3 +1,5 @@
+import { SensorProperties } from './Types.js'
+
 export class CsvExporter {
 
     /**
@@ -5,7 +7,7 @@ export class CsvExporter {
      * @param data - The data object or array to export
      * @param defaultName - (Optional) Filename base
      */
-    public static download(data: any, defaultName: string = "export") {
+    public static download(data: SensorProperties, defaultName: string = "export") {
         if (!data) return;
 
         const filename = `${defaultName.replace(/\s+/g, '_')}.csv`;

@@ -1,11 +1,11 @@
-type Target = {
+export type Target = {
     key: string,
     endpoint: string,
     ttl: number
     cacheFile: string
 }
 
-type Config = {
+export type Config = {
     appUrl?: string,
     port: number,
     airQuality: Target,
@@ -13,36 +13,36 @@ type Config = {
     traffic: Target
 }
 
-interface Geometry {
+export interface Geometry {
     type: string;
     coordinates: number[];
 }
 
-interface DynamicDataPoint {
+export interface DynamicDataPoint {
     [key: string]: any;
 }
 
-interface SensorProperties {
+export interface SensorProperties {
     name?: string;
     description?: string;
     data?: DynamicDataPoint[];
     [key: string]: any;
 }
 
-interface GeoFeature {
+export interface GeoFeature {
     type: "Feature";
     properties: SensorProperties;
     geometry: Geometry;
 }
 
-interface GeoFeatureCollection {
+export interface GeoFeatureCollection {
     type: "FeatureCollection";
     features: GeoFeature[];
 }
 
-type GeoJSONInput = GeoFeatureCollection | GeoFeature[];
+export type GeoJSONInput = GeoFeatureCollection | GeoFeature[];
 
-interface LayerStyleOptions {
+export interface LayerStyleOptions {
     color: string;
     fillColor?: string;
     radius?: number;

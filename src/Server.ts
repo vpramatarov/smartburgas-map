@@ -3,6 +3,9 @@ import axios from 'axios';
 import path from 'path';
 import fs from 'fs/promises';
 import {existsSync, mkdirSync} from 'fs';
+import {
+    Config, GeoFeature, GeoFeatureCollection, Target
+} from './Types.js'
 
 import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
