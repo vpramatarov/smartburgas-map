@@ -29,20 +29,23 @@ export class AirQualityTimeSensorStrategy implements IDetailsStrategy {
             let rowDiv = document.createElement('div') as HTMLElement;
             rowDiv.classList.add('data-row');
 
-            let pTag = document.createElement('p') as HTMLElement;
-            pTag.innerText = p;
+            let pTag = document.createElement('span') as HTMLElement;
+            pTag.innerText = p + ': ';
 
             let spanTag = document.createElement('span') as HTMLElement;
-            spanTag.innerText = `${value} ${p !== 'time' ? obj[p+'_unit'] : ''}`
+            spanTag.innerText = `${value} ${p !== 'time' ? obj[p+'_unit'] + ' ' : ''}`
 
             rowDiv.appendChild(pTag);
             rowDiv.appendChild(spanTag)
 
             if (p !== 'time') {
                 let btn = document.createElement('button') as HTMLButtonElement;
-                btn.classList.add('view-chart');
+                btn.classList.add('view-chart', 'action-btn');
                 btn.setAttribute('data-property', p);
-                btn.innerText = 'See Chart';
+                let spanIcon = document.createElement('span') as HTMLElement;
+                spanIcon.classList.add('icon-chart-bar');
+                btn.appendChild(spanIcon);
+
                 btn.addEventListener('click', () => {
                     const labels: string[] = [];
                     const values: number[] = [];
@@ -63,7 +66,6 @@ export class AirQualityTimeSensorStrategy implements IDetailsStrategy {
 
                     if (labels.length > 0 && values.length > 0) {
                         chartContainer.style.display = 'block';
-
                         ChartRenderer.render(chartContainer.id, labels, values);
                     } else {
                         const noChartData = document.getElementById('no-chart-data') as HTMLElement;
