@@ -64,14 +64,14 @@ ul li {
 /** Info panel */
 #info-panel {
     position: absolute;
-    bottom: 20px;
+    bottom: 0;
+    top: 0;
+    height: 100vh;
     right: 20px;
     width: 400px;
-    max-height: 400px;
-    background: white;
+    background: rgba(255,255,255, 0.5);
     z-index: 1001;
     border-radius: 8px;
-    padding: 15px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     overflow-y: auto;
     transition: transform 0.3s ease-in-out;
@@ -79,6 +79,13 @@ ul li {
 
 #info-panel.off-screen {
     transform: translateY(150%); /* Hide off-screen */
+}
+
+#info-panel-container {
+    background: white;
+    padding: 15px;
+    margin: 2%;
+    border-radius: 8px;
 }
 
 #close-panel {
@@ -189,18 +196,36 @@ ul li {
 }
 
 .action-btn {
-    margin-top: 15px;
-    padding: 10px;
-    background-color: #27ae60;
-    color: white;
-    border: none;
+    padding: 5px;
     border-radius: 4px;
     cursor: pointer;
     font-size: 14px;
     font-weight: bold;
     transition: background 0.2s;
+    background: transparent;
+    color: #000;
+    border: 1px solid #000;
 }
 
 .action-btn:hover {
+    background: #000;
+    color: #fff;
+    border: 1px solid #fff;
+}
+
+#info-panel-container .actions {
+    margin-top: 15px;
+}
+
+#btn-download-csv {
+    padding: 10px;
+    background-color: #27ae60;
+    color: #fff;
+    border: none;
+}
+
+#btn-download-csv:hover {
     background-color: #219150;
+    color: #fff;
+    border: none;
 }
