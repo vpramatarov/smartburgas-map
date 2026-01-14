@@ -26,7 +26,7 @@ export class ChartRenderer {
             plot_bgcolor: 'rgba(0,0,0,0)'
         };
 
-        const config = { responsive: true, displayModeBar: false };
+        const config = { responsive: true, displayModeBar: true };
 
         Plotly.newPlot(containerId, [trace], layout, config);
     }

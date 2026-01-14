@@ -120,7 +120,7 @@ ul li {
 
 /** Chart */
 #chart-container {
-    margin-top: 20px;
+    margin-top: 40px;
     max-height: 250px;
 }
 
@@ -228,4 +228,38 @@ ul li {
     background-color: #219150;
     color: #fff;
     border: none;
+}
+
+.modebar-container {
+    top: initial !important;
+    bottom: 30px !important;
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: center;
+    flex-direction: row;
+}
+
+.js-plotly-plot .plotly .modebar-container .modebar {
+    width: 100%;
+    left: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: center;
+}
+
+.js-plotly-plot .plotly .modebar-container .modebar .modebar-group {
+    float: none;
+    display: flex;
+    box-sizing: border-box;
+    padding-left: 8px;
+    position: relative;
+    vertical-align: middle;
+    white-space: nowrap;
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    background: transparent !important;
 }
