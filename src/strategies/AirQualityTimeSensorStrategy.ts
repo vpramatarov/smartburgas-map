@@ -51,7 +51,6 @@ export class AirQualityTimeSensorStrategy implements IDetailsStrategy {
                     const values: number[] = [];
                     ChartRenderer.clear(chartContainer.id);
                     let property = btn.dataset.property;
-                    console.log(property);
                     sensor.data?.forEach((item) => {
                         Object.keys(item).forEach(key => {
                             let value = item[key];

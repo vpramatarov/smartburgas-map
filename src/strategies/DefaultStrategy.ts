@@ -16,7 +16,6 @@ export class DefaultStrategy implements IDetailsStrategy {
 
         let date = '';
 
-        // 2. Render Text
         let html = `<h2>${sensor.name || 'Details'}</h2>`;
         for (const key in sensor) {
             const val = sensor[key];

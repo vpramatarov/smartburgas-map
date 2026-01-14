@@ -8,13 +8,13 @@ export class CsvExporter {
      * @param defaultName - (Optional) Filename base
      */
     public static download(data: SensorProperties, defaultName: string = "export") {
-        if (!data) return;
+        if (!data) {
+            return;
+        }
 
         const filename = `${defaultName.replace(/\s+/g, '_')}.csv`;
         let csvContent = "data:text/csv;charset=utf-8,";
 
-        // Strategy A: Data is an Array of Objects (Table)
-        // e.g., { data: [ {time: 1, val: 20}, {time: 2, val: 22} ] }
         if (data.data && Array.isArray(data.data) && data.data.length > 0) {
             const headers = Object.keys(data.data[0]);
             csvContent += headers.join(",") + "\n";
@@ -25,9 +25,7 @@ export class CsvExporter {
                 }).join(",");
                 csvContent += rowStr + "\n";
             });
-        }
-        // Strategy B: Data is a simple Object (Key-Value)
-        else {
+        } else {
             csvContent += "Property,Value\n";
             for (const key in data) {
                 // Ignore nested objects or the 'data' key if it was empty/malformed
