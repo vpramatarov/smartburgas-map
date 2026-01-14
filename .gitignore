@@ -1,5 +1,28 @@
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+
+# Git
 .git
-.idea
+
+# Dependency directories
 node_modules
+
+# build / generate output
 dist
+
+# Cache
 cache
+# Optional npm cache directory
+.npm
+
+# Logs
+logs
+*.log
+npm-debug.log*
