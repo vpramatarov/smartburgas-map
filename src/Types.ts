@@ -1,8 +1,6 @@
 export type Target = {
     key: string,
-    endpoint: string,
-    ttl: number
-    cacheFile: string
+    endpoint: string
 }
 
 export type Config = {

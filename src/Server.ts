@@ -15,16 +15,12 @@ const app = express();
 
 const airQualityTimeTarget: Target = {
     key: 'airQualityTime',
-    endpoint: process.env.AIR_QUALITY_TIME_URL as string,
-    ttl: parseInt(process.env.CACHE_DURATION_AIR_QUALITY_TIME_MS as string),
-    cacheFile: 'air-quality-time.json'
+    endpoint: process.env.AIR_QUALITY_TIME_URL as string
 }
 
 const trafficTarget: Target = {
     key: 'traffic',
-    endpoint: process.env.TRAFFIC_URL as string,
-    ttl: parseInt(process.env.CACHE_DURATION_TRAFFIC_MS as string),
-    cacheFile: 'traffic.json'
+    endpoint: process.env.TRAFFIC_URL as string
 }
 
 const config: Config = {
