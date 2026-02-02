@@ -63,23 +63,10 @@ app.use(express.static(path.join(__dirname, '../public')));
 app.use('/js', express.static(path.join(__dirname, '../dist')));
 
 // API Proxies
-app.get('/api/status', async (req, res) => {
-    type Response = Record<string, {}>;
-    let response: Response = {};
-    const getInfo = async (p: string) => existsSync(p) ? (await fs.stat(p)).mtimeMs : 0;
-
-    for (let target of targets) {
-        let cacheFilePath = path.join(CACHE_DIR, target.cacheFile)
-        response[target.key] = { lastUpdated: await getInfo(cacheFilePath), exists: existsSync(cacheFilePath) }
-    }
-
-    res.json(response);
-});
-
 app.get('/api/air-quality-time', async (req, res) => {
     try {
         const target = config.airQualityTime;
-        const result = await getDataWithCache(target.endpoint, target.cacheFile, target.ttl);
+        const result = await getData(target.endpoint);
         // Validation: Ensure data matches GeoJSON FeatureCollection format
         if (!Array.isArray(result.data.features1)) {
             throw new Error(
@@ -99,7 +86,7 @@ app.get('/api/air-quality-time', async (req, res) => {
 app.get('/api/traffic', async (req, res) => {
     try {
         const target = config.traffic;
-        const result = await getDataWithCache(target.endpoint, target.cacheFile, target.ttl);
+        const result = await getData(target.endpoint);
 
         // Validation: Ensure data matches GeoJSON FeatureCollection format
         if (!Array.isArray(result.data.features1)) {
@@ -125,43 +112,10 @@ prefetchAll().then(() => {
 });
 
 
-async function getDataWithCache(url: string, filename: string, cacheDuration: number) {
-    const filePath = path.join(CACHE_DIR, filename);
-
-    try {
-        // Check if file exists and get stats
-        const stats = await fs.stat(filePath);
-        const now = Date.now();
-        const fileAge = now - stats.mtimeMs;
-
-        // If cache is valid (less than cacheDuration old), return it
-        if (fileAge < cacheDuration) {
-            console.log(`[CACHE HIT] Serving ${filename} from local file (${(fileAge/1000).toFixed(1)}s old)`);
-            const fileContent = await fs.readFile(filePath, 'utf-8');
-            return {
-                data: JSON.parse(fileContent),
-                lastUpdated: stats.mtimeMs // Return cache file time
-            };
-        }
-
-        console.log(`[CACHE EXPIRED] ${filename} is ${(fileAge/1000).toFixed(1)}s old. Refreshing...`);
-    } catch (error: any) {
-        // If file doesn't exist (ENOENT), we just proceed to fetch
-        if (error.code !== 'ENOENT') {
-            console.error(`Error reading cache for ${filename}:`, error);
-        } else {
-            console.log(`[CACHE MISS] File ${filename} not found. Fetching from API...`);
-        }
-    }
-
+async function getData(url: string) {
     // Fetch fresh data from API
     const response = await axios.get(url);
     const data = response.data;
-
-    // Save to cache file (asynchronously, don't wait for it to block response)
-    fs.writeFile(filePath, JSON.stringify(data, null, 2))
-        .then(() => console.log(`[CACHE SAVED] Updated ${filename}`))
-        .catch(err => console.error(`Failed to write cache for ${filename}`, err));
 
     return {
         data: data,
@@ -175,11 +129,11 @@ async function prefetchAll() {
     try {
         let data = [];
         for (let target of targets) {
-            data.push(getDataWithCache(target.endpoint, target.cacheFile, target.ttl));
+            data.push(getData(target.endpoint));
         }
 
         await Promise.all(data);
-        console.log('--- Prefetch Complete: Cache is warm ---');
+        console.log('--- Prefetch Complete ---');
     } catch (error) {
         console.error('--- Prefetch Failed ---', error);
     }

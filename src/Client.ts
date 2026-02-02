@@ -25,29 +25,22 @@ class SmartMap {
     private airQualityTimeLayer: any;
     private trafficLayer: any;
 
-    // Store when we last fetched the data (Client side timestamp)
-    private lastAirFetch: number = 0;
     private lastAirQualityTimeFetch: number = 0;
     private lastTrafficFetch: number = 0;
 
-    /** @var SensorProperties|null */
-    private currentSensorData: any = null;
-
-    // 5 Minutes in milliseconds
-    private readonly REFRESH_RATE = 5 * 60 * 1000;
+    private currentSensorData: SensorProperties|null = null;
 
     constructor() {
         this.initMap();
         this.initListeners();
-        this.checkInitialStatus().then(() => {
-            this.loadAirQualityTime();
-            const airTimeCheckbox = document.getElementById('toggle-air-quality-time') as HTMLInputElement;
-            airTimeCheckbox.checked = true;
 
-            this.loadTraffic();
-            const trafficCheckbox = document.getElementById('toggle-traffic') as HTMLInputElement;
-            trafficCheckbox.checked = true;
-        });
+        this.loadAirQualityTime();
+        const airTimeCheckbox = document.getElementById('toggle-air-quality-time') as HTMLInputElement;
+        airTimeCheckbox.checked = true;
+
+        this.loadTraffic();
+        const trafficCheckbox = document.getElementById('toggle-traffic') as HTMLInputElement;
+        trafficCheckbox.checked = true;
     }
 
     private initMap(): void {
@@ -140,31 +133,9 @@ class SmartMap {
         });
     }
 
-    private async checkInitialStatus(): Promise<void> {
-        try {
-            const res = await fetch('/api/status');
-            const status = await res.json();
-
-            if (status.airQualityTime.exists) {
-                this.lastAirQualityTimeFetch = status.airQualityTime.lastUpdated;
-                this.updateTimestampUI('air-quality-time', new Date(status.airQualityTime.lastUpdated));
-            }
-
-            if (status.traffic.exists) {
-                this.lastTrafficFetch = status.traffic.lastUpdated;
-                this.updateTimestampUI('traffic-time', new Date(status.traffic.lastUpdated));
-            }
-        } catch (err) {
-            console.error("Could not fetch initial status", err);
-        }
-    }
-
     private async loadAirQualityTime(): Promise<void> {
-        const isDataFresh = (Date.now() - this.lastTrafficFetch) < this.REFRESH_RATE;
-
         // Prevent duplicate loading
-        if (this.airQualityTimeLayer.getLayers().length > 0 && isDataFresh) {
-            console.log("Using valid client-side cache for Air Quality Time.");
+        if (this.airQualityTimeLayer.getLayers().length > 0) {
             this.airQualityTimeLayer.addTo(this.map);
             return;
         }
@@ -204,11 +175,8 @@ class SmartMap {
     }
 
     private async loadTraffic(): Promise<void> {
-        const isDataFresh = (Date.now() - this.lastTrafficFetch) < this.REFRESH_RATE;
-
         // Prevent duplicate loading
-        if (this.trafficLayer.getLayers().length > 0 && isDataFresh) {
-            console.log("Using valid client-side cache for Traffic.");
+        if (this.trafficLayer.getLayers().length > 0) {
             this.trafficLayer.addTo(this.map);
             return;
         }
