@@ -3,7 +3,7 @@ import { SensorProperties } from './Types.js'
 export class CsvExporter {
 
     /**
-     * Downloads data as a CSV file.
+     * Downloads data as a CSV file with full UTF-8 support (BOM).
      * @param data - The data object or array to export
      * @param defaultName - (Optional) Filename base
      */
@@ -13,38 +13,36 @@ export class CsvExporter {
         }
 
         const filename = `${defaultName.replace(/\s+/g, '_')}.csv`;
-        let csvContent = "data:text/csv;charset=utf-8,";
+        let csvBody = "";
 
+        // Data is an Array of Objects (Table)
         if (data.data && Array.isArray(data.data) && data.data.length > 0) {
             const headers = Object.keys(data.data[0]);
-            csvContent += headers.join(",") + "\n";
+            csvBody += headers.join(",") + "\n";
 
             data.data.forEach((row: any) => {
                 const rowStr = headers.map(header => {
                     return this.escapeCsvValue(row[header]);
                 }).join(",");
-                csvContent += rowStr + "\n";
+                csvBody += rowStr + "\n";
             });
         } else {
-            csvContent += "Property,Value\n";
+            // Data is a simple Object (Key-Value)
+            csvBody += "Property,Value\n";
             for (const key in data) {
-                // Ignore nested objects or the 'data' key if it was empty/malformed
                 if (typeof data[key] !== 'object' && key !== 'data') {
-                    csvContent += `"${key}",${this.escapeCsvValue(data[key])}\n`;
+                    csvBody += `"${key}",${this.escapeCsvValue(data[key])}\n`;
                 }
             }
         }
 
-        this.triggerBrowserDownload(csvContent, filename);
+        this.triggerBrowserDownload(csvBody, filename);
     }
 
-    /**
-     * Helper to safely format values for CSV (handling commas/quotes)
-     */
     private static escapeCsvValue(val: any): string {
         if (val === undefined || val === null) return '""';
         const stringVal = String(val);
-        // If value contains comma, quotes or newline, wrap in quotes and escape inner quotes
+        // Escape quotes and handle commas/newlines
         if (stringVal.search(/("|,|\n)/g) >= 0) {
             return `"${stringVal.replace(/"/g, '""')}"`;
         }
@@ -52,15 +50,27 @@ export class CsvExporter {
     }
 
     /**
-     * Helper to create the link and click it
+     * Uses a Blob with a BOM to ensure Excel reads UTF-8 correctly.
      */
-    private static triggerBrowserDownload(csvContent: string, filename: string) {
-        const encodedUri = encodeURI(csvContent);
+    private static triggerBrowserDownload(content: string, filename: string) {
+        // Add the Byte Order Mark (BOM) for UTF-8
+        const BOM = "\uFEFF";
+
+        // Create a Blob with the correct type and encoding
+        const blob = new Blob([BOM + content], { type: 'text/csv;charset=utf-8;' });
+
+        // Create a temporary download link using the Blob URL
+        const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
+        link.setAttribute("href", url);
         link.setAttribute("download", filename);
+        link.style.visibility = 'hidden';
+
         document.body.appendChild(link);
         link.click();
+
+        // Cleanup
         document.body.removeChild(link);
+        URL.revokeObjectURL(url);
     }
 }
