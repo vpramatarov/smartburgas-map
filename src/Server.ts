@@ -13,13 +13,6 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-const airQualityTarget: Target = {
-    key: 'airQuality',
-    endpoint: process.env.AIR_QUALITY_URL as string,
-    ttl: parseInt(process.env.CACHE_DURATION_AIR_QUALITY_MS as string),
-    cacheFile: 'air-quality.json'
-}
-
 const airQualityTimeTarget: Target = {
     key: 'airQualityTime',
     endpoint: process.env.AIR_QUALITY_TIME_URL as string,
@@ -37,7 +30,6 @@ const trafficTarget: Target = {
 const config: Config = {
     appUrl: process.env.URL || 'http://localhost',
     port: parseInt(process.env.PORT as string),
-    airQuality: airQualityTarget,
     airQualityTime: airQualityTimeTarget,
     traffic: trafficTarget
 }
@@ -82,18 +74,6 @@ app.get('/api/status', async (req, res) => {
     }
 
     res.json(response);
-});
-
-app.get('/api/air-quality', async (req, res) => {
-    try {
-        const target = config.airQuality;
-        const result = await getDataWithCache(target.endpoint, target.cacheFile, target.ttl);
-        res.set('X-Last-Updated', new Date(result.lastUpdated).toISOString());
-        res.json(result.data);
-    } catch (error) {
-        console.error('Error fetching air quality:', error);
-        res.status(500).json({ error: 'Failed to fetch air quality data' });
-    }
 });
 
 app.get('/api/air-quality-time', async (req, res) => {

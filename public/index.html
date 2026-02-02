@@ -15,14 +15,6 @@
     <h3>Filters</h3>
     <ul>
         <li>
-            <label class="checkbox" for="toggle-air-quality">
-                <input type="checkbox" id="toggle-air-quality">
-                <span class="checkbox__checkmark"></span>
-                <span class="checkbox__body"><span class="icon-arrows-ccw"></span> Air Quality Sensors</span>
-                <span id="air-quality" class="timestamp">-</span>
-            </label>
-        </li>
-        <li>
             <label class="checkbox" for="toggle-air-quality-time">
                 <input type="checkbox" id="toggle-air-quality-time">
                 <span class="checkbox__checkmark"></span>
@@ -54,7 +46,18 @@
         </div>
         <div class="actions">
             <button id="btn-download-csv" class="action-btn"><span class="icon-download"></span> Download as CSV</button>
+            <button id="btn-full-chart" class="action-btn hidden" style="background-color: #3498db; margin-top: 10px;">Full Screen Chart</button>
         </div>
+    </div>
+</div>
+
+<div id="chart-modal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modal-title">Chart</h2>
+            <button id="close-modal">×</button>
+        </div>
+        <div id="full-chart-container"></div>
     </div>
 </div>
 

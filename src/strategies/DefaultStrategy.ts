@@ -4,6 +4,8 @@ import { ChartRenderer } from '../components/ChartRenderer.js';
 import { SensorProperties } from '../Types.js'
 
 export class DefaultStrategy implements IDetailsStrategy {
+    private _name = 'default';
+
     render(contentContainer: HTMLElement, chartContainer: HTMLElement, sensor: SensorProperties): void {
         // This strategy doesn't use chart
         ChartRenderer.clear(chartContainer.id);
@@ -29,5 +31,12 @@ export class DefaultStrategy implements IDetailsStrategy {
         }
         contentContainer.innerHTML = html;
         panel.classList.remove('off-screen');
+    }
+
+    renderFull(property: string, sensor: SensorProperties) {
+    }
+
+    supports(name: string): boolean {
+        return this._name === name;
     }
 }

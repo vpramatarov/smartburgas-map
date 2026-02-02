@@ -8,7 +8,6 @@ export type Target = {
 export type Config = {
     appUrl?: string,
     port: number,
-    airQuality: Target,
     airQualityTime: Target,
     traffic: Target
 }

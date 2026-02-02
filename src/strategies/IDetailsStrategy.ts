@@ -9,4 +9,10 @@ export interface IDetailsStrategy {
      * @param sensor The GeoJSON properties object
      */
     render(contentContainer: HTMLElement, chartContainer: HTMLElement, sensor: SensorProperties): void;
+
+    // get name(): string;
+
+    renderFull(property: string, sensor: SensorProperties): void;
+
+    supports(name: string): boolean;
 }

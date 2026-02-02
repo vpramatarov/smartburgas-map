@@ -6,6 +6,7 @@ import { AirQualityTimeSensorStrategy } from "./strategies/AirQualityTimeSensorS
 import {
     GeoFeature, GeoJSONInput, LayerStyleOptions, SensorProperties
 } from './Types.js'
+import { ChartRenderer } from './components/ChartRenderer.js';
 
 
 // Declare L (Leaflet) as global since we load it via CDN
@@ -15,8 +16,12 @@ class SmartMap {
     private trafficSensorStrategy = new TrafficSensorStrategy();
     private airQualityTimeSensorStrategy = new AirQualityTimeSensorStrategy();
     private defaultSensorStrategy = new DefaultStrategy();
+    private sensorStrategies = [
+        this.defaultSensorStrategy,
+        this.airQualityTimeSensorStrategy,
+        this.trafficSensorStrategy
+    ];
     private map: any;
-    private airLayer: any;
     private airQualityTimeLayer: any;
     private trafficLayer: any;
 
@@ -35,10 +40,6 @@ class SmartMap {
         this.initMap();
         this.initListeners();
         this.checkInitialStatus().then(() => {
-            this.loadAirQuality();
-            const airCheckbox = document.getElementById('toggle-air-quality') as HTMLInputElement;
-            airCheckbox.checked = true;
-
             this.loadAirQualityTime();
             const airTimeCheckbox = document.getElementById('toggle-air-quality-time') as HTMLInputElement;
             airTimeCheckbox.checked = true;
@@ -60,22 +61,46 @@ class SmartMap {
         }).addTo(this.map);
 
         // Initialize Layer Groups (empty initially)
-        this.airLayer = L.layerGroup();
         this.airQualityTimeLayer = L.layerGroup();
         this.trafficLayer = L.layerGroup();
     }
 
     private initListeners(): void {
-        const airCheckbox = document.getElementById('toggle-air-quality') as HTMLInputElement;
         const airTimeCheckbox = document.getElementById('toggle-air-quality-time') as HTMLInputElement;
         const trafficCheckbox = document.getElementById('toggle-traffic') as HTMLInputElement;
+        const modal = document.getElementById('chart-modal') as HTMLInputElement;
+        const btnFullChart = document.getElementById('btn-full-chart') as HTMLInputElement;
+        const btnCloseModal = document.getElementById('close-modal') as HTMLInputElement;
 
-        airCheckbox.addEventListener('change', (e: Event) => {
-            const target = e.target as HTMLInputElement;
-            if (target.checked) {
-                this.loadAirQuality();
-            } else {
-                this.map.removeLayer(this.airLayer);
+        // Open Modal
+        btnFullChart?.addEventListener('click', () => {
+            if (this.currentSensorData && modal) {
+                modal.classList.remove('hidden');
+                const name = this.currentSensorData.name || 'Sensor Data';
+                document.getElementById('modal-title')!.innerText = name;
+                let property = btnFullChart.dataset.property || '';
+                let strategyName = btnFullChart.dataset.strategy || '';
+
+                for (const strategy of this.sensorStrategies) {
+                    if (property && strategy.supports(strategyName)) {
+                        strategy.renderFull(property, this.currentSensorData);
+                        break;
+                    }
+                }
+            }
+        });
+
+        // Close Modal
+        btnCloseModal?.addEventListener('click', () => {
+            modal?.classList.add('hidden');
+            ChartRenderer.clear('full-chart-container'); // Clean up
+        });
+
+        // Close on outside click
+        window.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.add('hidden');
+                ChartRenderer.clear('full-chart-container');
             }
         });
 
@@ -120,11 +145,6 @@ class SmartMap {
             const res = await fetch('/api/status');
             const status = await res.json();
 
-            if (status.airQuality.exists) {
-                this.lastAirFetch = status.airQuality.lastUpdated;
-                this.updateTimestampUI('air-quality', new Date(status.airQuality.lastUpdated));
-            }
-
             if (status.airQualityTime.exists) {
                 this.lastAirQualityTimeFetch = status.airQualityTime.lastUpdated;
                 this.updateTimestampUI('air-quality-time', new Date(status.airQualityTime.lastUpdated));
@@ -136,52 +156,6 @@ class SmartMap {
             }
         } catch (err) {
             console.error("Could not fetch initial status", err);
-        }
-    }
-
-    private async loadAirQuality(): Promise<void> {
-        const isDataFresh = (Date.now() - this.lastAirFetch) < this.REFRESH_RATE;
-
-        // If data is already loaded, just add to map
-        if (this.airLayer.getLayers().length > 0 && isDataFresh) {
-            console.log("Using valid client-side cache for Air Quality.");
-            this.airLayer.addTo(this.map);
-            return;
-        }
-
-        // If stale or empty, clear and fetch
-        this.airLayer.clearLayers();
-        this.updateTimestampUI('air-time', 'Refreshing...');
-
-        try {
-            const res = await fetch('/api/air-quality');
-
-            if (!res.ok) {
-                throw new Error(`Server returned ${res.status}`);
-            }
-
-            // Get Server-Side Timestamp from Header
-            const serverDateStr = res.headers.get('X-Last-Updated');
-            const lastUpdateDate = serverDateStr ? new Date(serverDateStr) : new Date();
-            this.lastAirFetch = lastUpdateDate.getTime();
-            this.updateTimestampUI('air-time', lastUpdateDate);
-
-            const data = await res.json();
-
-            // --- DEBUGGING: Print the data structure to browser console ---
-            console.log("Air Quality API Response:", data);
-
-            this.addGeoJsonToLayer(
-                data,
-                this.airLayer,
-                {color: "#3498db", radius: 8},
-                this.defaultSensorStrategy
-            );
-            this.airLayer.addTo(this.map);
-        } catch (err) {
-            console.error("Failed to load air data", err);
-            this.updateTimestampUI('air-time', 'Error loading data.');
-            alert("Error loading Air Quality data");
         }
     }
 

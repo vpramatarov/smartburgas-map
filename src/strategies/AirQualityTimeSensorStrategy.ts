@@ -4,6 +4,8 @@ import { ChartRenderer } from '../components/ChartRenderer.js';
 
 
 export class AirQualityTimeSensorStrategy implements IDetailsStrategy {
+    private _name = 'air_quality_time';
+
     render(contentContainer: HTMLElement, chartContainer: HTMLElement, sensor: SensorProperties): void {
         ChartRenderer.clear(chartContainer.id);
         chartContainer.style.display = 'none';
@@ -13,6 +15,8 @@ export class AirQualityTimeSensorStrategy implements IDetailsStrategy {
             return;
         }
 
+        const btnFullChart = document.getElementById('btn-full-chart') as HTMLInputElement;
+        btnFullChart.classList.add('hidden');
         contentContainer.innerHTML = `<h2>${sensor.name || 'Sensor'}</h2>`;
         const obj = sensor.data[0];
 
@@ -50,7 +54,10 @@ export class AirQualityTimeSensorStrategy implements IDetailsStrategy {
                     const labels: string[] = [];
                     const values: number[] = [];
                     ChartRenderer.clear(chartContainer.id);
-                    let property = btn.dataset.property;
+                    let property = btn.dataset.property || '';
+                    btnFullChart.setAttribute('data-property', property);
+                    btnFullChart.setAttribute('data-strategy', this._name);
+                    btnFullChart.classList.remove('hidden');
                     sensor.data?.forEach((item) => {
                         Object.keys(item).forEach(key => {
                             let value = item[key];
@@ -80,6 +87,45 @@ export class AirQualityTimeSensorStrategy implements IDetailsStrategy {
         }
 
         panel.classList.remove('off-screen');
+    }
+
+    // get name(): string {
+    //     return this._name;
+    // }
+
+    renderFull(property: string, sensor: SensorProperties) {
+        const name = sensor.name || 'Sensor Data';
+        document.getElementById('modal-title')!.innerText = name;
+        document.getElementById('full-chart-container')!.innerHTML = '';
+
+        if (!sensor.data) {
+            document.getElementById('full-chart-container')!.innerHTML = '<p style="color:#eee">No chart data.</p>';
+            return;
+        }
+
+        // Extract data for chart
+        const labels: string[] = [];
+        const values: number[] = [];
+        sensor.data?.forEach((item) => {
+            Object.keys(item).forEach(key => {
+                let value = item[key];
+                if (key === property) {
+                    values.push(value);
+                } else if (key === 'time') {
+                    labels.push(value);
+                }
+            });
+        });
+
+        if (labels.length > 0) {
+            ChartRenderer.renderFull('full-chart-container', name, labels, values);
+        } else {
+            document.getElementById('full-chart-container')!.innerHTML = '<p style="color:#eee">No chart data.</p>';
+        }
+    }
+
+    supports(name: string): boolean {
+        return this._name === name;
     }
 }
 
