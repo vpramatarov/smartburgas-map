@@ -1,7 +1,7 @@
-// src/strategies/SensorStrategy.ts
+// src/strategies/TrafficSensorStrategy.ts
 import { IDetailsStrategy } from './IDetailsStrategy.js';
 import { ChartRenderer } from '../components/ChartRenderer.js';
-import { SensorProperties } from '../Types.js'
+import { ChartDataset, SensorProperties } from '../Types.js'
 
 export class TrafficSensorStrategy implements IDetailsStrategy {
     private _name = 'traffic_sensor';
@@ -29,7 +29,6 @@ export class TrafficSensorStrategy implements IDetailsStrategy {
                     if (!date.length) {
                         date = timeData[0];
                     }
-
                     labels.push(timeData[1]);
                 }
             });
@@ -45,55 +44,68 @@ export class TrafficSensorStrategy implements IDetailsStrategy {
         contentContainer.innerHTML = html;
         panel.classList.remove('off-screen');
         const btnFullChart = document.getElementById('btn-full-chart') as HTMLInputElement;
-        btnFullChart.classList.add('hidden');
 
         if (labels.length > 0 && values.length > 0) {
             chartContainer.style.display = 'block';
-            ChartRenderer.render(chartContainer.id, labels, values);
-            btnFullChart.setAttribute('data-property', 'car_count');
-            btnFullChart.setAttribute('data-strategy', this._name);
+
+            const datasets: ChartDataset[] = [{
+                label: 'Car Count',
+                values: values,
+                unit: 'count'
+            }];
+
+            ChartRenderer.render(chartContainer.id, labels, datasets);
+
             btnFullChart.classList.remove('hidden');
+            btnFullChart.dataset.strategy = this._name;
+            // Traffic implies 'car_count', strictly pass it as array
+            btnFullChart.dataset.properties = JSON.stringify(['car_count']);
         } else {
             const noChartData = document.getElementById('no-chart-data') as HTMLElement;
             noChartData?.classList.add('hidden');
             ChartRenderer.clear(chartContainer.id);
+            btnFullChart.classList.add('hidden');
         }
     }
 
-    renderFull(property: string, sensor: SensorProperties) {
+    renderFull(properties: string[], sensor: SensorProperties) {
         const name = sensor.name || 'Sensor Data';
         document.getElementById('modal-title')!.innerText = name;
-        document.getElementById('full-chart-container')!.innerHTML = '';
+        const containerId = 'full-chart-container';
+        document.getElementById(containerId)!.innerHTML = '';
 
         if (!sensor.data) {
-            document.getElementById('full-chart-container')!.innerHTML = '<p style="color:#eee">No chart data.</p>';
+            document.getElementById(containerId)!.innerHTML = '<p style="color:#eee">No chart data.</p>';
             return;
         }
 
         const labels: string[] = [];
         const values: number[] = [];
 
-        let date = '';
+        // Note: Traffic strategy ignores the 'properties' arg because it only has one metric, but we can respect it if passed.
+        const targetProp = properties.length > 0 ? properties[0] : 'car_count';
+
         sensor.data.forEach((item) => {
             Object.keys(item).forEach(key => {
                 let value = item[key];
-                if (key === property) {
+                if (key === targetProp) {
                     values.push(value);
                 } else if (key === 'time') {
                     let timeData = value.replace(/_/g, ' ').split(' ');
-                    if (!date.length) {
-                        date = timeData[0];
-                    }
-
                     labels.push(timeData[1]);
                 }
             });
         });
 
         if (labels.length > 0) {
-            ChartRenderer.renderFull('full-chart-container', name, labels, values);
+            const datasets: ChartDataset[] = [{
+                label: 'Car Count',
+                values: values,
+                unit: 'count'
+            }];
+            ChartRenderer.renderFull(containerId, name, labels, datasets);
         } else {
-            document.getElementById('full-chart-container')!.innerHTML = '<p style="color:#eee">No chart data.</p>';
+            document.getElementById(containerId)!.innerHTML = '<p style="color:#eee">No chart data.</p>';
         }
     }
 

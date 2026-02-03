@@ -33,7 +33,8 @@ export class DefaultStrategy implements IDetailsStrategy {
         panel.classList.remove('off-screen');
     }
 
-    renderFull(property: string, sensor: SensorProperties) {
+    renderFull(properties: string[], sensor: SensorProperties) {
+        // No implementation needed for default
     }
 
     supports(name: string): boolean {

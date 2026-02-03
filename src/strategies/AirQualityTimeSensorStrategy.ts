@@ -1,122 +1,183 @@
-import {IDetailsStrategy} from "./IDetailsStrategy.js";
-import {SensorProperties} from "../Types.js";
+import { IDetailsStrategy } from "./IDetailsStrategy.js";
+import { ChartDataset, SensorProperties } from "../Types.js";
 import { ChartRenderer } from '../components/ChartRenderer.js';
-
 
 export class AirQualityTimeSensorStrategy implements IDetailsStrategy {
     private _name = 'air_quality_time';
 
     render(contentContainer: HTMLElement, chartContainer: HTMLElement, sensor: SensorProperties): void {
-        ChartRenderer.clear(chartContainer.id);
+        ChartRenderer.clear(chartContainer.id); // clear previous chart
         chartContainer.style.display = 'none';
-        const panel = document.getElementById('info-panel') as HTMLElement;
 
-        if (!panel || !sensor.data) {
+        const panel = document.getElementById('info-panel');
+        const noChartData = document.getElementById('no-chart-data');
+        const btnFullChart = document.getElementById('btn-full-chart');
+
+        if (!panel || !sensor.data || sensor.data.length === 0) {
             return;
         }
 
-        const btnFullChart = document.getElementById('btn-full-chart') as HTMLInputElement;
-        btnFullChart.classList.add('hidden');
+        btnFullChart?.classList.add('hidden');
         contentContainer.innerHTML = `<h2>${sensor.name || 'Sensor'}</h2>`;
-        const obj = sensor.data[0];
 
-        for (const p in obj) {
-            let value = obj[p];
-            if (p.endsWith('_unit')) {
+        const latestData = sensor.data[0];
+
+        const toggleContainer = document.createElement('div');
+        toggleContainer.className = 'property-toggles';
+        contentContainer.appendChild(toggleContainer);
+
+        for (const p in latestData) {
+            if (p.endsWith('_unit') || p === 'time') {
                 continue;
             }
 
-            if (!value) {
+            let value = latestData[p];
+            if (value === undefined || value === null) {
                 continue;
             }
 
-            let rowDiv = document.createElement('div') as HTMLElement;
-            rowDiv.classList.add('data-row');
+            const unit = latestData[p + '_unit'] || '';
+            const rowId = `toggle-${p}`;
 
-            let pTag = document.createElement('span') as HTMLElement;
-            pTag.innerText = p + ': ';
+            const rowDiv = document.createElement('div');
+            rowDiv.classList.add('data-row', 'toggle-row');
 
-            let spanTag = document.createElement('span') as HTMLElement;
-            spanTag.innerText = `${value} ${p !== 'time' ? obj[p+'_unit'] + ' ' : ''}`
+            const textDiv = document.createElement('div');
+            textDiv.innerHTML = `<span class="prop-label">${p}:</span> <span class="prop-value">${value} ${unit}</span>`;
 
-            rowDiv.appendChild(pTag);
-            rowDiv.appendChild(spanTag)
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = rowId;
+            checkbox.dataset.property = p;
+            checkbox.dataset.unit = unit;
+            checkbox.className = 'chart-toggle-checkbox';
 
-            if (p !== 'time') {
-                let btn = document.createElement('button') as HTMLButtonElement;
-                btn.classList.add('view-chart', 'action-btn');
-                btn.setAttribute('data-property', p);
-                let spanIcon = document.createElement('span') as HTMLElement;
-                spanIcon.classList.add('icon-chart-bar');
-                btn.appendChild(spanIcon);
+            const labelBtn = document.createElement('label');
+            labelBtn.htmlFor = rowId;
+            labelBtn.className = 'chart-toggle-btn';
+            labelBtn.innerHTML = '<span class="icon-chart-bar"></span>';
+            labelBtn.title = "Add to chart";
 
-                btn.addEventListener('click', () => {
-                    const labels: string[] = [];
-                    const values: number[] = [];
-                    ChartRenderer.clear(chartContainer.id);
-                    let property = btn.dataset.property || '';
-                    btnFullChart.setAttribute('data-property', property);
-                    btnFullChart.setAttribute('data-strategy', this._name);
-                    btnFullChart.classList.remove('hidden');
-                    sensor.data?.forEach((item) => {
-                        Object.keys(item).forEach(key => {
-                            let value = item[key];
-                            if (key === property) {
-                                values.push(value);
-                            } else if (key === 'time') {
-                                labels.push(value);
-                            }
-                        });
-                    });
-                    // render chart
+            checkbox.addEventListener('change', () => {
+                this.updateChart(chartContainer, sensor, btnFullChart, noChartData);
+            });
 
-                    if (labels.length > 0 && values.length > 0) {
-                        chartContainer.style.display = 'block';
-                        ChartRenderer.render(chartContainer.id, labels, values);
-                    } else {
-                        const noChartData = document.getElementById('no-chart-data') as HTMLElement;
-                        noChartData?.classList.add('hidden');
-                        ChartRenderer.clear(chartContainer.id);
-                    }
-                });
+            rowDiv.appendChild(textDiv);
+            rowDiv.appendChild(checkbox);
+            rowDiv.appendChild(labelBtn);
 
-                rowDiv.appendChild(btn)
-            }
-
-            contentContainer.appendChild(rowDiv)
+            toggleContainer.appendChild(rowDiv);
         }
 
         panel.classList.remove('off-screen');
     }
 
-    renderFull(property: string, sensor: SensorProperties) {
-        const name = sensor.name || 'Sensor Data';
-        document.getElementById('modal-title')!.innerText = name;
-        document.getElementById('full-chart-container')!.innerHTML = '';
+    private updateChart(
+        chartContainer: HTMLElement,
+        sensor: SensorProperties,
+        btnFullChart: HTMLElement | null,
+        noChartText: HTMLElement | null
+    ) {
+        const checkedBoxes = document.querySelectorAll('#info-panel .chart-toggle-checkbox:checked');
 
-        if (!sensor.data) {
-            document.getElementById('full-chart-container')!.innerHTML = '<p style="color:#eee">No chart data.</p>';
+        if (checkedBoxes.length === 0) {
+            ChartRenderer.clear(chartContainer.id);
+            chartContainer.style.display = 'none';
+            noChartText?.classList.remove('hidden');
+            btnFullChart?.classList.add('hidden');
             return;
         }
 
-        // Extract data for chart
+        const selectedProperties: string[] = [];
+        const datasets: ChartDataset[] = [];
         const labels: string[] = [];
-        const values: number[] = [];
-        sensor.data?.forEach((item) => {
-            Object.keys(item).forEach(key => {
-                let value = item[key];
-                if (key === property) {
-                    values.push(value);
-                } else if (key === 'time') {
-                    labels.push(value);
+
+        if (sensor.data) {
+            sensor.data.forEach(item => {
+                labels.push(item['time']);
+            });
+        }
+
+        checkedBoxes.forEach((box: any) => {
+            const prop = box.dataset.property;
+            const unit = box.dataset.unit;
+            const values: number[] = [];
+            selectedProperties.push(prop);
+
+            sensor.data?.forEach(item => {
+                const val = parseFloat(item[prop]);
+                values.push(isNaN(val) ? 0 : val);
+            });
+
+            datasets.push({
+                label: prop,
+                values: values,
+                unit: unit
+            });
+        });
+
+        if (datasets.length > 0 && labels.length > 0) {
+            noChartText?.classList.add('hidden');
+            chartContainer.style.display = 'block';
+
+            ChartRenderer.render(chartContainer.id, labels, datasets);
+
+            btnFullChart?.classList.remove('hidden');
+            if (btnFullChart) {
+                btnFullChart.dataset.strategy = this._name;
+                btnFullChart.dataset.properties = JSON.stringify(selectedProperties);
+            }
+        } else {
+            ChartRenderer.clear(chartContainer.id);
+            chartContainer.style.display = 'none';
+            noChartText?.classList.remove('hidden');
+            btnFullChart?.classList.add('hidden');
+        }
+    }
+
+    renderFull(properties: string[], sensor: SensorProperties) {
+        const name = sensor.name || 'Sensor Data';
+        const titleEl = document.getElementById('modal-title');
+        if (titleEl) {
+            titleEl.innerText = name;
+        }
+
+        const containerId = 'full-chart-container';
+        const container = document.getElementById(containerId);
+        if (!container) {
+            return;
+        }
+
+        container.innerHTML = '';
+
+        if (!sensor.data || properties.length === 0) {
+            container.innerHTML = '<p style="color:#eee">No chart data selected.</p>';
+            return;
+        }
+
+        const labels: string[] = [];
+        const datasets: ChartDataset[] = [];
+
+        properties.forEach(prop => {
+            datasets.push({ label: prop, values: [] });
+        });
+
+        sensor.data.forEach((item) => {
+            labels.push(item['time']);
+            properties.forEach((prop, index) => {
+                const val = parseFloat(item[prop]);
+                datasets[index].values.push(isNaN(val) ? 0 : val);
+                const unitKey = prop + '_unit';
+                if (item[unitKey] && !datasets[index].unit) {
+                    datasets[index].unit = item[unitKey];
                 }
             });
         });
 
         if (labels.length > 0) {
-            ChartRenderer.renderFull('full-chart-container', name, labels, values);
+            ChartRenderer.renderFull(containerId, name, labels, datasets);
         } else {
-            document.getElementById('full-chart-container')!.innerHTML = '<p style="color:#eee">No chart data.</p>';
+            container.innerHTML = '<p style="color:#eee">No chart data.</p>';
         }
     }
 
@@ -124,4 +185,3 @@ export class AirQualityTimeSensorStrategy implements IDetailsStrategy {
         return this._name === name;
     }
 }
-

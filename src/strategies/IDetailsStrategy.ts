@@ -10,9 +10,12 @@ export interface IDetailsStrategy {
      */
     render(contentContainer: HTMLElement, chartContainer: HTMLElement, sensor: SensorProperties): void;
 
-    // get name(): string;
-
-    renderFull(property: string, sensor: SensorProperties): void;
+    /**
+     * Renders the full screen chart.
+     * @param properties Array of property keys to graph
+     * @param sensor Sensor data
+     */
+    renderFull(properties: string[], sensor: SensorProperties): void;
 
     supports(name: string): boolean;
 }

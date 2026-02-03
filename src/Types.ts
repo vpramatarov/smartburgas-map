@@ -47,3 +47,9 @@ export interface LayerStyleOptions {
     opacity?: number;
     fillOpacity?: number;
 }
+
+export interface ChartDataset {
+    label: string;
+    values: number[];
+    unit?: string;
+}

@@ -71,12 +71,21 @@ class SmartMap {
                 modal.classList.remove('hidden');
                 const name = this.currentSensorData.name || 'Sensor Data';
                 document.getElementById('modal-title')!.innerText = name;
-                let property = btnFullChart.dataset.property || '';
+
+                // Get Properties from dataset
+                let propertiesRaw = btnFullChart.dataset.properties || '[]';
+                let properties: string[] = [];
+                try {
+                    properties = JSON.parse(propertiesRaw);
+                } catch (e) {
+                    console.error("Failed to parse chart properties", e);
+                }
+
                 let strategyName = btnFullChart.dataset.strategy || '';
 
                 for (const strategy of this.sensorStrategies) {
-                    if (property && strategy.supports(strategyName)) {
-                        strategy.renderFull(property, this.currentSensorData);
+                    if (strategy.supports(strategyName)) {
+                        strategy.renderFull(properties, this.currentSensorData);
                         break;
                     }
                 }

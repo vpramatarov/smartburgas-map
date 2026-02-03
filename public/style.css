@@ -9,7 +9,7 @@ p {
 }
 
 .hidden {
-    display: none;
+    display: none !important;
 }
 
 #map {
@@ -111,11 +111,52 @@ ul li {
     padding-bottom: 4px;
 }
 
-#info-panel p {
+#info-panel .toggle-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#info-panel .prop-label {
     color: #555;
     font-size: 12px;
     text-transform: uppercase;
     font-weight: bold;
+}
+
+#info-panel .prop-value {
+    color: #333;
+    font-weight: normal;
+}
+
+/* --- Chart Checkbox Toggle Styles --- */
+.chart-toggle-checkbox {
+    display: none;
+}
+
+.chart-toggle-btn {
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+    background: transparent;
+    color: #999;
+    border: 1px solid #ddd;
+    display: inline-block;
+    margin: 0;
+}
+
+.chart-toggle-btn:hover {
+    background: #f5f5f5;
+    color: #555;
+}
+
+/* Highlight style when the preceding checkbox is checked */
+.chart-toggle-checkbox:checked + .chart-toggle-btn {
+    background-color: #3498db;
+    color: #fff;
+    border-color: #3498db;
 }
 
 /** Chart */
@@ -129,7 +170,7 @@ ul li {
     color:#999;
 }
 
-/** Style checkbox */
+/** Style checkbox (Filters) */
 .checkbox {
     display: inline-block;
     position: relative;
