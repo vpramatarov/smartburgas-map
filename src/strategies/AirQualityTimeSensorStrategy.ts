@@ -89,10 +89,6 @@ export class AirQualityTimeSensorStrategy implements IDetailsStrategy {
         panel.classList.remove('off-screen');
     }
 
-    // get name(): string {
-    //     return this._name;
-    // }
-
     renderFull(property: string, sensor: SensorProperties) {
         const name = sensor.name || 'Sensor Data';
         document.getElementById('modal-title')!.innerText = name;
