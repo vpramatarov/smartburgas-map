@@ -81,12 +81,16 @@ class SmartMap {
         });
 
         airTimeCheckbox.addEventListener('change', (e: Event) => {
-            if ((e.target as HTMLInputElement).checked) this.loadAirQualityTime();
+            if ((e.target as HTMLInputElement).checked) {
+                this.loadAirQualityTime();
+            }
             else this.map.removeLayer(this.airQualityTimeLayer);
         });
 
         trafficCheckbox.addEventListener('change', (e: Event) => {
-            if ((e.target as HTMLInputElement).checked) this.loadTraffic();
+            if ((e.target as HTMLInputElement).checked) {
+                this.loadTraffic();
+            }
             else this.map.removeLayer(this.trafficLayer);
         });
 
@@ -115,7 +119,9 @@ class SmartMap {
 
         try {
             const res = await fetch('/api/air-quality-time');
-            if (!res.ok) throw new Error(`${res.status}`);
+            if (!res.ok) {
+                throw new Error(`${res.status}`);
+            }
 
             this.updateTimestampUI('air-quality-time', new Date(res.headers.get('X-Last-Updated') || new Date()));
 

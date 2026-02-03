@@ -4,7 +4,7 @@ import {ChartDataset, SensorProperties} from "../Types.js";
 export class AirQualityTimeSensorStrategy implements IDetailsStrategy {
     public name = 'air_quality_time';
 
-    // 1. Render just the specific content
+    // Render just the specific content
     renderCardContent(
         container: HTMLElement,
         sensor: SensorProperties,
