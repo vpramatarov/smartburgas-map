@@ -1,43 +1,27 @@
-// src/strategies/DefaultStrategy.ts
 import { IDetailsStrategy } from './IDetailsStrategy.js';
-import { ChartRenderer } from '../components/ChartRenderer.js';
-import { SensorProperties } from '../Types.js'
+import { ChartDataset, SensorProperties } from '../Types.js'
 
 export class DefaultStrategy implements IDetailsStrategy {
-    private _name = 'default';
+    public name = 'default';
 
-    render(contentContainer: HTMLElement, chartContainer: HTMLElement, sensor: SensorProperties): void {
-        // This strategy doesn't use chart
-        ChartRenderer.clear(chartContainer.id);
-        chartContainer.style.display = 'none';
-        const panel = document.getElementById('info-panel') as HTMLElement;
-
-        if (!panel) {
-            return;
-        }
-
-        let date = '';
-
-        let html = `<h2>${sensor.name || 'Details'}</h2>`;
+    renderCardContent(container: HTMLElement, sensor: SensorProperties, uniqueIdPrefix: string): void {
+        let html = '';
         for (const key in sensor) {
             const val = sensor[key];
-            if (typeof val !== 'object' && key !== 'name' && key !== 'data') {
+            if (typeof val !== 'object' && key !== 'name' && key !== 'data' && key !== 'strategy') {
                 html += `
                 <div class="data-row">
-                    <p>${date.length ? date : key.replace(/_/g, ' ')}</p>
+                    <p>${key.replace(/_/g, ' ')}</p>
                     <span>${val}</span>
                 </div>`;
             }
         }
-        contentContainer.innerHTML = html;
-        panel.classList.remove('off-screen');
+        container.innerHTML = html;
     }
 
-    renderFull(properties: string[], sensor: SensorProperties) {
-        // No implementation needed for default
+    getChartData(sensor: SensorProperties, property: string): ChartDataset | null {
+        return null;
     }
 
-    supports(name: string): boolean {
-        return this._name === name;
-    }
+    renderFull(properties: string[], sensors: SensorProperties[]): void {}
 }

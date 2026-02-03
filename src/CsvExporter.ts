@@ -1,76 +1,113 @@
-import { SensorProperties } from './Types.js'
+import { SensorProperties } from './Types.js';
 
 export class CsvExporter {
 
     /**
-     * Downloads data as a CSV file with full UTF-8 support (BOM).
-     * @param data - The data object or array to export
-     * @param defaultName - (Optional) Filename base
+     * Downloads the CSV file for the given list of sensors.
+     * Columns: FeatureName, DataType, Variable, Date, TimeStamp, Value, Unit
      */
-    public static download(data: SensorProperties, defaultName: string = "export") {
-        if (!data) {
+    public static download(sensors: SensorProperties[], filename: string = 'export_data') {
+        if (!sensors || sensors.length === 0) {
+            console.warn("No sensors to export.");
             return;
         }
 
-        const filename = `${defaultName.replace(/\s+/g, '_')}.csv`;
-        let csvBody = "";
+        const headers = ["FeatureName", "DataType", "Variable", "Date", "TimeStamp", "Value", "Unit"];
+        const rows: string[] = [];
+        rows.push(headers.map(h => `"${h}"`).join(','));
 
-        // Data is an Array of Objects (Table)
-        if (data.data && Array.isArray(data.data) && data.data.length > 0) {
-            const headers = Object.keys(data.data[0]);
-            csvBody += headers.join(",") + "\n";
-
-            data.data.forEach((row: any) => {
-                const rowStr = headers.map(header => {
-                    return this.escapeCsvValue(row[header]);
-                }).join(",");
-                csvBody += rowStr + "\n";
-            });
-        } else {
-            // Data is a simple Object (Key-Value)
-            csvBody += "Property,Value\n";
-            for (const key in data) {
-                if (typeof data[key] !== 'object' && key !== 'data') {
-                    csvBody += `"${key}",${this.escapeCsvValue(data[key])}\n`;
-                }
+        sensors.forEach(sensor => {
+            if (!sensor.data || sensor.data.length === 0) {
+                return;
             }
-        }
 
-        this.triggerBrowserDownload(csvBody, filename);
-    }
+            const featureName = sensor.name || "";
+            const dataType = sensor.strategy || "";
 
-    private static escapeCsvValue(val: any): string {
-        if (val === undefined || val === null) return '""';
-        const stringVal = String(val);
-        // Escape quotes and handle commas/newlines
-        if (stringVal.search(/("|,|\n)/g) >= 0) {
-            return `"${stringVal.replace(/"/g, '""')}"`;
-        }
-        return `"${stringVal}"`;
-    }
+            sensor.data.forEach(item => {
+                const timeRaw = item['time'];
+                const timestamp = this.parseDate(timeRaw);
+                const dateStr = timestamp > 0 ? new Date(timestamp).toUTCString() : timeRaw;
+                const timeStampStr = timestamp > 0 ? timestamp.toString() : "";
 
-    /**
-     * Uses a Blob with a BOM to ensure Excel reads UTF-8 correctly.
-     */
-    private static triggerBrowserDownload(content: string, filename: string) {
-        // Add the Byte Order Mark (BOM) for UTF-8
-        const BOM = "\uFEFF";
+                Object.keys(item).forEach(key => {
+                    // Skip Metadata keys
+                    if (key === 'time' || key.endsWith('_unit')) {
+                        return;
+                    }
 
-        // Create a Blob with the correct type and encoding
-        const blob = new Blob([BOM + content], { type: 'text/csv;charset=utf-8;' });
+                    const value = item[key];
 
-        // Create a temporary download link using the Blob URL
+                    if (value === undefined || value === null) {
+                        return;
+                    }
+
+                    const unit = item[key + '_unit'] || "";
+
+                    // Construct CSV Row
+                    const row = [
+                        this.escape(featureName),
+                        this.escape(dataType),
+                        this.escape(key),
+                        this.escape(dateStr),
+                        this.escape(timeStampStr),
+                        this.escape(String(value)),
+                        this.escape(unit)
+                    ];
+
+                    rows.push(row.join(','));
+                });
+            });
+        });
+
+        const csvContent = rows.join('\n');
+
+        // FIX: Add Byte Order Mark (\uFEFF) for UTF-8 compatibility with Excel
+        const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.setAttribute("href", url);
-        link.setAttribute("download", filename);
+        link.setAttribute("download", `${filename}.csv`);
         link.style.visibility = 'hidden';
-
         document.body.appendChild(link);
         link.click();
-
-        // Cleanup
         document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+    }
+
+    private static escape(str: string): string {
+        if (str === null || str === undefined) {
+            return "";
+        }
+        // Convert to string in case of numbers, then escape double quotes
+        const stringVal = String(str);
+        return `"${stringVal.replace(/"/g, '""')}"`;
+    }
+
+    private static parseDate(raw: string): number {
+        if (!raw) {
+            return 0;
+        }
+
+        const std = new Date(raw).getTime();
+
+        if (!isNaN(std)) {
+            return std;
+        }
+
+        const clean = raw.replace(/_/g, ' ').trim();
+        const match = clean.match(/^(\d{1,2})[\s\.\-](\d{1,2})[\s\.\-](\d{4})\s+(\d{1,2})[:\s](\d{1,2})(?:[:\s](\d{1,2}))?/);
+
+        if (match) {
+            const day = parseInt(match[1]);
+            const month = parseInt(match[2]) - 1;
+            const year = parseInt(match[3]);
+            const hour = parseInt(match[4]);
+            const minute = parseInt(match[5]);
+            const second = match[6] ? parseInt(match[6]) : 0;
+            return new Date(year, month, day, hour, minute, second).getTime();
+        }
+
+        return 0;
     }
 }

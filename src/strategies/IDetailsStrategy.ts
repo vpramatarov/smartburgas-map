@@ -1,21 +1,33 @@
-// src/strategies/IDetailsStrategy.ts
-import { SensorProperties } from '../Types.js'
+import { ChartDataset, SensorProperties } from '../Types.js'
 
 export interface IDetailsStrategy {
     /**
-     * Renders data into the provided DOM elements.
-     * @param contentContainer The DIV for text details
-     * @param chartContainer The DIV for the chart (optional)
-     * @param sensor The GeoJSON properties object
+     * Unique name to identify the strategy (e.g. 'traffic', 'air_quality')
      */
-    render(contentContainer: HTMLElement, chartContainer: HTMLElement, sensor: SensorProperties): void;
+    name: string;
 
     /**
-     * Renders the full screen chart.
-     * @param properties Array of property keys to graph
-     * @param sensor Sensor data
+     * Renders the specific content (stats, toggles) inside a sensor card.
+     *
+     * @param container The DOM element of the card body
+     * @param sensor The sensor data
+     * @param uniqueIdPrefix A unique prefix (e.g. "sensor-0") to ensure HTML IDs don't collide
+     * @param onChartRequest Callback when user toggles a property.
      */
-    renderFull(properties: string[], sensor: SensorProperties): void;
+    renderCardContent(
+        container: HTMLElement,
+        sensor: SensorProperties,
+        uniqueIdPrefix: string,
+        onChartRequest: () => void
+    ): void;
 
-    supports(name: string): boolean;
+    /**
+     * Extracts a chart dataset for a specific property.
+     */
+    getChartData(sensor: SensorProperties, property: string): ChartDataset | null;
+
+    /**
+     * Optional: Full screen render logic (can remain as is or be adapted)
+     */
+    renderFull(properties: string[], sensors: SensorProperties[]): void;
 }

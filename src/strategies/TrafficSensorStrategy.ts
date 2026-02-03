@@ -1,115 +1,113 @@
-// src/strategies/TrafficSensorStrategy.ts
 import { IDetailsStrategy } from './IDetailsStrategy.js';
-import { ChartRenderer } from '../components/ChartRenderer.js';
 import { ChartDataset, SensorProperties } from '../Types.js'
 
 export class TrafficSensorStrategy implements IDetailsStrategy {
-    private _name = 'traffic_sensor';
+    public name = 'traffic_sensor';
 
-    render(contentContainer: HTMLElement, chartContainer: HTMLElement, sensor: SensorProperties): void {
-        ChartRenderer.clear(chartContainer.id); // clear previous chart
-        const panel = document.getElementById('info-panel') as HTMLElement;
-
-        if (!panel || !sensor.data) {
-            return;
-        }
-
-        let html = `<h2>${sensor.name || 'Sensor'}</h2>`;
-        const labels: string[] = [];
-        const values: number[] = [];
-
-        let date = '';
-        sensor.data.forEach((item) => {
-            Object.keys(item).forEach(key => {
-                let value = item[key];
-                if (key === 'car_count') {
-                    values.push(value);
-                } else if (key === 'time') {
-                    let timeData = value.replace(/_/g, ' ').split(' ');
-                    if (!date.length) {
-                        date = timeData[0];
-                    }
-                    labels.push(timeData[1]);
-                }
-            });
-        });
-
-        if (date.length) {
-            html += `
-                <div class="data-row">
-                    <p>${date}</p>
-                </div>`;
-        }
-
-        contentContainer.innerHTML = html;
-        panel.classList.remove('off-screen');
-        const btnFullChart = document.getElementById('btn-full-chart') as HTMLInputElement;
-
-        if (labels.length > 0 && values.length > 0) {
-            chartContainer.style.display = 'block';
-
-            const datasets: ChartDataset[] = [{
-                label: 'Car Count',
-                values: values,
-                unit: 'count'
-            }];
-
-            ChartRenderer.render(chartContainer.id, labels, datasets);
-
-            btnFullChart.classList.remove('hidden');
-            btnFullChart.dataset.strategy = this._name;
-            // Traffic implies 'car_count', strictly pass it as array
-            btnFullChart.dataset.properties = JSON.stringify(['car_count']);
-        } else {
-            const noChartData = document.getElementById('no-chart-data') as HTMLElement;
-            noChartData?.classList.add('hidden');
-            ChartRenderer.clear(chartContainer.id);
-            btnFullChart.classList.add('hidden');
-        }
-    }
-
-    renderFull(properties: string[], sensor: SensorProperties) {
-        const name = sensor.name || 'Sensor Data';
-        document.getElementById('modal-title')!.innerText = name;
-        const containerId = 'full-chart-container';
-        document.getElementById(containerId)!.innerHTML = '';
-
+    renderCardContent(
+        container: HTMLElement,
+        sensor: SensorProperties,
+        uniqueIdPrefix: string,
+        onChartRequest: () => void
+    ): void {
         if (!sensor.data) {
-            document.getElementById(containerId)!.innerHTML = '<p style="color:#eee">No chart data.</p>';
+            container.innerHTML = '<p>No data</p>';
             return;
         }
 
-        const labels: string[] = [];
-        const values: number[] = [];
-
-        // Note: Traffic strategy ignores the 'properties' arg because it only has one metric, but we can respect it if passed.
-        const targetProp = properties.length > 0 ? properties[0] : 'car_count';
-
-        sensor.data.forEach((item) => {
-            Object.keys(item).forEach(key => {
-                let value = item[key];
-                if (key === targetProp) {
-                    values.push(value);
-                } else if (key === 'time') {
-                    let timeData = value.replace(/_/g, ' ').split(' ');
-                    labels.push(timeData[1]);
-                }
-            });
+        // Sort locally just to show the true "latest" value in the text card
+        const sortedForDisplay = [...sensor.data].sort((a, b) => {
+            return this.parseTrafficDate(a.time) - this.parseTrafficDate(b.time);
         });
+        const lastItem = sortedForDisplay[sortedForDisplay.length - 1];
 
-        if (labels.length > 0) {
-            const datasets: ChartDataset[] = [{
-                label: 'Car Count',
-                values: values,
-                unit: 'count'
-            }];
-            ChartRenderer.renderFull(containerId, name, labels, datasets);
-        } else {
-            document.getElementById(containerId)!.innerHTML = '<p style="color:#eee">No chart data.</p>';
+        if(lastItem) {
+            container.innerHTML = `
+                <div class="data-row">
+                    <span class="prop-label">Car Count:</span> 
+                    <span class="prop-value">${lastItem.car_count}</span>
+                </div>
+                <div class="data-row">
+                    <span class="timestamp">${lastItem.time}</span>
+                </div>
+            `;
         }
+
+        const toggleDiv = document.createElement('div') as HTMLDivElement;
+        toggleDiv.className = 'property-toggles';
+        const uniqueId = `${uniqueIdPrefix}-car_count`;
+
+        toggleDiv.innerHTML = `
+            <div class="data-row toggle-row">
+                <span class="prop-label">Show Chart</span>
+                <input type="checkbox" id="${uniqueId}" 
+                       data-property="car_count" 
+                       data-sensor-index="${uniqueIdPrefix.split('-')[1]}" 
+                       class="chart-toggle-checkbox" />
+                <label for="${uniqueId}" class="chart-toggle-btn"><span class="icon-chart-bar"></span></label>
+            </div>
+        `;
+
+        container.appendChild(toggleDiv);
+
+        const box = toggleDiv.querySelector('input');
+        box?.addEventListener('change', onChartRequest);
     }
 
-    supports(name: string): boolean {
-        return this._name === name;
+    getChartData(sensor: SensorProperties, property: string): ChartDataset | null {
+        if (property !== 'car_count' || !sensor.data) {
+            return null;
+        }
+
+        // Create mapped array
+        const dataPoints = sensor.data.map(item => {
+            // Use custom parser
+            const timestamp = this.parseTrafficDate(item.time);
+            return {
+                timestamp: timestamp,
+                isoTime: new Date(timestamp).toISOString(),
+                value: parseFloat(item.car_count)
+            };
+        });
+
+        // Sort by Time
+        dataPoints.sort((a, b) => a.timestamp - b.timestamp);
+        const sortedValues = dataPoints.map(d => d.value);
+        const sortedTimes = dataPoints.map(d => d.isoTime);
+
+        return {label: 'Car Count', values: sortedValues, times: sortedTimes, unit: 'cars'};
+    }
+
+    renderFull(properties: string[], sensors: SensorProperties[]): void {}
+
+    /**
+     * Strictly parses traffic dates usually in format DD_MM_YYYY_HH_mm_ss or similar.
+     * Replaces underscores and handles DD/MM order.
+     */
+    private parseTrafficDate(raw: string): number {
+        if (!raw) {
+            return 0;
+        }
+
+        // Replace underscores with spaces for easier regex
+        const clean = raw.replace(/_/g, ' ').trim();
+
+        // Try Regex for DD MM YYYY HH mm ss
+        // Matches: 03 02 2025 10 30 (with optional seconds)
+        const match = clean.match(/^(\d{1,2})[\s\.\-](\d{1,2})[\s\.\-](\d{4})\s+(\d{1,2})[:\s](\d{1,2})(?:[:\s](\d{1,2}))?/);
+
+        if (match) {
+            const day = parseInt(match[1]);
+            const month = parseInt(match[2]) - 1; // JS months are 0-indexed
+            const year = parseInt(match[3]);
+            const hour = parseInt(match[4]);
+            const minute = parseInt(match[5]);
+            const second = match[6] ? parseInt(match[6]) : 0;
+
+            return new Date(year, month, day, hour, minute, second).getTime();
+        }
+
+        // 3. Fallback to standard parser if regex fails (e.g. if format is actually YYYY-MM-DD)
+        return new Date(clean).getTime();
     }
 }

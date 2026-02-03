@@ -4,6 +4,7 @@ import { ChartDataset } from "../Types.js";
 declare const Plotly: any;
 
 export class ChartRenderer {
+
     private static palette = [
         '#3498db', // Blue
         '#e74c3c', // Red
@@ -11,24 +12,38 @@ export class ChartRenderer {
         '#f1c40f', // Yellow
         '#9b59b6', // Purple
         '#e67e22', // Orange
-        '#1abc9c'  // Teal
+        '#1abc9c', // Teal
+        '#34495e'
     ];
 
-    public static render(containerId: string, labels: string[], datasets: ChartDataset[]) {
+    /**
+     * Renders chart. Now supports individual time arrays per dataset.
+     * @param containerId DOM ID
+     * @param defaultLabels Fallback X-axis labels (can be empty if datasets have times)
+     * @param datasets Data to render
+     */
+    public static render(containerId: string, defaultLabels: string[], datasets: ChartDataset[]) {
         const container = document.getElementById(containerId);
-        if(!container) return;
+
+        if (!container) {
+            return;
+        }
 
         const traces = datasets.map((ds, index) => {
             const color = this.palette[index % this.palette.length];
+            // Use dataset-specific time or fall back to defaultLabels
+            const xValues = (ds.times && ds.times.length > 0) ? ds.times : defaultLabels;
+
             return {
-                x: labels,
+                x: xValues,
                 y: ds.values,
                 name: ds.label + (ds.unit ? ` (${ds.unit})` : ''),
                 type: 'scatter',
                 mode: 'lines+markers',
+                connectgaps: true,
                 marker: { color: color, size: 6 },
                 line: { shape: 'spline', color: color, width: 2 },
-                fill: datasets.length === 1 ? 'tozeroy' : 'none',
+                fill: datasets.length === 1 ? 'tozeroy' : 'none', // Fill only if it's the solitary dataset
                 fillcolor: datasets.length === 1 ? `rgba(${this.hexToRgb(color)}, 0.1)` : undefined
             };
         });
@@ -38,12 +53,12 @@ export class ChartRenderer {
             height: 250,
             margin: { l: 40, r: 20, t: 10, b: 60 },
             font: { family: 'Arial, sans-serif', size: 10 },
-            xaxis: { tickangle: -45, automargin: true },
+            xaxis: { type: 'date', tickangle: -45, automargin: true },
             yaxis: { gridcolor: '#eee', zerolinecolor: '#ccc' },
             paper_bgcolor: 'rgba(0,0,0,0)',
             plot_bgcolor: 'rgba(0,0,0,0)',
             showlegend: datasets.length > 1,
-            legend: { x: 0, y: 1, orientation: 'h' }
+            legend: { x: 0, y: 1.1, orientation: 'h' } // Legend on top
         };
 
         const config = { responsive: true, displayModeBar: true };
@@ -54,11 +69,13 @@ export class ChartRenderer {
     /**
      * Renders a full-screen version of the chart in the modal.
      */
-    public static renderFull(containerId: string, title: string, labels: string[], datasets: ChartDataset[]) {
+    public static renderFull(containerId: string, title: string, defaultLabels: string[], datasets: ChartDataset[]) {
         const traces = datasets.map((ds, index) => {
             const color = this.palette[index % this.palette.length];
+            const xValues = (ds.times && ds.times.length > 0) ? ds.times : defaultLabels;
+
             return {
-                x: labels,
+                x: xValues,
                 y: ds.values,
                 name: ds.label + (ds.unit ? ` (${ds.unit})` : ''),
                 type: 'scatter',
@@ -75,6 +92,7 @@ export class ChartRenderer {
             autosize: true,
             font: { family: 'Arial, sans-serif', size: 12, color: '#eee' },
             xaxis: {
+                type: 'date',
                 tickangle: -45,
                 automargin: true,
                 gridcolor: '#444',
@@ -87,7 +105,7 @@ export class ChartRenderer {
             paper_bgcolor: '#222',
             plot_bgcolor: '#222',
             showlegend: true,
-            legend: { font: { color: '#eee' } }
+            legend: { font: { color: '#eee' }, orientation: 'h', y: 1.1 }
         };
 
         const config = { responsive: true, displayModeBar: true };

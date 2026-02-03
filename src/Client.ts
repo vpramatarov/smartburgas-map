@@ -1,59 +1,47 @@
 import { CsvExporter } from './CsvExporter.js';
-import { IDetailsStrategy } from './strategies/IDetailsStrategy.js';
 import { TrafficSensorStrategy } from './strategies/TrafficSensorStrategy.js';
 import { DefaultStrategy } from "./strategies/DefaultStrategy.js";
 import { AirQualityTimeSensorStrategy } from "./strategies/AirQualityTimeSensorStrategy.js";
+import { CompositeDetailsStrategy } from "./strategies/CompositeDetailsStrategy.js";
 import {
     GeoFeature, GeoJSONInput, LayerStyleOptions, SensorProperties
 } from './Types.js'
 import { ChartRenderer } from './components/ChartRenderer.js';
 
-
-// Declare L (Leaflet) as global since we load it via CDN
 declare const L: any;
 
 class SmartMap {
-    private trafficSensorStrategy = new TrafficSensorStrategy();
-    private airQualityTimeSensorStrategy = new AirQualityTimeSensorStrategy();
-    private defaultSensorStrategy = new DefaultStrategy();
-    private sensorStrategies = [
-        this.defaultSensorStrategy,
-        this.airQualityTimeSensorStrategy,
-        this.trafficSensorStrategy
-    ];
+    private compositeStrategy: CompositeDetailsStrategy;
+
     private map: any;
     private airQualityTimeLayer: any;
     private trafficLayer: any;
-
-    private lastAirQualityTimeFetch: number = 0;
-    private lastTrafficFetch: number = 0;
-
-    private currentSensorData: SensorProperties|null = null;
+    private pinnedSensors: SensorProperties[] = [];
 
     constructor() {
+        const strategies = [
+            new DefaultStrategy(),
+            new AirQualityTimeSensorStrategy(),
+            new TrafficSensorStrategy()
+        ];
+        this.compositeStrategy = new CompositeDetailsStrategy(strategies);
+
         this.initMap();
         this.initListeners();
-
         this.loadAirQualityTime();
-        const airTimeCheckbox = document.getElementById('toggle-air-quality-time') as HTMLInputElement;
-        airTimeCheckbox.checked = true;
-
         this.loadTraffic();
-        const trafficCheckbox = document.getElementById('toggle-traffic') as HTMLInputElement;
-        trafficCheckbox.checked = true;
+
+        (document.getElementById('toggle-air-quality-time') as HTMLInputElement).checked = true;
+        (document.getElementById('toggle-traffic') as HTMLInputElement).checked = true;
     }
 
     private initMap(): void {
-        // Initialize map centered on Burgas
         this.map = L.map('map').setView([42.5048, 27.4626], 13);
-
-        // Add OpenStreetMap tile layer
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '© OpenStreetMap contributors'
         }).addTo(this.map);
 
-        // Initialize Layer Groups (empty initially)
         this.airQualityTimeLayer = L.layerGroup();
         this.trafficLayer = L.layerGroup();
     }
@@ -61,44 +49,30 @@ class SmartMap {
     private initListeners(): void {
         const airTimeCheckbox = document.getElementById('toggle-air-quality-time') as HTMLInputElement;
         const trafficCheckbox = document.getElementById('toggle-traffic') as HTMLInputElement;
-        const modal = document.getElementById('chart-modal') as HTMLInputElement;
-        const btnFullChart = document.getElementById('btn-full-chart') as HTMLInputElement;
-        const btnCloseModal = document.getElementById('close-modal') as HTMLInputElement;
+        const modal = document.getElementById('chart-modal') as HTMLElement;
+        const btnFullChart = document.getElementById('btn-full-chart') as HTMLElement;
+        const btnCloseModal = document.getElementById('close-modal') as HTMLElement;
 
-        // Open Modal
+        // Full Screen Chart
         btnFullChart?.addEventListener('click', () => {
-            if (this.currentSensorData && modal) {
+            if (this.pinnedSensors.length > 0 && modal) {
                 modal.classList.remove('hidden');
-                const name = this.currentSensorData.name || 'Sensor Data';
-                document.getElementById('modal-title')!.innerText = name;
 
-                // Get Properties from dataset
-                let propertiesRaw = btnFullChart.dataset.properties || '[]';
-                let properties: string[] = [];
+                const configRaw = btnFullChart.dataset.chartConfig || '[]';
                 try {
-                    properties = JSON.parse(propertiesRaw);
+                    const config = JSON.parse(configRaw);
+                    this.compositeStrategy.renderFull(config, this.pinnedSensors);
                 } catch (e) {
-                    console.error("Failed to parse chart properties", e);
-                }
-
-                let strategyName = btnFullChart.dataset.strategy || '';
-
-                for (const strategy of this.sensorStrategies) {
-                    if (strategy.supports(strategyName)) {
-                        strategy.renderFull(properties, this.currentSensorData);
-                        break;
-                    }
+                    console.error("Failed to parse chart config", e);
                 }
             }
         });
 
-        // Close Modal
         btnCloseModal?.addEventListener('click', () => {
             modal?.classList.add('hidden');
-            ChartRenderer.clear('full-chart-container'); // Clean up
+            ChartRenderer.clear('full-chart-container');
         });
 
-        // Close on outside click
         window.addEventListener('click', (e) => {
             if (e.target === modal) {
                 modal.classList.add('hidden');
@@ -107,43 +81,30 @@ class SmartMap {
         });
 
         airTimeCheckbox.addEventListener('change', (e: Event) => {
-            const target = e.target as HTMLInputElement;
-            if (target.checked) {
-                this.loadAirQualityTime();
-            } else {
-                this.map.removeLayer(this.airQualityTimeLayer);
-            }
+            if ((e.target as HTMLInputElement).checked) this.loadAirQualityTime();
+            else this.map.removeLayer(this.airQualityTimeLayer);
         });
 
         trafficCheckbox.addEventListener('change', (e: Event) => {
-            const target = e.target as HTMLInputElement;
-            if (target.checked) {
-                this.loadTraffic();
-            } else {
-                this.map.removeLayer(this.trafficLayer);
-            }
+            if ((e.target as HTMLInputElement).checked) this.loadTraffic();
+            else this.map.removeLayer(this.trafficLayer);
         });
 
-        const closePanel = document.getElementById('close-panel') as HTMLInputElement;
-        // Close button for the panel
-        closePanel.addEventListener('click', () => {
+        document.getElementById('close-panel')?.addEventListener('click', () => {
             document.getElementById('info-panel')?.classList.add('off-screen');
         });
 
-        const csvDownloadBtn = document.getElementById('btn-download-csv') as HTMLInputElement;
-        csvDownloadBtn.addEventListener('click', () => {
-            if (this.currentSensorData) {
-                // Use the new class
-                CsvExporter.download(
-                    this.currentSensorData,
-                    this.currentSensorData.name || 'sensor_data'
-                );
+        document.getElementById('btn-download-csv')?.addEventListener('click', () => {
+            if (this.pinnedSensors.length > 0) {
+                // Pass all pinned sensors to the exporter
+                CsvExporter.download(this.pinnedSensors);
+            } else {
+                alert("Please pin at least one sensor to export data.");
             }
         });
     }
 
     private async loadAirQualityTime(): Promise<void> {
-        // Prevent duplicate loading
         if (this.airQualityTimeLayer.getLayers().length > 0) {
             this.airQualityTimeLayer.addTo(this.map);
             return;
@@ -154,37 +115,22 @@ class SmartMap {
 
         try {
             const res = await fetch('/api/air-quality-time');
+            if (!res.ok) throw new Error(`${res.status}`);
 
-            if (!res.ok) {
-                throw new Error(`Server returned ${res.status}`);
-            }
-
-            const serverDateStr = res.headers.get('X-Last-Updated');
-            const lastUpdateDate = serverDateStr ? new Date(serverDateStr) : new Date();
-            this.lastAirQualityTimeFetch = lastUpdateDate.getTime();
-            this.updateTimestampUI('air-quality-time', lastUpdateDate);
+            this.updateTimestampUI('air-quality-time', new Date(res.headers.get('X-Last-Updated') || new Date()));
 
             const data = await res.json();
+            // IMPORTANT: Tag data with strategy name
+            this.tagDataWithStrategy(data, 'air_quality_time');
 
-            // --- DEBUGGING: Print the data structure to browser console ---
-            console.log("Air Quality Time API Response:", data);
-
-            // Create GeoJSON layer with custom styles and popups
-            this.addGeoJsonToLayer(
-                data,
-                this.airQualityTimeLayer,
-                {color: "#008000", radius: 8},
-                this.airQualityTimeSensorStrategy
-            );
+            this.addGeoJsonToLayer(data, this.airQualityTimeLayer, {color: "#008000"});
             this.airQualityTimeLayer.addTo(this.map);
         } catch (err) {
-            console.error("Failed to load Air Quality Time data", err);
-            alert("Error loading Air Quality Time data. Check console for details.");
+            console.error(err);
         }
     }
 
     private async loadTraffic(): Promise<void> {
-        // Prevent duplicate loading
         if (this.trafficLayer.getLayers().length > 0) {
             this.trafficLayer.addTo(this.map);
             return;
@@ -195,144 +141,113 @@ class SmartMap {
 
         try {
             const res = await fetch('/api/traffic');
-
             if (!res.ok) {
-                throw new Error(`Server returned ${res.status}`);
+                throw new Error(`${res.status}`);
             }
 
-            const serverDateStr = res.headers.get('X-Last-Updated');
-            const lastUpdateDate = serverDateStr ? new Date(serverDateStr) : new Date();
-            this.lastTrafficFetch = lastUpdateDate.getTime();
-            this.updateTimestampUI('traffic-time', lastUpdateDate);
+            this.updateTimestampUI('traffic-time', new Date(res.headers.get('X-Last-Updated') || new Date()));
 
             const data = await res.json();
+            // IMPORTANT: Tag data with strategy name
+            this.tagDataWithStrategy(data, 'traffic_sensor');
 
-            // --- DEBUGGING: Print the data structure to browser console ---
-            console.log("Traffic API Response:", data);
-
-            // Create GeoJSON layer with custom styles and popups
-            this.addGeoJsonToLayer(
-                data,
-                this.trafficLayer,
-                {color: "#e74c3c", radius: 8},
-                this.trafficSensorStrategy
-            );
+            this.addGeoJsonToLayer(data, this.trafficLayer, {color: "#e74c3c"});
             this.trafficLayer.addTo(this.map);
         } catch (err) {
-            console.error("Failed to load traffic data", err);
-            alert("Error loading Traffic data. Check console for details.");
+            console.error(err);
         }
     }
 
-    // Helper: Update the timestamp text on screen
+    private tagDataWithStrategy(data: GeoJSONInput, strategyName: string) {
+        if(Array.isArray(data)) {
+            data.forEach(f => {
+                if (f.properties) {
+                    f.properties.strategy = strategyName;
+                }
+            });
+        } else {
+            data.features.forEach(f => {
+                if (f.properties) {
+                    f.properties.strategy = strategyName;
+                }
+            });
+        }
+    }
+
     private updateTimestampUI(elementId: string, dateOrMsg: Date | string) {
         const el = document.getElementById(elementId);
         if (el) {
-            if (typeof dateOrMsg === 'string') {
-                el.innerText = dateOrMsg;
-            } else {
-                el.innerText = "Updated: " + dateOrMsg.toLocaleTimeString();
-            }
+            el.innerText = (typeof dateOrMsg === 'string') ? dateOrMsg : "Updated: " + dateOrMsg.toLocaleTimeString();
         }
     }
 
-    /**
-     * Generic method to add GeoJSON data to a Leaflet layer.
-     * @param inputData - The typed GeoJSON data (Collection or Array)
-     * @param targetLayer - The Leaflet LayerGroup to add markers to
-     * @param options - Styling configuration
-     * @param detailStrategy - Show details panel based on layer
-     */
-    private addGeoJsonToLayer(inputData: GeoJSONInput, targetLayer: any, options: LayerStyleOptions, detailStrategy: IDetailsStrategy) {
-        let features: GeoFeature[] = [];
-
-        if (Array.isArray(inputData)) {
-            features = inputData;
-        } else if (inputData.features && Array.isArray(inputData.features)) {
-            features = inputData.features;
-        } else {
-            console.log('GeoJSON data is empty, invalid, missing `features` key or data is not array.');
-            return; // Invalid data
-        }
+    private addGeoJsonToLayer(inputData: GeoJSONInput, targetLayer: any, options: LayerStyleOptions) {
+        let features: GeoFeature[] = Array.isArray(inputData) ? inputData : inputData.features || [];
 
         L.geoJSON(features, {
             pointToLayer: (feature: GeoFeature, latlng: any) => {
                 return L.circleMarker(latlng, {
                     radius: options.radius || 8,
-                    fillColor: options.fillColor || options.color, // Fallback to outline color
-                    color: "#fff", // White border usually looks best
-                    weight: options.weight || 1,
-                    opacity: options.opacity || 1,
-                    fillOpacity: options.fillOpacity || 0.8
+                    fillColor: options.fillColor || options.color,
+                    color: "#fff",
+                    weight: 1,
+                    opacity: 1,
+                    fillOpacity: 0.8
                 });
             },
             onEachFeature: (feature: GeoFeature, layer: any) => {
-                if (!feature.properties) {
-                    console.log ('Data does not contain `properties`.');
-                    return;
-                }
-
                 const props = feature.properties;
-                const name = props.name || 'Sensor';
-                const description = props.description || "No description available.";
-                const popupContent = `
-                    <div class="marker-popup-hover">
-                        <h4>${name}</h4>
-                        <p>${description}</p>
-                    </div>
-                `;
-
-                // Bind the popup with specific settings for hover
-                layer.bindPopup(popupContent, {
+                layer.bindPopup(`<div class="marker-popup-hover"><h4>${props.name}</h4><p>Click to Pin</p></div>`, {
                     closeButton: false,
                     offset: L.point(0, -10)
                 });
 
-                // --- HOVER EVENTS ---
-                layer.on('mouseover', function (e: any) {
-                    const m = e.target;
-                    m.openPopup();
-
-                    // enlarge the marker on hover
-                    m.setStyle({
-                        weight: 3,
-                        radius: 10
-                    });
+                layer.on('mouseover', (e: any) => {
+                    e.target.openPopup();
+                    e.target.setStyle({ weight: 3, radius: 10 });
                 });
-
-                layer.on('mouseout', function (e: any) {
-                    const m = e.target;
-                    m.closePopup();
-
-                    // Reset style
-                    m.setStyle({
-                        weight: 1,
-                        radius: 8
-                    });
+                layer.on('mouseout', (e: any) => {
+                    e.target.closePopup();
+                    e.target.setStyle({ weight: 1, radius: 8 });
                 });
-
                 layer.on('click', () => {
-                    this.currentSensorData = props;
-                    this.executeStrategy(detailStrategy, props);
-
-                    document.getElementById('info-panel')?.classList.remove('off-screen');
+                    this.pinSensor(props);
                 });
             }
         }).addTo(targetLayer);
     }
 
-    private executeStrategy(strategy: IDetailsStrategy, data: SensorProperties) {
+    private pinSensor(sensor: SensorProperties) {
+        // do not clear list on strategy change. Mixed strategies are allowed.
+        const exists = this.pinnedSensors.find(s => {
+            if (s.id && sensor.id) {
+                return s.id === sensor.id;
+            }
+            return s.name === sensor.name;
+        });
+
+        if (!exists) {
+            this.pinnedSensors.push(sensor);
+        }
+        this.refreshPanel();
+    }
+
+    private removeSensor(sensor: SensorProperties) {
+        this.pinnedSensors = this.pinnedSensors.filter(s => s !== sensor);
+        this.refreshPanel();
+    }
+
+    private refreshPanel() {
         const content = document.getElementById('info-content') as HTMLElement;
         const chart = document.getElementById('chart-container') as HTMLElement;
 
         if (content && chart) {
-            strategy.render(content, chart, data);
+            // Delegate all rendering to composite strategy
+            this.compositeStrategy.render(content, chart, this.pinnedSensors, (s) => this.removeSensor(s));
         }
     }
 }
 
-
-// Initialize App
 document.addEventListener('DOMContentLoaded', () => {
     new SmartMap();
 });

@@ -23,6 +23,8 @@ export interface SensorProperties {
     name?: string;
     description?: string;
     data?: DynamicDataPoint[];
+    id?: string | number;
+    strategy?: string;
     [key: string]: any;
 }
 
@@ -51,5 +53,6 @@ export interface LayerStyleOptions {
 export interface ChartDataset {
     label: string;
     values: number[];
+    times?: string[];
     unit?: string;
 }
