@@ -33,7 +33,6 @@ export class CompositeDetailsStrategy {
 
         contentContainer.innerHTML = '';
 
-        // 1. Handle Empty State
         if (sensors.length === 0) {
             contentContainer.innerHTML = '<p style="text-align:center; color:#666; margin-top:20px;">No sensors pinned.<br>Click a map marker to add.</p>';
             chartContainer.style.display = 'none';
@@ -42,7 +41,6 @@ export class CompositeDetailsStrategy {
             return;
         }
 
-        // 2. Render Cards Loop
         sensors.forEach((sensor, index) => {
             const strategyName = sensor.strategy || 'default';
             const strategy = this.strategies.get(strategyName);
@@ -63,7 +61,6 @@ export class CompositeDetailsStrategy {
             header.appendChild(removeBtn);
             card.appendChild(header);
 
-            // Body
             const body = document.createElement('div') as HTMLDivElement;
 
             if (strategy) {

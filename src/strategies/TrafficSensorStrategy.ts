@@ -50,7 +50,7 @@ export class TrafficSensorStrategy implements IDetailsStrategy {
 
         container.appendChild(toggleDiv);
 
-        const box = toggleDiv.querySelector('input');
+        const box = toggleDiv.querySelector('input') as HTMLElementTagNameMap["input"] | null;
         box?.addEventListener('change', onChartRequest);
     }
 
@@ -107,7 +107,7 @@ export class TrafficSensorStrategy implements IDetailsStrategy {
             return new Date(year, month, day, hour, minute, second).getTime();
         }
 
-        // 3. Fallback to standard parser if regex fails (e.g. if format is actually YYYY-MM-DD)
+        // Fallback to standard parser if regex fails (e.g. if format is actually YYYY-MM-DD)
         return new Date(clean).getTime();
     }
 }

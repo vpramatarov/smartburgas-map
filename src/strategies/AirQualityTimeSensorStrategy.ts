@@ -105,11 +105,10 @@ export class AirQualityTimeSensorStrategy implements IDetailsStrategy {
             return 0;
         }
 
-        // Try Standard
-        const std = new Date(raw).getTime();
+        const time = new Date(raw).getTime();
 
-        if (!isNaN(std)) {
-            return std;
+        if (!isNaN(time)) {
+            return time;
         }
 
         // Try fixing common separators

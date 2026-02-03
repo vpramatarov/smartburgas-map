@@ -13,7 +13,7 @@ export class ChartRenderer {
         '#9b59b6', // Purple
         '#e67e22', // Orange
         '#1abc9c', // Teal
-        '#34495e'
+        '#34495e'  // Pickled Bluewood
     ];
 
     /**

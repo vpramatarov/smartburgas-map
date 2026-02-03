@@ -89,10 +89,10 @@ export class CsvExporter {
             return 0;
         }
 
-        const std = new Date(raw).getTime();
+        const time = new Date(raw).getTime();
 
-        if (!isNaN(std)) {
-            return std;
+        if (!isNaN(time)) {
+            return time;
         }
 
         const clean = raw.replace(/_/g, ' ').trim();
@@ -108,6 +108,6 @@ export class CsvExporter {
             return new Date(year, month, day, hour, minute, second).getTime();
         }
 
-        return 0;
+        return 0; // Invalid
     }
 }
