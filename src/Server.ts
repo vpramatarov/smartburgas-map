@@ -1,8 +1,6 @@
 import express from 'express';
 import axios from 'axios';
 import path from 'path';
-import fs from 'fs/promises';
-import {existsSync, mkdirSync} from 'fs';
 import {
     Config, GeoFeature, GeoFeatureCollection, Target
 } from './Types.js'
@@ -45,12 +43,6 @@ for (let target of targets) {
         console.error("CRITICAL ERROR: Missing API URLs in environment variables.");
         process.exit(1);
     }
-}
-
-const CACHE_DIR = path.join(__dirname, '../cache');
-if (!existsSync(CACHE_DIR)) {
-    mkdirSync(CACHE_DIR);
-    console.log(`Created cache directory at: ${CACHE_DIR}`);
 }
 
 // Middleware to serve static files (Frontend)
