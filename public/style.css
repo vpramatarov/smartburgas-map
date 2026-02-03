@@ -237,21 +237,19 @@ ul li {
 }
 
 .action-btn {
-    padding: 5px;
+    padding: 10px;
     border-radius: 4px;
     cursor: pointer;
     font-size: 14px;
     font-weight: bold;
     transition: background 0.2s;
     background: transparent;
-    color: #000;
-    border: 1px solid #000;
+    border: 1px solid transparent;
 }
 
 .action-btn:hover {
     background: #000;
     color: #fff;
-    border: 1px solid #fff;
 }
 
 #info-panel-container .actions {
@@ -259,19 +257,28 @@ ul li {
 }
 
 #btn-download-csv {
-    padding: 10px;
     background-color: #27ae60;
     color: #fff;
-    border: none;
 }
 
 #btn-download-csv:hover {
-    background-color: #219150;
-    color: #fff;
-    border: none;
+    color: #219150;
+    background: #fff;
+    border-color: #219150;
 }
 
-.modebar-container {
+#btn-full-chart {
+    background-color: #3498db;
+    color: #fff;
+}
+
+#btn-full-chart:hover {
+    color: #3498db;
+    background: #fff;
+    border-color: #3498db;
+}
+
+#chart-container .modebar-container {
     top: initial !important;
     bottom: 30px !important;
     display: flex;
@@ -281,7 +288,7 @@ ul li {
     flex-direction: row;
 }
 
-.js-plotly-plot .plotly .modebar-container .modebar {
+#chart-container.js-plotly-plot .plotly .modebar-container .modebar {
     width: 100%;
     left: 0;
     background: rgba(0, 0, 0, 0.5);
@@ -291,7 +298,11 @@ ul li {
     justify-content: center;
 }
 
-.js-plotly-plot .plotly .modebar-container .modebar .modebar-group {
+#chart-container.js-plotly-plot .plotly .modebar {
+    top: 12px;
+}
+
+#chart-container.js-plotly-plot .plotly .modebar-container .modebar .modebar-group {
     float: none;
     display: flex;
     box-sizing: border-box;
