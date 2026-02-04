@@ -25,9 +25,4 @@ export interface IDetailsStrategy {
      * Extracts a chart dataset for a specific property.
      */
     getChartData(sensor: SensorProperties, property: string): ChartDataset | null;
-
-    /**
-     * Optional: Full screen render logic (can remain as is or be adapted)
-     */
-    renderFull(properties: string[], sensors: SensorProperties[]): void;
 }

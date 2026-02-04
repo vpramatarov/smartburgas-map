@@ -78,8 +78,6 @@ export class TrafficSensorStrategy implements IDetailsStrategy {
         return {label: 'Car Count', values: sortedValues, times: sortedTimes, unit: 'cars'};
     }
 
-    renderFull(properties: string[], sensors: SensorProperties[]): void {}
-
     /**
      * Strictly parses traffic dates usually in format DD_MM_YYYY_HH_mm_ss or similar.
      * Replaces underscores and handles DD/MM order.

@@ -93,9 +93,6 @@ export class AirQualityTimeSensorStrategy implements IDetailsStrategy {
         return {label: property, values: sortedValues, times: sortedTimes, unit: unitFound};
     }
 
-    // Legacy/Unused direct call
-    renderFull(properties: string[], sensors: SensorProperties[]): void {}
-
     /**
      * Robust date parser for Air Quality data.
      * Handles standard ISO or custom formats.

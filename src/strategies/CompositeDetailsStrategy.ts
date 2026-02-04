@@ -25,6 +25,7 @@ export class CompositeDetailsStrategy {
         ChartRenderer.clear(chartContainer.id);
         const panel = document.getElementById('info-panel') as HTMLElement;
         const btnFullChart = document.getElementById('btn-full-chart') as HTMLButtonElement;
+        const btnCsv = document.getElementById('btn-download-csv') as HTMLButtonElement;
         const noChartData = document.getElementById('no-chart-data') as HTMLElement;
 
         if (!panel) {
@@ -36,10 +37,13 @@ export class CompositeDetailsStrategy {
         if (sensors.length === 0) {
             contentContainer.innerHTML = '<p style="text-align:center; color:#666; margin-top:20px;">No sensors pinned.<br>Click a map marker to add.</p>';
             chartContainer.style.display = 'none';
+            btnCsv?.classList.add('hidden');
             btnFullChart?.classList.add('hidden');
             noChartData?.classList.add('hidden');
             return;
         }
+
+        btnCsv?.classList.remove('hidden');
 
         sensors.forEach((sensor, index) => {
             const strategyName = sensor.strategy || 'default';

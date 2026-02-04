@@ -22,6 +22,4 @@ export class DefaultStrategy implements IDetailsStrategy {
     getChartData(sensor: SensorProperties, property: string): ChartDataset | null {
         return null;
     }
-
-    renderFull(properties: string[], sensors: SensorProperties[]): void {}
 }
