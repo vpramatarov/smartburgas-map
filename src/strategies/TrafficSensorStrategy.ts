@@ -10,22 +10,26 @@ export class TrafficSensorStrategy implements IDetailsStrategy {
         uniqueIdPrefix: string,
         onChartRequest: () => void
     ): void {
-        if (!sensor.data) {
+        if (!sensor.data || sensor.data.length === 0) {
             container.innerHTML = '<p>No data</p>';
             return;
         }
 
-        // Sort locally just to show the true "latest" value in the text card
+        // Sort to get the "latest" value in the text card
         const sortedForDisplay = [...sensor.data].sort((a, b) => {
             return this.parseTrafficDate(a.time) - this.parseTrafficDate(b.time);
         });
         const lastItem = sortedForDisplay[sortedForDisplay.length - 1];
 
-        if(lastItem) {
+        if (lastItem) {
             container.innerHTML = `
                 <div class="data-row">
                     <span class="prop-label">Car Count:</span> 
                     <span class="prop-value">${lastItem.car_count}</span>
+                </div>
+                <div class="data-row">
+                    <span class="prop-label">Car Speed:</span> 
+                    <span class="prop-value">${typeof lastItem.car_speed === 'undefined' ? 'N/A' : lastItem.car_speed + ' km/h'} </span>
                 </div>
                 <div class="data-row">
                     <span class="timestamp">${lastItem.time}</span>
@@ -35,38 +39,42 @@ export class TrafficSensorStrategy implements IDetailsStrategy {
 
         const toggleDiv = document.createElement('div') as HTMLDivElement;
         toggleDiv.className = 'property-toggles';
-        const uniqueId = `${uniqueIdPrefix}-car_count`;
 
-        toggleDiv.innerHTML = `
+        // Helper fn to generate toggle HTML
+        const createToggleHtml = (key: string, label: string) => {
+            const uniqueId = `${uniqueIdPrefix}-${key}`;
+            return `
             <div class="data-row toggle-row">
-                <span class="prop-label">Show Chart</span>
+                <span class="prop-label">${label}</span>
                 <input type="checkbox" id="${uniqueId}" 
-                       data-property="car_count" 
+                       data-property="${key}" 
                        data-sensor-index="${uniqueIdPrefix.split('-')[1]}" 
                        class="chart-toggle-checkbox" />
                 <label for="${uniqueId}" class="chart-toggle-btn"><span class="icon-chart-bar"></span></label>
             </div>
-        `;
+            `;
+        };
 
+        toggleDiv.innerHTML = createToggleHtml('car_count', 'Car Count') + createToggleHtml('car_speed', 'Car Speed');
         container.appendChild(toggleDiv);
 
-        const box = toggleDiv.querySelector('input') as HTMLElementTagNameMap["input"] | null;
-        box?.addEventListener('change', onChartRequest);
+        const boxes = toggleDiv.querySelectorAll('input');
+        boxes.forEach(box => box.addEventListener('change', onChartRequest));
     }
 
     getChartData(sensor: SensorProperties, property: string): ChartDataset | null {
-        if (property !== 'car_count' || !sensor.data) {
+        if (!sensor.data || (property !== 'car_count' && property !== 'car_speed')) {
             return null;
         }
 
-        // Create mapped array
         const dataPoints = sensor.data.map(item => {
-            // Use custom parser
             const timestamp = this.parseTrafficDate(item.time);
+            const rawValue = property === 'car_speed' ? item.car_speed : item.car_count;
+
             return {
                 timestamp: timestamp,
                 isoTime: new Date(timestamp).toISOString(),
-                value: parseFloat(item.car_count)
+                value: parseFloat(rawValue || '0')
             };
         });
 
@@ -75,7 +83,10 @@ export class TrafficSensorStrategy implements IDetailsStrategy {
         const sortedValues = dataPoints.map(d => d.value);
         const sortedTimes = dataPoints.map(d => d.isoTime);
 
-        return {label: 'Car Count', values: sortedValues, times: sortedTimes, unit: 'cars'};
+        const label = property === 'car_speed' ? 'Speed' : 'Car Count';
+        const unit = property === 'car_speed' ? 'km/h' : 'cars';
+
+        return { label: label, values: sortedValues, times: sortedTimes, unit: unit };
     }
 
     /**
