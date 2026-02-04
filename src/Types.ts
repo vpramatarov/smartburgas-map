@@ -1,3 +1,5 @@
+export type SupportedLanguage = 'bg' | 'en';
+
 export type Target = {
     key: string,
     endpoint: string

@@ -4,7 +4,7 @@ import { DefaultStrategy } from "./strategies/DefaultStrategy.js";
 import { AirQualityTimeSensorStrategy } from "./strategies/AirQualityTimeSensorStrategy.js";
 import { CompositeDetailsStrategy } from "./strategies/CompositeDetailsStrategy.js";
 import {
-    GeoFeature, GeoJSONInput, LayerStyleOptions, SensorProperties
+    GeoFeature, GeoJSONInput, LayerStyleOptions, SensorProperties, SupportedLanguage
 } from './Types.js'
 import { ChartRenderer } from './components/ChartRenderer.js';
 
@@ -18,6 +18,9 @@ class SmartMap {
     private trafficLayer: any;
     private pinnedSensors: SensorProperties[] = [];
 
+    // State for Language
+    private currentLang: SupportedLanguage = 'bg';
+
     constructor() {
         const strategies = [
             new DefaultStrategy(),
@@ -26,8 +29,14 @@ class SmartMap {
         ];
         this.compositeStrategy = new CompositeDetailsStrategy(strategies);
 
+        const savedLang = localStorage.getItem('sb_lang') as SupportedLanguage;
+        if (savedLang === 'bg' || savedLang === 'en') {
+            this.currentLang = savedLang;
+        }
+
         this.initMap();
         this.initListeners();
+        this.renderLanguageSwitcher();
         this.loadAirQualityTime();
         this.loadTraffic();
 
@@ -46,6 +55,65 @@ class SmartMap {
         this.trafficLayer = L.layerGroup();
     }
 
+    private renderLanguageSwitcher() {
+        const controls = document.getElementById('controls') as HTMLElement;
+        if (!controls) return;
+
+        const wrapper = document.createElement('div') as HTMLDivElement;
+        wrapper.className = 'lang-switcher';
+        wrapper.style.marginBottom = '15px';
+        wrapper.style.display = 'flex';
+        wrapper.style.gap = '10px';
+
+        const createBtn = (lang: SupportedLanguage, label: string, flag: string) => {
+            const btn = document.createElement('button');
+            btn.innerHTML = `<span style="font-size:1.2em">${flag}</span> ${label}`;
+            btn.style.flex = '1';
+            btn.style.cursor = 'pointer';
+            btn.style.padding = '5px';
+            btn.style.border = '1px solid #ccc';
+            btn.style.background = this.currentLang === lang ? '#e0e0e0' : '#fff';
+            btn.style.fontWeight = this.currentLang === lang ? 'bold' : 'normal';
+
+            btn.onclick = () => this.setLanguage(lang);
+            return btn;
+        };
+
+        const btnBg = createBtn('bg', 'BG', '🇧🇬');
+        const btnEn = createBtn('en', 'EN', '🇬🇧');
+
+        wrapper.appendChild(btnBg);
+        wrapper.appendChild(btnEn);
+
+        // Insert at the top of controls (before the Filters)
+        controls.insertBefore(wrapper, controls.firstChild);
+    }
+
+    private setLanguage(lang: SupportedLanguage) {
+        if (this.currentLang === lang) return;
+
+        this.currentLang = lang;
+        localStorage.setItem('sb_lang', lang);
+
+        console.log(`Language switched to ${lang}. Refreshing data...`);
+
+        // Re-render buttons to update styling
+        const controls = document.getElementById('controls') as HTMLElement;
+        const existingSwitcher = controls.querySelector('.lang-switcher');
+        if (existingSwitcher) {
+            controls.removeChild(existingSwitcher);
+        }
+        this.renderLanguageSwitcher();
+
+        // Refresh Data
+        if ((document.getElementById('toggle-air-quality-time') as HTMLInputElement).checked) {
+            this.loadAirQualityTime();
+        }
+        if ((document.getElementById('toggle-traffic') as HTMLInputElement).checked) {
+            this.loadTraffic();
+        }
+    }
+
     private initListeners(): void {
         const airTimeCheckbox = document.getElementById('toggle-air-quality-time') as HTMLInputElement;
         const trafficCheckbox = document.getElementById('toggle-traffic') as HTMLInputElement;
@@ -53,11 +121,9 @@ class SmartMap {
         const btnFullChart = document.getElementById('btn-full-chart') as HTMLElement;
         const btnCloseModal = document.getElementById('close-modal') as HTMLElement;
 
-        // Full Screen Chart
         btnFullChart?.addEventListener('click', () => {
             if (this.pinnedSensors.length > 0 && modal) {
                 modal.classList.remove('hidden');
-
                 const configRaw = btnFullChart.dataset.chartConfig || '[]';
                 try {
                     const config = JSON.parse(configRaw);
@@ -100,7 +166,6 @@ class SmartMap {
 
         document.getElementById('btn-download-csv')?.addEventListener('click', () => {
             if (this.pinnedSensors.length > 0) {
-                // Pass all pinned sensors to the exporter
                 CsvExporter.download(this.pinnedSensors);
             } else {
                 alert("Please pin at least one sensor to export data.");
@@ -109,16 +174,12 @@ class SmartMap {
     }
 
     private async loadAirQualityTime(): Promise<void> {
-        if (this.airQualityTimeLayer.getLayers().length > 0) {
-            this.airQualityTimeLayer.addTo(this.map);
-            return;
-        }
-
         this.airQualityTimeLayer.clearLayers();
         this.updateTimestampUI('air-quality-time', 'Refreshing...');
 
         try {
-            const res = await fetch('/api/air-quality-time');
+            // Updated to use currentLang
+            const res = await fetch(`/api/air-quality-time?lang=${this.currentLang}`);
             if (!res.ok) {
                 throw new Error(`${res.status}`);
             }
@@ -126,7 +187,6 @@ class SmartMap {
             this.updateTimestampUI('air-quality-time', new Date(res.headers.get('X-Last-Updated') || new Date()));
 
             const data = await res.json();
-            // IMPORTANT: Tag data with strategy name
             this.tagDataWithStrategy(data, 'air_quality_time');
 
             this.addGeoJsonToLayer(data, this.airQualityTimeLayer, {color: "#008000"});
@@ -137,16 +197,12 @@ class SmartMap {
     }
 
     private async loadTraffic(): Promise<void> {
-        if (this.trafficLayer.getLayers().length > 0) {
-            this.trafficLayer.addTo(this.map);
-            return;
-        }
-
         this.trafficLayer.clearLayers();
         this.updateTimestampUI('traffic-time', 'Refreshing...');
 
         try {
-            const res = await fetch('/api/traffic');
+            // Updated to use currentLang
+            const res = await fetch(`/api/traffic?lang=${this.currentLang}`);
             if (!res.ok) {
                 throw new Error(`${res.status}`);
             }
@@ -154,7 +210,6 @@ class SmartMap {
             this.updateTimestampUI('traffic-time', new Date(res.headers.get('X-Last-Updated') || new Date()));
 
             const data = await res.json();
-            // IMPORTANT: Tag data with strategy name
             this.tagDataWithStrategy(data, 'traffic_sensor');
 
             this.addGeoJsonToLayer(data, this.trafficLayer, {color: "#e74c3c"});
@@ -224,7 +279,6 @@ class SmartMap {
     }
 
     private pinSensor(sensor: SensorProperties) {
-        // do not clear list on strategy change. Mixed strategies are allowed.
         const exists = this.pinnedSensors.find(s => {
             if (s.id && sensor.id) {
                 return s.id === sensor.id;
@@ -248,7 +302,6 @@ class SmartMap {
         const chart = document.getElementById('chart-container') as HTMLElement;
 
         if (content && chart) {
-            // Delegate all rendering to composite strategy
             this.compositeStrategy.render(content, chart, this.pinnedSensors, (s) => this.removeSensor(s));
         }
     }

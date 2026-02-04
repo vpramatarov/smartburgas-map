@@ -2,7 +2,7 @@ import express from 'express';
 import axios from 'axios';
 import path from 'path';
 import {
-    Config, GeoFeature, GeoFeatureCollection, Target
+    Config, GeoFeature, GeoFeatureCollection, Target, SupportedLanguage
 } from './Types.js'
 
 import { fileURLToPath } from 'url';
@@ -53,14 +53,14 @@ app.use('/js', express.static(path.join(__dirname, '../dist')));
 // API Proxies
 app.get('/api/air-quality-time', async (req, res) => {
     try {
+        const lang = (req.query.lang === 'en' ? 'en' : 'bg') as SupportedLanguage;
         const target = config.airQualityTime;
-        const result = await getData(target.endpoint);
-        // Validation: Ensure data matches GeoJSON FeatureCollection format
+
+        // Pass language to data fetcher
+        const result = await getData(target.endpoint, lang);
+
         if (!Array.isArray(result.data.features1)) {
-            throw new Error(
-                "Air Quality Time is missing 'features1' array. Attempting to parse raw data..." +
-                "Invalid structure: 'features1' key missing."
-            );
+            throw new Error("Invalid structure: 'features1' key missing.");
         }
 
         res.set('X-Last-Updated', new Date(result.lastUpdated).toISOString());
@@ -73,15 +73,14 @@ app.get('/api/air-quality-time', async (req, res) => {
 
 app.get('/api/traffic', async (req, res) => {
     try {
+        const lang = (req.query.lang === 'en' ? 'en' : 'bg') as SupportedLanguage;
         const target = config.traffic;
-        const result = await getData(target.endpoint);
 
-        // Validation: Ensure data matches GeoJSON FeatureCollection format
+        // Pass language to data fetcher
+        const result = await getData(target.endpoint, lang);
+
         if (!Array.isArray(result.data.features1)) {
-            throw new Error(
-                "Traffic data is missing 'features1' array. Attempting to parse raw data..." +
-                "Invalid structure: 'features1' key missing."
-            );
+            throw new Error("Invalid structure: 'features1' key missing.");
         }
 
         res.set('X-Last-Updated', new Date(result.lastUpdated).toISOString());
@@ -99,10 +98,12 @@ prefetchAll().then(() => {
     });
 });
 
-
-async function getData(url: string) {
-    // Fetch fresh data from API
-    const response = await axios.get(url);
+async function getData(url: string, lang: SupportedLanguage = 'bg') {
+    // Fetch fresh data from API with lang param
+    console.log(`[Proxy] Fetching ${url} ? lang=${lang}`);
+    const response = await axios.get(url, {
+        params: { lang }
+    });
     const data = response.data;
 
     return {
@@ -111,13 +112,12 @@ async function getData(url: string) {
     };
 }
 
-// Prefetch Logic
 async function prefetchAll() {
     console.log('--- Initializing Prefetch ---');
     try {
         let data = [];
         for (let target of targets) {
-            data.push(getData(target.endpoint));
+            data.push(getData(target.endpoint, 'bg')); // Default prefetch BG
         }
 
         await Promise.all(data);
