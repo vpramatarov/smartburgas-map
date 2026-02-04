@@ -57,53 +57,36 @@ class SmartMap {
 
     private renderLanguageSwitcher() {
         const controls = document.getElementById('controls') as HTMLElement;
-        if (!controls) return;
+        if (!controls) {
+            return;
+        }
 
-        const wrapper = document.createElement('div') as HTMLDivElement;
-        wrapper.className = 'lang-switcher';
-        wrapper.style.marginBottom = '15px';
-        wrapper.style.display = 'flex';
-        wrapper.style.gap = '10px';
+        const flagElements = document.querySelectorAll('.lang-switcher span') as NodeListOf<HTMLSpanElement>;
+        flagElements?.forEach((flagEl) => {
+            const flagLang = flagEl.dataset.flag as SupportedLanguage;
+            if (this.currentLang === flagLang) {
+                flagEl.classList.add('active');
+            }
 
-        const createBtn = (lang: SupportedLanguage, label: string, flag: string) => {
-            const btn = document.createElement('button');
-            btn.innerHTML = `<span style="font-size:1.2em">${flag}</span> ${label}`;
-            btn.style.flex = '1';
-            btn.style.cursor = 'pointer';
-            btn.style.padding = '5px';
-            btn.style.border = '1px solid #ccc';
-            btn.style.background = this.currentLang === lang ? '#e0e0e0' : '#fff';
-            btn.style.fontWeight = this.currentLang === lang ? 'bold' : 'normal';
-
-            btn.onclick = () => this.setLanguage(lang);
-            return btn;
-        };
-
-        const btnBg = createBtn('bg', 'BG', '🇧🇬');
-        const btnEn = createBtn('en', 'EN', '🇬🇧');
-
-        wrapper.appendChild(btnBg);
-        wrapper.appendChild(btnEn);
-
-        // Insert at the top of controls (before the Filters)
-        controls.insertBefore(wrapper, controls.firstChild);
+            flagEl.addEventListener('click', (e) => {
+                e.preventDefault();
+                flagEl.nextElementSibling?.classList.remove('active');
+                flagEl.previousElementSibling?.classList.remove('active');
+                flagEl.classList.add('active');
+                this.setLanguage(flagLang);
+            })
+        });
     }
 
     private setLanguage(lang: SupportedLanguage) {
-        if (this.currentLang === lang) return;
+        if (this.currentLang === lang) {
+            return;
+        }
 
         this.currentLang = lang;
         localStorage.setItem('sb_lang', lang);
 
         console.log(`Language switched to ${lang}. Refreshing data...`);
-
-        // Re-render buttons to update styling
-        const controls = document.getElementById('controls') as HTMLElement;
-        const existingSwitcher = controls.querySelector('.lang-switcher');
-        if (existingSwitcher) {
-            controls.removeChild(existingSwitcher);
-        }
-        this.renderLanguageSwitcher();
 
         // Refresh Data
         if ((document.getElementById('toggle-air-quality-time') as HTMLInputElement).checked) {

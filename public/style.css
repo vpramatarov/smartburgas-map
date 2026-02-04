@@ -29,6 +29,26 @@ p {
     font-family: sans-serif;
 }
 
+.lang-switcher {
+    margin-bottom: 15px;
+    display: flex;
+    gap: 10px;
+}
+
+.lang-switcher span {
+    flex: 1 1 0;
+    cursor: pointer;
+    padding: 5px;
+    border: 1px solid #ccc;
+    background: #eee;
+}
+
+.lang-switcher span.active {
+    background: rgba(0,0,0,0.5);
+    font-weight: bold;
+    color: #fff;
+}
+
 label {
     cursor: pointer;
     display: block;
