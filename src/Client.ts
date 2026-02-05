@@ -1,12 +1,13 @@
 import { CsvExporter } from './CsvExporter.js';
 import { TrafficSensorStrategy } from './strategies/TrafficSensorStrategy.js';
-import { DefaultStrategy } from "./strategies/DefaultStrategy.js";
 import { AirQualityTimeSensorStrategy } from "./strategies/AirQualityTimeSensorStrategy.js";
 import { CompositeDetailsStrategy } from "./strategies/CompositeDetailsStrategy.js";
 import {
     GeoFeature, GeoJSONInput, LayerStyleOptions, SensorProperties, SupportedLanguage
 } from './Types.js'
 import { ChartRenderer } from './components/ChartRenderer.js';
+import {CCTVStrategy} from "./strategies/CCTVStrategy.js";
+import {Utils} from "./Utils.js";
 
 declare const L: any;
 
@@ -16,6 +17,7 @@ class SmartMap {
     private map: any;
     private airQualityTimeLayer: any;
     private trafficLayer: any;
+    private cameraLayer: any;
     private pinnedSensors: SensorProperties[] = [];
 
     // State for Language
@@ -23,9 +25,9 @@ class SmartMap {
 
     constructor() {
         const strategies = [
-            new DefaultStrategy(),
             new AirQualityTimeSensorStrategy(),
-            new TrafficSensorStrategy()
+            new TrafficSensorStrategy(),
+            new CCTVStrategy()
         ];
         this.compositeStrategy = new CompositeDetailsStrategy(strategies);
 
@@ -39,9 +41,11 @@ class SmartMap {
         this.renderLanguageSwitcher();
         this.loadAirQualityTime();
         this.loadTraffic();
+        this.loadCameraData();
 
         (document.getElementById('toggle-air-quality-time') as HTMLInputElement).checked = true;
         (document.getElementById('toggle-traffic') as HTMLInputElement).checked = true;
+        (document.getElementById('toggle-cctv') as HTMLInputElement).checked = true;
     }
 
     private initMap(): void {
@@ -53,6 +57,7 @@ class SmartMap {
 
         this.airQualityTimeLayer = L.layerGroup();
         this.trafficLayer = L.layerGroup();
+        this.cameraLayer = L.layerGroup();
     }
 
     private renderLanguageSwitcher() {
@@ -95,11 +100,16 @@ class SmartMap {
         if ((document.getElementById('toggle-traffic') as HTMLInputElement).checked) {
             this.loadTraffic();
         }
+
+        if ((document.getElementById('toggle-cctv') as HTMLInputElement).checked) {
+            this.loadCameraData();
+        }
     }
 
     private initListeners(): void {
         const airTimeCheckbox = document.getElementById('toggle-air-quality-time') as HTMLInputElement;
         const trafficCheckbox = document.getElementById('toggle-traffic') as HTMLInputElement;
+        const cameraCheckbox = document.getElementById('toggle-cctv') as HTMLInputElement;
         const modal = document.getElementById('chart-modal') as HTMLElement;
         const btnFullChart = document.getElementById('btn-full-chart') as HTMLElement;
         const btnCloseModal = document.getElementById('close-modal') as HTMLElement;
@@ -132,19 +142,42 @@ class SmartMap {
         airTimeCheckbox.addEventListener('change', (e: Event) => {
             if ((e.target as HTMLInputElement).checked) {
                 this.loadAirQualityTime();
+            } else {
+                this.map.removeLayer(this.airQualityTimeLayer);
             }
-            else this.map.removeLayer(this.airQualityTimeLayer);
         });
 
         trafficCheckbox.addEventListener('change', (e: Event) => {
             if ((e.target as HTMLInputElement).checked) {
                 this.loadTraffic();
+            } else {
+                this.map.removeLayer(this.trafficLayer);
             }
-            else this.map.removeLayer(this.trafficLayer);
+        });
+
+        cameraCheckbox.addEventListener('change', (e: Event) => {
+            if ((e.target as HTMLInputElement).checked) {
+                this.loadCameraData();
+            } else {
+                this.map.removeLayer(this.cameraLayer);
+            }
         });
 
         document.getElementById('close-panel')?.addEventListener('click', () => {
-            document.getElementById('info-panel')?.classList.add('off-screen');
+            // document.getElementById('info-panel')?.classList.add('off-screen');
+            document.getElementById('info-panel')?.classList.add('hidden');
+            // Clear the DOM content
+            // This also ensures video elements are removed, stopping native playback
+            const content = document.getElementById('info-content');
+            if (content) {
+                content.innerHTML = '';
+            }
+
+            this.pinnedSensors = [];
+
+            // Force stop all HLS streams
+            // This also kills the background network requests
+            CCTVStrategy.stopAll();
         });
 
         document.getElementById('btn-download-csv')?.addEventListener('click', () => {
@@ -158,19 +191,18 @@ class SmartMap {
 
     private async loadAirQualityTime(): Promise<void> {
         this.airQualityTimeLayer.clearLayers();
-        this.updateTimestampUI('air-quality-time', 'Refreshing...');
+        Utils.updateTimestampUI('air-quality-time', 'Refreshing...');
 
         try {
-            // Updated to use currentLang
             const res = await fetch(`/api/air-quality-time?lang=${this.currentLang}`);
             if (!res.ok) {
                 throw new Error(`${res.status}`);
             }
 
-            this.updateTimestampUI('air-quality-time', new Date(res.headers.get('X-Last-Updated') || new Date()));
+            Utils.updateTimestampUI('air-quality-time', new Date(res.headers.get('X-Last-Updated') || new Date()));
 
             const data = await res.json();
-            this.tagDataWithStrategy(data, 'air_quality_time');
+            Utils.tagDataWithStrategy(data, 'air_quality_time');
 
             this.addGeoJsonToLayer(data, this.airQualityTimeLayer, {color: "#008000"});
             this.airQualityTimeLayer.addTo(this.map);
@@ -181,19 +213,18 @@ class SmartMap {
 
     private async loadTraffic(): Promise<void> {
         this.trafficLayer.clearLayers();
-        this.updateTimestampUI('traffic-time', 'Refreshing...');
+        Utils.updateTimestampUI('traffic-time', 'Refreshing...');
 
         try {
-            // Updated to use currentLang
             const res = await fetch(`/api/traffic?lang=${this.currentLang}`);
             if (!res.ok) {
                 throw new Error(`${res.status}`);
             }
 
-            this.updateTimestampUI('traffic-time', new Date(res.headers.get('X-Last-Updated') || new Date()));
+            Utils.updateTimestampUI('traffic-time', new Date(res.headers.get('X-Last-Updated') || new Date()));
 
             const data = await res.json();
-            this.tagDataWithStrategy(data, 'traffic_sensor');
+            Utils.tagDataWithStrategy(data, 'traffic_sensor');
 
             this.addGeoJsonToLayer(data, this.trafficLayer, {color: "#e74c3c"});
             this.trafficLayer.addTo(this.map);
@@ -202,26 +233,25 @@ class SmartMap {
         }
     }
 
-    private tagDataWithStrategy(data: GeoJSONInput, strategyName: string) {
-        if(Array.isArray(data)) {
-            data.forEach(f => {
-                if (f.properties) {
-                    f.properties.strategy = strategyName;
-                }
-            });
-        } else {
-            data.features.forEach(f => {
-                if (f.properties) {
-                    f.properties.strategy = strategyName;
-                }
-            });
-        }
-    }
+    private async loadCameraData(): Promise<void> {
+        this.cameraLayer.clearLayers();
+        Utils.updateTimestampUI('cctv-time', 'Refreshing...');
 
-    private updateTimestampUI(elementId: string, dateOrMsg: Date | string) {
-        const el = document.getElementById(elementId);
-        if (el) {
-            el.innerText = (typeof dateOrMsg === 'string') ? dateOrMsg : "Updated: " + dateOrMsg.toLocaleTimeString();
+        try {
+            const res = await fetch(`/api/cctv?lang=${this.currentLang}`);
+            if (!res.ok) {
+                throw new Error(`${res.status}`);
+            }
+
+            Utils.updateTimestampUI('cctv-time', new Date(res.headers.get('X-Last-Updated') || new Date()));
+
+            const data = await res.json();
+            Utils.tagDataWithStrategy(data, 'cctv');
+
+            this.addGeoJsonToLayer(data, this.cameraLayer, {color: "#2ecc71"});
+            this.cameraLayer.addTo(this.map);
+        } catch (err) {
+            console.error(err);
         }
     }
 
@@ -241,7 +271,7 @@ class SmartMap {
             },
             onEachFeature: (feature: GeoFeature, layer: any) => {
                 const props = feature.properties;
-                layer.bindPopup(`<div class="marker-popup-hover"><h4>${props.name}</h4><p>Click to Pin</p></div>`, {
+                layer.bindPopup(`<div class="marker-popup-hover"><h4>${props.name || props.publicname}</h4><p>Click to Pin</p></div>`, {
                     closeButton: false,
                     offset: L.point(0, -10)
                 });
@@ -266,7 +296,9 @@ class SmartMap {
             if (s.id && sensor.id) {
                 return s.id === sensor.id;
             }
-            return s.name === sensor.name;
+            const sName = s.name || s.publicname;
+            const sensorName = sensor.name || sensor.publicname;
+            return sName === sensorName;
         });
 
         if (!exists) {
@@ -277,6 +309,9 @@ class SmartMap {
 
     private removeSensor(sensor: SensorProperties) {
         this.pinnedSensors = this.pinnedSensors.filter(s => s !== sensor);
+        // Force stop all HLS streams
+        // This also kills the background network requests
+        CCTVStrategy.stopAll();
         this.refreshPanel();
     }
 
