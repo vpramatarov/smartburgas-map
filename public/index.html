@@ -34,12 +34,20 @@
                 <span id="traffic-time" class="timestamp">-</span>
             </label>
         </li>
+        <li>
+            <label class="checkbox" for="toggle-cctv">
+                <input type="checkbox" id="toggle-cctv">
+                <span class="checkbox__checkmark"></span>
+                <span class="checkbox__body"><span class="icon-cctv"></span> Camera</span>
+                <span id="cctv-time" class="timestamp">-</span>
+            </label>
+        </li>
     </ul>
 </div>
 
 <div id="map"></div>
 
-<div id="info-panel" class="off-screen">
+<div id="info-panel" class="hidden">
     <div id="info-panel-container">
         <button id="close-panel">×</button>
         <div id="info-content">
@@ -67,6 +75,7 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
 
 <script type="module" src="/js/client.js"></script>
 </body>
