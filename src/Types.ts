@@ -1,15 +1,16 @@
 export type SupportedLanguage = 'bg' | 'en';
 
 export type Target = {
-    key: string,
-    endpoint: string
+    key: string;
+    endpoint: string;
 }
 
 export type Config = {
-    appUrl?: string,
-    port: number,
-    airQualityTime: Target,
-    traffic: Target
+    appUrl?: string;
+    port: number;
+    airQualityTime: Target;
+    traffic: Target;
+    cctv: Target;
 }
 
 export interface Geometry {
