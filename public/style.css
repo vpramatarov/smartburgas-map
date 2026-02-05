@@ -9,7 +9,7 @@ p {
 }
 
 .hidden {
-    display: none !important;
+    display: none;
 }
 
 #map {
@@ -83,29 +83,41 @@ ul li {
 
 /** Info panel */
 #info-panel {
-    position: absolute;
+    position: fixed;
     bottom: 0;
     top: 0;
     height: 100vh;
     right: 20px;
     width: 400px;
-    background: rgba(255,255,255, 0.5);
-    z-index: 1001;
     border-radius: 8px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     overflow-y: auto;
     transition: transform 0.3s ease-in-out;
+    background: rgba(255,255,255, 0.5);
+    z-index: 1001;
+
+    display: flex;       /* Use flexbox to handle internal scrolling better */
+    flex-direction: column;
+    /*background: rgba(255, 255, 255, 0.95); !* Make it slightly more opaque *!*/
+    /*z-index: 2000;       !* Ensure it's on top of map *!*/
 }
 
-#info-panel.off-screen {
-    transform: translateY(150%); /* Hide off-screen */
+#info-panel.hidden {
+    display: none;
 }
 
 #info-panel-container {
-    background: white;
+    background: #fff;
     padding: 15px;
     margin: 2%;
     border-radius: 8px;
+    position: relative;
+
+    flex: 1;             /* Take remaining height */
+    overflow-y: auto;    /* scroll INSIDE the panel, not the body */
+    overflow-x: hidden;
+    height: auto;        /* Let it grow/shrink */
+    max-height: 100%;
 }
 
 #close-panel {
@@ -113,10 +125,11 @@ ul li {
     top: 10px;
     right: 10px;
     border: none;
-    background: none;
+    background: transparent;
     font-size: 20px;
     cursor: pointer;
     color: #999;
+    z-index: 1002;
 }
 
 #info-panel h2 {
@@ -256,6 +269,7 @@ ul li {
     margin-bottom: 10px;
 }
 
+/*---- Action Buttons ----*/
 .action-btn {
     padding: 10px;
     border-radius: 4px;
@@ -298,6 +312,7 @@ ul li {
     border-color: #3498db;
 }
 
+/*---- Chart ----*/
 #chart-container .modebar-container {
     top: initial !important;
     bottom: 30px !important;
@@ -390,12 +405,14 @@ ul li {
     color: #000;
 }
 
+/*---- Full Chart ----*/
 #full-chart-container {
     flex-grow: 1;
     width: 100%;
     height: 100%;
 }
 
+/*---- Sensor Cards ----*/
 .sensor-card {
     background: #f9f9f9;
     border: 1px solid #ddd;
@@ -436,4 +453,28 @@ ul li {
 
 .sensor-card .toggle-row {
     padding: 4px 0;
+}
+
+/*------ VIDEO PLAYER -------*/
+
+/* Video Wrapper Layout */
+.cctv-video-wrapper {
+    position: relative;
+    width: 100%;
+    height: 0;
+    padding-bottom: 56.25%;
+    background: #000;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+.cctv-video-wrapper video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: none; /* Important: without this the video won't show up! */
 }
