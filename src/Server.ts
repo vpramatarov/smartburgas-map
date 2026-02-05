@@ -21,11 +21,17 @@ const trafficTarget: Target = {
     endpoint: process.env.TRAFFIC_URL as string
 }
 
+const cctvTarget: Target = {
+    key: 'cctv',
+    endpoint: process.env.CCTV_URL as string
+}
+
 const config: Config = {
     appUrl: process.env.URL || 'http://localhost',
     port: parseInt(process.env.PORT as string),
     airQualityTime: airQualityTimeTarget,
-    traffic: trafficTarget
+    traffic: trafficTarget,
+    cctv: cctvTarget
 }
 
 const targets: Target[] = [];
@@ -88,6 +94,22 @@ app.get('/api/traffic', async (req, res) => {
     } catch (error) {
         console.error('Error fetching traffic:', error);
         res.status(500).json({ error: 'Failed to fetch traffic data' });
+    }
+});
+
+app.get('/api/cctv', async (req, res) => {
+    try {
+        const lang = (req.query.lang === 'en' ? 'en' : 'bg') as SupportedLanguage;
+        const target = config.cctv;
+
+        // Pass language to data fetcher
+        const result = await getData(target.endpoint, lang);
+
+        res.set('X-Last-Updated', new Date(result.lastUpdated).toISOString());
+        res.json(result.data);
+    } catch (error) {
+        console.error('Error fetching cctv:', error);
+        res.status(500).json({ error: 'Failed to fetch cctv data' });
     }
 });
 
