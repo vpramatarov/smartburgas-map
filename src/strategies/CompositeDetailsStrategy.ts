@@ -13,6 +13,10 @@ export class CompositeDetailsStrategy {
         strategies.forEach(s => this.strategies.set(s.name, s));
     }
 
+    getStrategies(): Map<string, IDetailsStrategy> {
+        return this.strategies
+    }
+
     /**
      * Main entry point called by Client.ts
      */
@@ -43,7 +47,12 @@ export class CompositeDetailsStrategy {
             return;
         }
 
-        btnCsv?.classList.remove('hidden');
+        // Do not show button if only cctv strategies are pinned.
+        if (sensors.filter(s => s.strategy === 'cctv').length === sensors.length) {
+            btnCsv?.classList.add('hidden');
+        } else {
+            btnCsv?.classList.remove('hidden');
+        }
 
         sensors.forEach((sensor, index) => {
             const strategyName = sensor.strategy || 'default';
@@ -83,7 +92,8 @@ export class CompositeDetailsStrategy {
             contentContainer.appendChild(card);
         });
 
-        panel.classList.remove('off-screen');
+        // panel.classList.remove('off-screen');
+        panel.classList.remove('hidden');
 
         // Re-draw chart if checkboxes were checked (state persistence handled by DOM existence here)
         this.updateChart(chartContainer, sensors, btnFullChart, noChartData);
