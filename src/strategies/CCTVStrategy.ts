@@ -1,7 +1,9 @@
 import { IDetailsStrategy } from './IDetailsStrategy.js';
-import { ChartDataset, SensorProperties } from '../Types.js';
+import { ChartDataset, GeoFeature, GeoJSONInput, SensorProperties } from '../Types.js';
+import { Utils } from "../Utils.js";
 
 declare const Hls: any;
+declare const L: any;
 
 interface ActivePlayer {
     hls: any;
@@ -10,8 +12,126 @@ interface ActivePlayer {
 
 export class CCTVStrategy implements IDetailsStrategy {
     public name = 'cctv';
-
+    private layer: any;
+    private onPin: ((sensor: SensorProperties) => void) | undefined;
     private static activePlayers: Map<string, ActivePlayer> = new Map();
+
+    initialize(map: any, onPin: (sensor: SensorProperties) => void): void {
+        this.onPin = onPin;
+        this.layer = L.layerGroup();
+
+        // Scaling function
+        const updateZoomScale = () => {
+            const zoom = map.getZoom();
+            // Formula: Base scale 1.0 at Zoom 16.
+            // Scales down to 0.2 at Zoom 12.
+            // Scales up to 2.0 at Zoom 19.
+            let scale = Math.pow(1.4, zoom - 15);
+
+            // Clamp values to prevent them becoming invisible or massive
+            scale = Math.max(0.1, Math.min(scale, 3.0));
+
+            // Set CSS Variable on the map container
+            map.getContainer().style.setProperty('--cctv-zoom-scale', scale.toString());
+        };
+
+        // Attach listener to map
+        map.on('zoomend', updateZoomScale);
+
+        // Initial call to set correct size on load
+        updateZoomScale();
+    }
+
+    getLayer(): any {
+        return this.layer;
+    }
+
+    async loadData(lang: string): Promise<void> {
+        if (!this.layer) {
+            return;
+        }
+
+        this.layer.clearLayers();
+        Utils.updateTimestampUI('cctv-time', 'Refreshing...');
+
+        try {
+            const res = await fetch(`/api/cctv?lang=${lang}`);
+
+            if (!res.ok) {
+                throw new Error(`${res.status}`);
+            }
+
+            Utils.updateTimestampUI('cctv-time', new Date(res.headers.get('X-Last-Updated') || new Date()));
+            const data = await res.json();
+            Utils.tagDataWithStrategy(data, this.name);
+
+            this.addGeoJsonToLayer(data, { color: "#2ecc71" });
+        } catch (err) {
+            console.error('CCTV load error:', err);
+        }
+    }
+
+    private addGeoJsonToLayer(inputData: GeoJSONInput, options: { color: string }) {
+        let features: GeoFeature[] = Array.isArray(inputData) ? inputData : inputData.features || [];
+
+        L.geoJSON(features, {
+            pointToLayer: (_feature: GeoFeature, latlng: any) => {
+                const position = _feature.properties.position || 0;
+
+                // .cctv-zoom-wrapper wrapper reads the --cctv-zoom-scale variable.
+                // The inner .cctv-container handles the rotation.
+                const html = `
+                    <div class="cctv-zoom-wrapper">
+                        <div class="cctv-container" style="transform: rotate(${position}deg)">
+                            <svg class="cctv-cone-svg" viewBox="0 0 100 100">
+                                 <path d="M 50 50 L 30 15 A 40 40 0 0 1 70 15 Z" />
+                            </svg>
+                            <div class="cctv-dot"></div>
+                        </div>
+                    </div>
+                `;
+
+                return L.marker(latlng, {
+                    icon: L.divIcon({
+                        className: 'cctv-icon-wrapper',
+                        html: html,
+                        iconSize: [100, 100],
+                        iconAnchor: [50, 50]
+                    })
+                });
+            },
+            onEachFeature: (feature: GeoFeature, layer: any) => {
+                const props = feature.properties;
+                layer.bindPopup(`<div class="marker-popup-hover"><h4>${props.publicname || 'Camera'}</h4><p>Click to Pin</p></div>`, {
+                    closeButton: false,
+                    offset: L.point(0, -10)
+                });
+
+                layer.on('mouseover', (e: any) => {
+                    e.target.openPopup();
+                    const path = e.target.getElement()?.querySelector('path');
+                    if (path) {
+                        path.style.fillOpacity = '0.4'; // Darker on hover
+                    }
+                });
+
+                layer.on('mouseout', (e: any) => {
+                    e.target.closePopup();
+                    const path = e.target.getElement()?.querySelector('path');
+
+                    if (path) {
+                        path.style.fillOpacity = ''; // Reset
+                    }
+                });
+
+                layer.on('click', () => {
+                    if (this.onPin) {
+                        this.onPin(props);
+                    }
+                });
+            }
+        }).addTo(this.layer);
+    }
 
     renderCardContent(
         container: HTMLElement,
@@ -19,7 +139,6 @@ export class CCTVStrategy implements IDetailsStrategy {
         uniqueIdPrefix: string,
         onChartRequest: () => void
     ): void {
-        // Run Garbage Collection: Clean up any players whose video elements were removed from DOM
         CCTVStrategy.garbageCollect();
         container.innerHTML = '';
         const streamUrl = sensor.video_url2 || '';
@@ -29,11 +148,9 @@ export class CCTVStrategy implements IDetailsStrategy {
             return;
         }
 
-        // const sensorId = uniqueIdPrefix + '_' + (sensor.publicname || 'cam').replace(/\s/g, "_");
         const sensorId = (sensor.publicname || 'cam').replace(/[^a-zA-Z0-9]/g, "_");
         const posterUrl = sensor.pic_url || null;
 
-        // Cleanup existing player for THIS specific sensor (in case of re-render)
         CCTVStrategy.destroyPlayer(sensorId);
 
         container.innerHTML = `
@@ -43,7 +160,6 @@ export class CCTVStrategy implements IDetailsStrategy {
         `;
 
         const {videoWrapper, video} = this.createVideo(sensorId, posterUrl);
-
         videoWrapper.appendChild(video);
         container.appendChild(videoWrapper);
 
@@ -54,13 +170,9 @@ export class CCTVStrategy implements IDetailsStrategy {
         return null;
     }
 
-    /**
-     * Checks all active players. If their video element is no longer in the DOM, destroy the HLS instance.
-     */
     public static garbageCollect(): void {
         CCTVStrategy.activePlayers.forEach((player, id) => {
             if (!player.videoElement.isConnected) {
-                // Element is detached from DOM -> Destroy HLS
                 player.hls.stopLoad();
                 player.hls.destroy();
                 CCTVStrategy.activePlayers.delete(id);
@@ -68,12 +180,8 @@ export class CCTVStrategy implements IDetailsStrategy {
         });
     }
 
-    /**
-     * Specific cleanup for a single ID
-     */
     public static destroyPlayer(id: string): void {
         const player = CCTVStrategy.activePlayers.get(id);
-
         if (player) {
             player.hls.stopLoad();
             player.hls.destroy();
@@ -81,15 +189,11 @@ export class CCTVStrategy implements IDetailsStrategy {
         }
     }
 
-    /**
-     * Force stop EVERYTHING (Used when closing the sidebar)
-     */
     public static stopAll(): void {
         CCTVStrategy.activePlayers.forEach((player) => {
             player.hls.stopLoad();
             player.hls.destroy();
         });
-
         CCTVStrategy.activePlayers.clear();
     }
 
@@ -114,17 +218,13 @@ export class CCTVStrategy implements IDetailsStrategy {
         if (typeof Hls !== 'undefined' && Hls.isSupported()) {
             const hls = new Hls({
                 enableWorker: true,
-                // lowLatencyMode: true,
-                // debug: true,
-                lowLatencyMode: false, // Disabled for better stability on Docker/Localhost
-                backBufferLength: 30,  // Keep memory usage low
+                lowLatencyMode: false,
+                backBufferLength: 30,
                 liveSyncDuration: 10,
                 liveMaxLatencyDuration: 30
             });
 
-            // hls.loadSource(url);
             hls.attachMedia(video);
-
             hls.on(Hls.Events.MEDIA_ATTACHED, () => {
                 hls.loadSource(url);
             });
@@ -139,16 +239,11 @@ export class CCTVStrategy implements IDetailsStrategy {
                 }
             });
 
-            // Register active player
             CCTVStrategy.activePlayers.set(sensorId, { hls, videoElement: video });
 
         } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-            // Safari Native
             video.src = url;
-            video.addEventListener('loadedmetadata', () => {
-                video.play().catch(() => {});
-            });
-            // Note: Native players don't need manual destruction, the browser handles it when DOM is removed.
+            video.addEventListener('loadedmetadata', () => { video.play().catch(() => {}); });
         }
     }
 }

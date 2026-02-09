@@ -1,10 +1,87 @@
-import {IDetailsStrategy} from "./IDetailsStrategy.js";
-import {ChartDataset, SensorProperties} from "../Types.js";
+import { IDetailsStrategy } from "./IDetailsStrategy.js";
+import { ChartDataset, GeoFeature, GeoJSONInput, SensorProperties } from "../Types.js";
+import { Utils } from "../Utils.js";
+
+declare const L: any;
 
 export class AirQualityTimeSensorStrategy implements IDetailsStrategy {
     public name = 'air_quality_time';
+    private layer: any;
+    private onPin: ((sensor: SensorProperties) => void) | undefined;
 
-    // Render just the specific content
+    initialize(map: any, onPin: (sensor: SensorProperties) => void): void {
+        this.onPin = onPin;
+        this.layer = L.layerGroup();
+    }
+
+    getLayer(): any {
+        return this.layer;
+    }
+
+    async loadData(lang: string): Promise<void> {
+        if (!this.layer) {
+            return;
+        }
+
+        this.layer.clearLayers();
+        Utils.updateTimestampUI('air-quality-time', 'Refreshing...');
+
+        try {
+            const res = await fetch(`/api/air-quality-time?lang=${lang}`);
+
+            if (!res.ok) {
+                throw new Error(`${res.status}`);
+            }
+
+            Utils.updateTimestampUI('air-quality-time', new Date(res.headers.get('X-Last-Updated') || new Date()));
+            const data = await res.json();
+            Utils.tagDataWithStrategy(data, this.name);
+            this.addGeoJsonToLayer(data, { color: "#008000" });
+        } catch (err) {
+            console.error('Air Quality load error:', err);
+        }
+    }
+
+    private addGeoJsonToLayer(inputData: GeoJSONInput, options: { color: string }) {
+        let features: GeoFeature[] = Array.isArray(inputData) ? inputData : inputData.features || [];
+
+        L.geoJSON(features, {
+            pointToLayer: (_feature: GeoFeature, latlng: any) => {
+                return L.circleMarker(latlng, {
+                    radius: 8,
+                    fillColor: options.color,
+                    color: "#fff",
+                    weight: 1,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                });
+            },
+            onEachFeature: (feature: GeoFeature, layer: any) => {
+                const props = feature.properties;
+                layer.bindPopup(`<div class="marker-popup-hover"><h4>${props.name}</h4><p>Click to Pin</p></div>`, {
+                    closeButton: false,
+                    offset: L.point(0, -10)
+                });
+
+                layer.on('mouseover', (e: any) => {
+                    e.target.openPopup();
+                    e.target.setStyle({ weight: 3, radius: 10 });
+                });
+
+                layer.on('mouseout', (e: any) => {
+                    e.target.closePopup();
+                    e.target.setStyle({ weight: 1, radius: 8 });
+                });
+
+                layer.on('click', () => {
+                    if (this.onPin) {
+                        this.onPin(props);
+                    }
+                });
+            }
+        }).addTo(this.layer);
+    }
+
     renderCardContent(
         container: HTMLElement,
         sensor: SensorProperties,
@@ -33,19 +110,15 @@ export class AirQualityTimeSensorStrategy implements IDetailsStrategy {
 
             const unit = latestData[p + '_unit'] || '';
             const uniqueId = `${uniqueIdPrefix}-${p}`;
-
             const rowDiv = document.createElement('div') as HTMLDivElement;
             rowDiv.classList.add('data-row', 'toggle-row');
-
             const textDiv = document.createElement('div') as HTMLDivElement;
             textDiv.innerHTML = `<span class="prop-label">${p}:</span> <span class="prop-value">${value} ${unit}</span>`;
-
             const checkbox = document.createElement('input') as HTMLInputElement;
             checkbox.type = 'checkbox';
             checkbox.id = uniqueId;
             checkbox.dataset.property = p;
             checkbox.dataset.unit = unit;
-            // IMPORTANT: Extract the index from prefix (e.g. sensor-0 -> 0) to help Composite strategy
             checkbox.dataset.sensorIndex = uniqueIdPrefix.split('-')[1];
             checkbox.className = 'chart-toggle-checkbox';
 
@@ -64,17 +137,14 @@ export class AirQualityTimeSensorStrategy implements IDetailsStrategy {
         container.appendChild(toggleContainer);
     }
 
-    // Extract Data
     getChartData(sensor: SensorProperties, property: string): ChartDataset | null {
         if (!sensor.data || sensor.data.length === 0) {
             return null;
         }
 
-        // Create a temporary array of objects to keep time & value linked
         const dataPoints = sensor.data.map(item => {
             const val = parseFloat(item[property]);
             const timestamp = this.parseDate(item['time']);
-
             return {
                 timestamp: timestamp,
                 isoTime: new Date(timestamp).toISOString(),
@@ -83,20 +153,14 @@ export class AirQualityTimeSensorStrategy implements IDetailsStrategy {
             };
         });
 
-        // Sort by timestamp (Oldest -> Newest)
         dataPoints.sort((a, b) => a.timestamp - b.timestamp);
         const sortedValues = dataPoints.map(d => d.value);
         const sortedTimes = dataPoints.map(d => d.isoTime);
-        // Find unit (using the last valid unit found or empty)
         const unitFound = dataPoints.find(d => d.unit)?.unit || '';
 
         return {label: property, values: sortedValues, times: sortedTimes, unit: unitFound};
     }
 
-    /**
-     * Robust date parser for Air Quality data.
-     * Handles standard ISO or custom formats.
-     */
     private parseDate(raw: string): number {
         if (!raw) {
             return 0;
@@ -108,7 +172,6 @@ export class AirQualityTimeSensorStrategy implements IDetailsStrategy {
             return time;
         }
 
-        // Try fixing common separators
         const clean = raw.replace(/_/g, ' ').replace(/\./g, '-');
         const cleanDate = new Date(clean).getTime();
 
@@ -116,6 +179,6 @@ export class AirQualityTimeSensorStrategy implements IDetailsStrategy {
             return cleanDate;
         }
 
-        return 0; // Invalid
+        return 0;
     }
 }

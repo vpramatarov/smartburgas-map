@@ -7,12 +7,27 @@ export interface IDetailsStrategy {
     name: string;
 
     /**
+     * Initializes the strategy with the map instance.
+     * Should create the Leaflet layer but NOT add it to the map yet (unless default).
+     * @param map The Leaflet map instance
+     * @param onPin Callback when a marker is clicked (to pin it to the panel)
+     */
+    initialize(map: any, onPin: (sensor: SensorProperties) => void): void;
+
+    /**
+     * Fetches data from the API and populates the layer.
+     * @param lang 'bg' or 'en'
+     */
+    loadData(lang: string): Promise<void>;
+
+    /**
+     * Returns the Leaflet layer group for this strategy.
+     * Used by the Client to toggle visibility.
+     */
+    getLayer(): any;
+
+    /**
      * Renders the specific content (stats, toggles) inside a sensor card.
-     *
-     * @param container The DOM element of the card body
-     * @param sensor The sensor data
-     * @param uniqueIdPrefix A unique prefix (e.g. "sensor-0") to ensure HTML IDs don't collide
-     * @param onChartRequest Callback when user toggles a property.
      */
     renderCardContent(
         container: HTMLElement,

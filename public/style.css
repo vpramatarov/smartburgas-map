@@ -478,3 +478,75 @@ ul li {
     object-fit: contain;
     filter: none; /* Important: without this the video won't show up! */
 }
+
+/* --- CCTV Directional Markers (SVG Version) --- */
+
+.cctv-zoom-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Scale based on the variable set by JS */
+    /* Default to 1 if the variable is missing */
+    transform: scale(var(--cctv-zoom-scale, 1));
+    /* Ensure the center point (the camera dot) stays anchored correctly */
+    transform-origin: center center;
+    /* Smooth transition when zooming */
+    transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.cctv-container {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Rotation is handled inline by JS */
+}
+
+.cctv-icon-wrapper {
+    background: transparent;
+    border: none;
+}
+
+.cctv-container {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* This element gets rotated by the inline style in JS */
+}
+
+.cctv-cone-svg {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    pointer-events: none;
+    overflow: visible;
+}
+
+.cctv-cone-svg path {
+    fill: rgba(46, 204, 113, 0.1);
+    stroke: #2ecc71; /* Solid border color */
+    stroke-width: 1.5px;
+    stroke-linejoin: round;
+    transition: fill-opacity 0.2s; /* Smooth hover effect */
+}
+
+.cctv-dot {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background-color: #2ecc71;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    z-index: 101; /* Must sit on top of the SVG lines */
+    box-shadow: 0 0 4px rgba(0,0,0,0.3);
+}

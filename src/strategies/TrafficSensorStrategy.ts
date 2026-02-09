@@ -1,8 +1,86 @@
 import { IDetailsStrategy } from './IDetailsStrategy.js';
-import { ChartDataset, SensorProperties } from '../Types.js'
+import { ChartDataset, GeoFeature, GeoJSONInput, SensorProperties } from '../Types.js';
+import { Utils } from '../Utils.js';
+
+declare const L: any;
 
 export class TrafficSensorStrategy implements IDetailsStrategy {
     public name = 'traffic_sensor';
+    private layer: any; // L.LayerGroup
+    private map: any;
+    private onPin: ((sensor: SensorProperties) => void) | undefined;
+
+    initialize(map: any, onPin: (sensor: SensorProperties) => void): void {
+        this.map = map;
+        this.onPin = onPin;
+        this.layer = L.layerGroup();
+    }
+
+    getLayer(): any {
+        return this.layer;
+    }
+
+    async loadData(lang: string): Promise<void> {
+        if (!this.layer) {
+            return;
+        }
+
+        this.layer.clearLayers();
+        Utils.updateTimestampUI('traffic-time', 'Refreshing...');
+
+        try {
+            const res = await fetch(`/api/traffic?lang=${lang}`);
+
+            if (!res.ok) {
+                throw new Error(`${res.status}`);
+            }
+
+            Utils.updateTimestampUI('traffic-time', new Date(res.headers.get('X-Last-Updated') || new Date()));
+            const data = await res.json();
+            Utils.tagDataWithStrategy(data, this.name);
+            this.addGeoJsonToLayer(data, { color: "#e74c3c" });
+        } catch (err) {
+            console.error('Traffic load error:', err);
+        }
+    }
+
+    private addGeoJsonToLayer(inputData: GeoJSONInput, options: { color: string }) {
+        let features: GeoFeature[] = Array.isArray(inputData) ? inputData : inputData.features || [];
+
+        L.geoJSON(features, {
+            pointToLayer: (_feature: GeoFeature, latlng: any) => {
+                return L.circleMarker(latlng, {
+                    radius: 8,
+                    fillColor: options.color,
+                    color: "#fff",
+                    weight: 1,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                });
+            },
+            onEachFeature: (feature: GeoFeature, layer: any) => {
+                const props = feature.properties;
+                layer.bindPopup(`<div class="marker-popup-hover"><h4>${props.name}</h4><p>Click to Pin</p></div>`, {
+                    closeButton: false,
+                    offset: L.point(0, -10)
+                });
+
+                layer.on('mouseover', (e: any) => {
+                    e.target.openPopup();
+                    e.target.setStyle({ weight: 3, radius: 10 });
+                });
+                layer.on('mouseout', (e: any) => {
+                    e.target.closePopup();
+                    e.target.setStyle({ weight: 1, radius: 8 });
+                });
+                layer.on('click', () => {
+                    if (this.onPin) {
+                        this.onPin(props);
+                    }
+                });
+            }
+        }).addTo(this.layer);
+    }
 
     renderCardContent(
         container: HTMLElement,
@@ -15,7 +93,6 @@ export class TrafficSensorStrategy implements IDetailsStrategy {
             return;
         }
 
-        // Sort to get the "latest" value in the text card
         const sortedForDisplay = [...sensor.data].sort((a, b) => {
             return this.parseTrafficDate(a.time) - this.parseTrafficDate(b.time);
         });
@@ -40,7 +117,6 @@ export class TrafficSensorStrategy implements IDetailsStrategy {
         const toggleDiv = document.createElement('div') as HTMLDivElement;
         toggleDiv.className = 'property-toggles';
 
-        // Helper fn to generate toggle HTML
         const createToggleHtml = (key: string, label: string) => {
             const uniqueId = `${uniqueIdPrefix}-${key}`;
             return `
@@ -57,7 +133,6 @@ export class TrafficSensorStrategy implements IDetailsStrategy {
 
         toggleDiv.innerHTML = createToggleHtml('car_count', 'Car Count') + createToggleHtml('car_speed', 'Car Speed');
         container.appendChild(toggleDiv);
-
         const boxes = toggleDiv.querySelectorAll('input');
         boxes.forEach(box => box.addEventListener('change', onChartRequest));
     }
@@ -78,45 +153,33 @@ export class TrafficSensorStrategy implements IDetailsStrategy {
             };
         });
 
-        // Sort by Time
         dataPoints.sort((a, b) => a.timestamp - b.timestamp);
         const sortedValues = dataPoints.map(d => d.value);
         const sortedTimes = dataPoints.map(d => d.isoTime);
-
         const label = property === 'car_speed' ? 'Speed' : 'Car Count';
         const unit = property === 'car_speed' ? 'km/h' : 'cars';
 
         return { label: label, values: sortedValues, times: sortedTimes, unit: unit };
     }
 
-    /**
-     * Strictly parses traffic dates usually in format DD_MM_YYYY_HH_mm_ss or similar.
-     * Replaces underscores and handles DD/MM order.
-     */
     private parseTrafficDate(raw: string): number {
         if (!raw) {
             return 0;
         }
 
-        // Replace underscores with spaces for easier regex
         const clean = raw.replace(/_/g, ' ').trim();
-
-        // Try Regex for DD MM YYYY HH mm ss
-        // Matches: 03 02 2025 10 30 (with optional seconds)
         const match = clean.match(/^(\d{1,2})[\s\.\-](\d{1,2})[\s\.\-](\d{4})\s+(\d{1,2})[:\s](\d{1,2})(?:[:\s](\d{1,2}))?/);
 
         if (match) {
             const day = parseInt(match[1]);
-            const month = parseInt(match[2]) - 1; // JS months are 0-indexed
+            const month = parseInt(match[2]) - 1;
             const year = parseInt(match[3]);
             const hour = parseInt(match[4]);
             const minute = parseInt(match[5]);
             const second = match[6] ? parseInt(match[6]) : 0;
-
             return new Date(year, month, day, hour, minute, second).getTime();
         }
 
-        // Fallback to standard parser if regex fails (e.g. if format is actually YYYY-MM-DD)
         return new Date(clean).getTime();
     }
 }
