@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import axios from 'axios';
 import path from 'path';
 import {
@@ -56,14 +56,55 @@ app.use(express.static(path.join(__dirname, '../public')));
 // Serve compiled client JS
 app.use('/js', express.static(path.join(__dirname, '../dist')));
 
+// --- Middleware ---
+app.use((req: Request, res: Response, next: NextFunction) => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    next();
+});
+
+
+function isSupportedLanguage(lang: any): lang is SupportedLanguage {
+    return lang === 'bg' || lang === 'en';
+}
+
+const getValidatedLang = (req: Partial<Request>): SupportedLanguage => {
+    const lang = req.query?.lang;
+    if (!lang) {
+        return 'bg';
+    }
+
+    if (isSupportedLanguage(lang)) {
+        return lang;
+    }
+
+    throw new Error(`Invalid language: ${lang}. Supported: bg, en`);
+};
+
+/**
+ * Builds query string for filters (excluding lang, which is handled by axios params)
+ */
+const buildExtraQuery = (req: Partial<Request>) => {
+    const params = new URLSearchParams();
+    const query = req.query || {};
+
+    params.append('lang', getValidatedLang(req));
+
+    if (query.start_date) {
+        params.append('start_date', query.start_date as string);
+    }
+
+    if (query.end_date) {
+        params.append('end_date', query.end_date as string);
+    }
+
+    return params.toString() ? `?${params.toString()}` : '';
+};
+
 // API Proxies
 app.get('/api/air-quality-time', async (req, res) => {
     try {
-        const lang = (req.query.lang === 'en' ? 'en' : 'bg') as SupportedLanguage;
         const target = config.airQualityTime;
-
-        // Pass language to data fetcher
-        const result = await getData(target.endpoint, lang);
+        const result = await getData(target.endpoint, req);
 
         if (!Array.isArray(result.data.features1)) {
             throw new Error("Invalid structure: 'features1' key missing.");
@@ -79,11 +120,8 @@ app.get('/api/air-quality-time', async (req, res) => {
 
 app.get('/api/traffic', async (req, res) => {
     try {
-        const lang = (req.query.lang === 'en' ? 'en' : 'bg') as SupportedLanguage;
         const target = config.traffic;
-
-        // Pass language to data fetcher
-        const result = await getData(target.endpoint, lang);
+        const result = await getData(target.endpoint, req);
 
         if (!Array.isArray(result.data.features1)) {
             throw new Error("Invalid structure: 'features1' key missing.");
@@ -99,11 +137,8 @@ app.get('/api/traffic', async (req, res) => {
 
 app.get('/api/cctv', async (req, res) => {
     try {
-        const lang = (req.query.lang === 'en' ? 'en' : 'bg') as SupportedLanguage;
         const target = config.cctv;
-
-        // Pass language to data fetcher
-        const result = await getData(target.endpoint, lang);
+        const result = await getData(target.endpoint, req);
 
         res.set('X-Last-Updated', new Date(result.lastUpdated).toISOString());
         res.json(result.data);
@@ -113,39 +148,31 @@ app.get('/api/cctv', async (req, res) => {
     }
 });
 
-// STARTUP
-prefetchAll().then(() => {
-    app.listen(config.port, () => {
-        console.log(`Server running at ${config.appUrl}:${config.port}`);
-    });
-});
+async function getData(url: string, req: Partial<Request>) {
+    const upstreamUrl = `${url}${buildExtraQuery(req)}`;
+    console.log(`[Proxy] Fetching ${upstreamUrl}`);
+    const response = await axios.get(upstreamUrl);
 
-async function getData(url: string, lang: SupportedLanguage = 'bg') {
-    // Fetch fresh data from API with lang param
-    console.log(`[Proxy] Fetching ${url} ? lang=${lang}`);
-    const response = await axios.get(url, {
-        params: { lang }
-    });
-    const data = response.data;
-
-    return {
-        data: data,
-        lastUpdated: Date.now()
-    };
+    return {data: response.data, lastUpdated: Date.now()};
 }
 
 async function prefetchAll() {
     console.log('--- Initializing Prefetch ---');
-    try {
-        let data = [];
-        for (let target of targets) {
-            data.push(getData(target.endpoint, 'bg')); // Default prefetch BG
-        }
 
-        await Promise.all(data);
+    // Mock Request Object
+    const mockReq: Partial<Request> = {
+        query: { lang: 'bg' }
+    };
+
+    try {
+        const promises = targets.map(target =>
+            getData(target.endpoint, mockReq).catch(err => console.error(`Prefetch failed for ${target.key}: ${err.message}`))
+        );
+
+        await Promise.all(promises);
         console.log('--- Prefetch Complete ---');
     } catch (error) {
-        console.error('--- Prefetch Failed ---', error);
+        console.error('--- Prefetch Critical Fail ---', error);
     }
 }
 
@@ -158,11 +185,19 @@ function createFeaturesCollectionFromApiResult(result: { data: {features1: GeoFe
         let lng: number;
         let point = feature.properties.geometry.coordinates[0].toString();
 
-        if (parseInt(point.split('.')[0]) < 26 || parseInt(point.split('.')[0]) > 28) {
+        // if (parseInt(point.split('.')[0]) < 26 || parseInt(point.split('.')[0]) > 28) {
+        //     lat = feature.properties.geometry.coordinates[1]; // may be the order is reversed?
+        //     lng = feature.properties.geometry.coordinates[0];
+        // } else {
+        //     // Burgas starts with 26,27,28
+        //     lat = feature.properties.geometry.coordinates[0];
+        //     lng = feature.properties.geometry.coordinates[1];
+        // }
+        console.log(point);
+        if (point > 40) {
             lat = feature.properties.geometry.coordinates[1]; // may be the order is reversed?
             lng = feature.properties.geometry.coordinates[0];
         } else {
-            // Burgas starts with 26,27,28
             lat = feature.properties.geometry.coordinates[0];
             lng = feature.properties.geometry.coordinates[1];
         }
@@ -186,3 +221,9 @@ function createFeaturesCollectionFromApiResult(result: { data: {features1: GeoFe
         features: features
     };
 }
+
+// Start Server
+app.listen(config.port, async () => {
+    console.log(`\n🚀 Server running at ${config.appUrl}:${config.port}`);
+    await prefetchAll();
+});

@@ -17,8 +17,9 @@ export interface IDetailsStrategy {
     /**
      * Fetches data from the API and populates the layer.
      * @param lang 'bg' or 'en'
+     * @param options Optional filter parameters (e.g. { start_date, end_date })
      */
-    loadData(lang: string): Promise<void>;
+    loadData(lang: string, options?: Record<string, any>): Promise<void>;
 
     /**
      * Returns the Leaflet layer group for this strategy.

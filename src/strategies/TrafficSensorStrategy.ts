@@ -20,8 +20,16 @@ export class TrafficSensorStrategy implements IDetailsStrategy {
         return this.layer;
     }
 
-    async loadData(lang: string): Promise<void> {
+    async loadData(lang: string, options?: { start_date?: string, end_date?: string }): Promise<void> {
         if (!this.layer) {
+            return;
+        }
+
+        const dateParams = this.resolveDateParams(options);
+
+        if (dateParams.error) {
+            alert(`Traffic Data Error: ${dateParams.error}`);
+            console.error(dateParams.error);
             return;
         }
 
@@ -29,7 +37,8 @@ export class TrafficSensorStrategy implements IDetailsStrategy {
         Utils.updateTimestampUI('traffic-time', 'Refreshing...');
 
         try {
-            const res = await fetch(`/api/traffic?lang=${lang}`);
+            const query = `?lang=${lang}&start_date=${dateParams.start}&end_date=${dateParams.end}`;
+            const res = await fetch(`/api/traffic${query}`);
 
             if (!res.ok) {
                 throw new Error(`${res.status}`);
@@ -42,44 +51,6 @@ export class TrafficSensorStrategy implements IDetailsStrategy {
         } catch (err) {
             console.error('Traffic load error:', err);
         }
-    }
-
-    private addGeoJsonToLayer(inputData: GeoJSONInput, options: { color: string }) {
-        let features: GeoFeature[] = Array.isArray(inputData) ? inputData : inputData.features || [];
-
-        L.geoJSON(features, {
-            pointToLayer: (_feature: GeoFeature, latlng: any) => {
-                return L.circleMarker(latlng, {
-                    radius: 8,
-                    fillColor: options.color,
-                    color: "#fff",
-                    weight: 1,
-                    opacity: 1,
-                    fillOpacity: 0.8
-                });
-            },
-            onEachFeature: (feature: GeoFeature, layer: any) => {
-                const props = feature.properties;
-                layer.bindPopup(`<div class="marker-popup-hover"><h4>${props.name}</h4><p>Click to Pin</p></div>`, {
-                    closeButton: false,
-                    offset: L.point(0, -10)
-                });
-
-                layer.on('mouseover', (e: any) => {
-                    e.target.openPopup();
-                    e.target.setStyle({ weight: 3, radius: 10 });
-                });
-                layer.on('mouseout', (e: any) => {
-                    e.target.closePopup();
-                    e.target.setStyle({ weight: 1, radius: 8 });
-                });
-                layer.on('click', () => {
-                    if (this.onPin) {
-                        this.onPin(props);
-                    }
-                });
-            }
-        }).addTo(this.layer);
     }
 
     renderCardContent(
@@ -160,6 +131,97 @@ export class TrafficSensorStrategy implements IDetailsStrategy {
         const unit = property === 'car_speed' ? 'km/h' : 'cars';
 
         return { label: label, values: sortedValues, times: sortedTimes, unit: unit };
+    }
+
+    private addGeoJsonToLayer(inputData: GeoJSONInput, options: { color: string }) {
+        let features: GeoFeature[] = Array.isArray(inputData) ? inputData : inputData.features || [];
+
+        L.geoJSON(features, {
+            pointToLayer: (_feature: GeoFeature, latlng: any) => {
+                return L.circleMarker(latlng, {
+                    radius: 8,
+                    fillColor: options.color,
+                    color: "#fff",
+                    weight: 1,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                });
+            },
+            onEachFeature: (feature: GeoFeature, layer: any) => {
+                const props = feature.properties;
+                layer.bindPopup(`<div class="marker-popup-hover"><h4>${props.name}</h4><p>Click to Pin</p></div>`, {
+                    closeButton: false,
+                    offset: L.point(0, -10)
+                });
+
+                layer.on('mouseover', (e: any) => {
+                    e.target.openPopup();
+                    e.target.setStyle({ weight: 3, radius: 10 });
+                });
+                layer.on('mouseout', (e: any) => {
+                    e.target.closePopup();
+                    e.target.setStyle({ weight: 1, radius: 8 });
+                });
+                layer.on('click', () => {
+                    if (this.onPin) {
+                        this.onPin(props);
+                    }
+                });
+            }
+        }).addTo(this.layer);
+    }
+
+    /**
+     * Handles default logic and validation constraints
+     */
+    private resolveDateParams(options?: { start_date?: string, end_date?: string }): { start?: string, end?: string, error?: string } {
+        const now = new Date();
+        let start: Date;
+        let end: Date;
+
+        // Default End: Current Date
+        if (options?.end_date) {
+            end = new Date(options.end_date);
+        } else {
+            end = now;
+        }
+
+        // Default Start: First day of previous month
+        if (options?.start_date) {
+            start = new Date(options.start_date);
+        } else {
+            start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        }
+
+        // Validate Valid Dates
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+            return { error: "Invalid date format provided." };
+        }
+
+        // Validate Logic: Range Check
+        const diffTime = Math.abs(end.getTime() - start.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const approximateMonths = diffDays / 30;
+
+        if (diffDays < 2) {
+            return { error: "Date range must be at least 2 days." };
+        }
+        if (approximateMonths > 6) {
+            return { error: "Date range cannot exceed 6 months." };
+        }
+        if (start > end) {
+            return { error: "Start date cannot be after end date." };
+        }
+
+        // Helper: Format to YYYY-MM-DD using LOCAL time, not UTC
+        const formatLocal = (d: Date) => {
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
+
+        return { start: formatLocal(start), end: formatLocal(end) };
     }
 
     private parseTrafficDate(raw: string): number {

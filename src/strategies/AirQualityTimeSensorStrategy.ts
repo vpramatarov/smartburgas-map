@@ -18,7 +18,7 @@ export class AirQualityTimeSensorStrategy implements IDetailsStrategy {
         return this.layer;
     }
 
-    async loadData(lang: string): Promise<void> {
+    async loadData(lang: string, options?: any): Promise<void> {
         if (!this.layer) {
             return;
         }

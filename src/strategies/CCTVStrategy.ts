@@ -23,16 +23,22 @@ export class CCTVStrategy implements IDetailsStrategy {
         // Scaling function
         const updateZoomScale = () => {
             const zoom = map.getZoom();
-            // Formula: Base scale 1.0 at Zoom 16.
-            // Scales down to 0.2 at Zoom 12.
-            // Scales up to 2.0 at Zoom 19.
-            let scale = Math.pow(1.4, zoom - 15);
 
-            // Clamp values to prevent them becoming invisible or massive
+            // Calculate Scale
+            // At zoom 15 it's 1.0. At zoom 18 it's ~2.7.
+            let scale = Math.pow(1.4, zoom - 15);
             scale = Math.max(0.1, Math.min(scale, 3.0));
 
-            // Set CSS Variable on the map container
-            map.getContainer().style.setProperty('--cctv-zoom-scale', scale.toString());
+            const container = map.getContainer();
+            container.style.setProperty('--cctv-zoom-scale', scale.toString());
+
+            // Level of Detail (LOD) Threshold
+            // If zoom is less than 15, we hide the cones to prevent clutter.
+            if (zoom < 15) {
+                container.classList.add('cctv-lod-low');
+            } else {
+                container.classList.remove('cctv-lod-low');
+            }
         };
 
         // Attach listener to map
@@ -46,7 +52,7 @@ export class CCTVStrategy implements IDetailsStrategy {
         return this.layer;
     }
 
-    async loadData(lang: string): Promise<void> {
+    async loadData(lang: string, options?: any): Promise<void> {
         if (!this.layer) {
             return;
         }
@@ -81,13 +87,16 @@ export class CCTVStrategy implements IDetailsStrategy {
                 // .cctv-zoom-wrapper wrapper reads the --cctv-zoom-scale variable.
                 // The inner .cctv-container handles the rotation.
                 const html = `
-                    <div class="cctv-zoom-wrapper">
-                        <div class="cctv-container" style="transform: rotate(${position}deg)">
-                            <svg class="cctv-cone-svg" viewBox="0 0 100 100">
-                                 <path d="M 50 50 L 30 15 A 40 40 0 0 1 70 15 Z" />
-                            </svg>
-                            <div class="cctv-dot"></div>
+                    <div class="cctv-root">
+                        <div class="cctv-cone-scaler">
+                            <div class="cctv-rotator" style="transform: rotate(${position}deg)">
+                                <svg class="cctv-cone-svg" viewBox="0 0 100 100">
+                                     <path d="M 50 50 L 30 15 A 40 40 0 0 1 70 15 Z" />
+                                </svg>
+                            </div>
                         </div>
+                        
+                        <div class="cctv-dot"></div>
                     </div>
                 `;
 
@@ -95,8 +104,8 @@ export class CCTVStrategy implements IDetailsStrategy {
                     icon: L.divIcon({
                         className: 'cctv-icon-wrapper',
                         html: html,
-                        iconSize: [100, 100],
-                        iconAnchor: [50, 50]
+                        iconSize: [20, 20],
+                        iconAnchor: [10, 10] // Center it ([width/2, height/2])
                     })
                 });
             },
