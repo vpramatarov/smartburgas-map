@@ -159,6 +159,7 @@ async function getData(url: string, req: Partial<Request>) {
 async function prefetchAll() {
     console.log('--- Initializing Prefetch ---');
 
+    // @todo: need to find better way to improve performance for traffic endpoint.
     const d = new Date()
     const currentDate = d.toISOString().split('T')[0];
     const yesterday = new Date(d).setDate(d.getDate() - 1);
