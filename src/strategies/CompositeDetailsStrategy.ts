@@ -18,14 +18,22 @@ export class CompositeDetailsStrategy {
     }
 
     /**
-     * Main entry point called by Client.ts
+     * Renders the Side Panel content
+     * @param container DOM element for the list of cards
+     * @param chartContainer DOM element for the chart
+     * @param items All items to display (Pinned + Preview)
+     * @param pinnedItems Just the pinned items (to determine icon state)
+     * @param onTogglePin Callback
+     * @param onClose Callback
      */
     render(
-        contentContainer: HTMLElement,
+        container: HTMLElement,
         chartContainer: HTMLElement,
-        sensors: SensorProperties[],
-        onRemove: (s: SensorProperties) => void
-    ): void {
+        items: SensorProperties[],
+        pinnedItems: SensorProperties[],
+        onTogglePin: (s: SensorProperties) => void,
+        onClose: (s: SensorProperties) => void
+    ) {
         ChartRenderer.clear(chartContainer.id);
         const panel = document.getElementById('info-panel') as HTMLElement;
         const btnFullChart = document.getElementById('btn-full-chart') as HTMLButtonElement;
@@ -36,10 +44,10 @@ export class CompositeDetailsStrategy {
             return;
         }
 
-        contentContainer.innerHTML = '';
+        container.innerHTML = '';
 
-        if (sensors.length === 0) {
-            contentContainer.innerHTML = '<p style="text-align:center; color:#666; margin-top:20px;">No sensors pinned.<br>Click a map marker to add.</p>';
+        if (items.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#666; margin-top:20px;">No sensors pinned.<br>Click a map marker to add.</p>';
             chartContainer.style.display = 'none';
             btnCsv?.classList.add('hidden');
             btnFullChart?.classList.add('hidden');
@@ -48,55 +56,65 @@ export class CompositeDetailsStrategy {
         }
 
         // Do not show button if only cctv strategies are pinned.
-        if (sensors.filter(s => s.strategy === 'cctv').length === sensors.length) {
+        if (items.filter(s => s.strategy === 'cctv').length === items.length) {
             btnCsv?.classList.add('hidden');
         } else {
             btnCsv?.classList.remove('hidden');
         }
 
-        sensors.forEach((sensor, index) => {
-            const strategyName = sensor.strategy || 'default';
+        items.forEach((sensor, index) => {
+            const strategyName = sensor.strategy || '';
             const strategy = this.strategies.get(strategyName);
+            if (!strategy) {
+                return;
+            }
 
-            // Create Card Frame
+            const isPinned = pinnedItems.some(p => this.idsMatch(p, sensor));
+            const uniqueIdPrefix = `sensor-${index}`;
+
             const card = document.createElement('div') as HTMLDivElement;
-            card.className = 'sensor-card';
+            card.className = `sensor-card ${isPinned ? 'card-pinned' : 'card-preview'}`;
 
-            // Header
             const header = document.createElement('div') as HTMLDivElement;
-            header.className = 'sensor-header';
-            header.innerHTML = `<h3>${sensor.name || 'Sensor'} <small style="font-weight:normal; font-size:10px; color:#888">(${strategyName})</small></h3>`;
+            header.className = 'sensor-card-header';
 
-            const removeBtn = document.createElement('button') as HTMLButtonElement;
-            removeBtn.className = 'remove-sensor-btn';
-            removeBtn.innerHTML = '&times;';
-            removeBtn.onclick = () => onRemove(sensor);
-            header.appendChild(removeBtn);
+            const title = document.createElement('h3');
+            title.innerText = sensor.name || sensor.publicname || 'Unknown Sensor';
+
+            const actions = document.createElement('div') as HTMLDivElement;
+            actions.className = 'card-actions';
+
+            const btnPin = document.createElement('button') as HTMLButtonElement;
+            btnPin.className = isPinned ? 'btn-icon active' : 'btn-icon';
+            btnPin.title = isPinned ? "Unpin location" : "Pin location";
+            btnPin.innerHTML = '<span class="icon-pin"></span>';
+            btnPin.onclick = () => onTogglePin(sensor);
+
+            const btnClose = document.createElement('button') as HTMLButtonElement;
+            btnClose.className = 'btn-icon';
+            btnClose.innerHTML = '<span class="icon-cancel"></span>';
+            btnClose.onclick = () => onClose(sensor);
+
+            actions.appendChild(btnPin);
+            actions.appendChild(btnClose);
+            header.appendChild(title);
+            header.appendChild(actions);
             card.appendChild(header);
 
             const body = document.createElement('div') as HTMLDivElement;
+            body.className = 'sensor-card-body';
 
-            if (strategy) {
-                // Delegate content rendering to the specific strategy
-                strategy.renderCardContent(
-                    body,
-                    sensor,
-                    `sensor-${index}`,
-                    () => this.updateChart(chartContainer, sensors, btnFullChart, noChartData)
-                );
-            } else {
-                body.innerHTML = '<p>Unknown data type.</p>';
-            }
+            // Delegate content rendering to the specific strategy
+            strategy.renderCardContent(body, sensor, uniqueIdPrefix, () => {
+                this.updateChart(chartContainer, items, btnFullChart, noChartData);
+            });
 
             card.appendChild(body);
-            contentContainer.appendChild(card);
+            container.appendChild(card);
         });
 
-        // panel.classList.remove('off-screen');
-        panel.classList.remove('hidden');
-
-        // Re-draw chart if checkboxes were checked (state persistence handled by DOM existence here)
-        this.updateChart(chartContainer, sensors, btnFullChart, noChartData);
+        // Render Chart (Combined logic)
+        this.updateChart(chartContainer, items, btnFullChart, noChartData);
     }
 
     private updateChart(
@@ -172,7 +190,6 @@ export class CompositeDetailsStrategy {
         }
 
         container.innerHTML = '';
-
         const datasets: ChartDataset[] = [];
 
         chartConfig.forEach(cfg => {
@@ -194,5 +211,11 @@ export class CompositeDetailsStrategy {
         } else {
             container.innerHTML = '<p>No data</p>';
         }
+    }
+
+    private idsMatch(a: SensorProperties, b: SensorProperties): boolean {
+        const idA = a.id || a.name || a.publicname;
+        const idB = b.id || b.name || b.publicname;
+        return idA === idB;
     }
 }

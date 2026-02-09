@@ -159,9 +159,13 @@ async function getData(url: string, req: Partial<Request>) {
 async function prefetchAll() {
     console.log('--- Initializing Prefetch ---');
 
+    const d = new Date()
+    const currentDate = d.toISOString().split('T')[0];
+    const yesterday = new Date(d).setDate(d.getDate() - 1);
+    const yesterdayFormated = new Date(yesterday).toISOString().split('T')[0];
     // Mock Request Object
     const mockReq: Partial<Request> = {
-        query: { lang: 'bg' }
+        query: { lang: 'bg', start_date: yesterdayFormated, end_date: currentDate }
     };
 
     try {
@@ -193,7 +197,7 @@ function createFeaturesCollectionFromApiResult(result: { data: {features1: GeoFe
         //     lat = feature.properties.geometry.coordinates[0];
         //     lng = feature.properties.geometry.coordinates[1];
         // }
-        console.log(point);
+
         if (point > 40) {
             lat = feature.properties.geometry.coordinates[1]; // may be the order is reversed?
             lng = feature.properties.geometry.coordinates[0];

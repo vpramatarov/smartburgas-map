@@ -69,6 +69,8 @@ export class TrafficSensorStrategy implements IDetailsStrategy {
         });
         const lastItem = sortedForDisplay[sortedForDisplay.length - 1];
 
+        // const lastItem = sensor.data[sensor.data.length - 1];
+
         if (lastItem) {
             container.innerHTML = `
                 <div class="data-row">
@@ -213,15 +215,7 @@ export class TrafficSensorStrategy implements IDetailsStrategy {
             return { error: "Start date cannot be after end date." };
         }
 
-        // Helper: Format to YYYY-MM-DD using LOCAL time, not UTC
-        const formatLocal = (d: Date) => {
-            const year = d.getFullYear();
-            const month = String(d.getMonth() + 1).padStart(2, '0');
-            const day = String(d.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        };
-
-        return { start: formatLocal(start), end: formatLocal(end) };
+        return { start: Utils.formatDateToLocal(start), end: Utils.formatDateToLocal(end) };
     }
 
     private parseTrafficDate(raw: string): number {

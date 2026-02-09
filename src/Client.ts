@@ -12,6 +12,7 @@ class SmartMap {
     private compositeStrategy: CompositeDetailsStrategy;
     private map: any;
     private pinnedSensors: SensorProperties[] = [];
+    private previewSensor: SensorProperties | null = null;
     private currentLang: SupportedLanguage = 'bg';
 
     constructor() {
@@ -33,7 +34,8 @@ class SmartMap {
 
         this.compositeStrategy.getStrategies().forEach(strategy => {
             // Initialize: Strategy creates its layer and attaches click listeners
-            strategy.initialize(this.map, (sensor) => this.pinSensor(sensor));
+            // strategy.initialize(this.map, (sensor) => this.pinSensor(sensor));
+            strategy.initialize(this.map, (sensor) => this.onSensorSelect(sensor));
             strategy.loadData(this.currentLang);
         });
 
@@ -106,12 +108,18 @@ class SmartMap {
 
         // --- Chart Modal Logic ---
         btnFullChart?.addEventListener('click', () => {
-            if (this.pinnedSensors.length > 0 && modal) {
+            if ((this.previewSensor || this.pinnedSensors.length > 0) && modal) {
+                const data = [...this.pinnedSensors];
+
+                if (this.previewSensor) {
+                    data.push(this.previewSensor);
+                }
+
                 modal.classList.remove('hidden');
                 const configRaw = btnFullChart.dataset.chartConfig || '[]';
                 try {
                     const config = JSON.parse(configRaw);
-                    this.compositeStrategy.renderFull(config, this.pinnedSensors);
+                    this.compositeStrategy.renderFull(config, data);
                 } catch (e) {
                     console.error("Failed to parse chart config", e);
                 }
@@ -174,33 +182,106 @@ class SmartMap {
         });
     }
 
-    private pinSensor(sensor: SensorProperties) {
-        const exists = this.pinnedSensors.find(s => {
-            if (s.id && sensor.id) return s.id === sensor.id;
-            const sName = s.name || s.publicname;
-            const sensorName = sensor.name || sensor.publicname;
-            return sName === sensorName;
-        });
+    /**
+     * Called when a user clicks a marker on the map.
+     * Sets the sensor as 'Preview' unless it is already pinned.
+     */
+    private onSensorSelect(sensor: SensorProperties) {
+        const isAlreadyPinned = this.pinnedSensors.some(s => this.getSensorId(s) === this.getSensorId(sensor));
 
-        if (!exists) {
-            this.pinnedSensors.push(sensor);
+        if (isAlreadyPinned) {
+            // @todo: check why fails for traffic to pin different locations
+            console.log('Sensor already pinned');
+            return;
         }
+
+        this.previewSensor = sensor;
         this.refreshPanel();
     }
 
-    private removeSensor(sensor: SensorProperties) {
-        this.pinnedSensors = this.pinnedSensors.filter(s => s !== sensor);
-        CCTVStrategy.stopAll();
+    /**
+     * Called when user clicks the "Pin" icon in the panel.
+     */
+    private togglePin(sensor: SensorProperties) {
+        const id = this.getSensorId(sensor);
+        const existingIndex = this.pinnedSensors.findIndex(s => this.getSensorId(s) === id);
+
+        if (existingIndex >= 0) {
+            // UNPIN: Remove from list
+            this.pinnedSensors.splice(existingIndex, 1);
+            this.previewSensor = sensor;
+        } else {
+            // PIN: Move from Preview to Pinned
+            this.pinnedSensors.push(sensor);
+            if (this.previewSensor && this.getSensorId(this.previewSensor) === id) {
+                this.previewSensor = null; // Clear preview slot
+            }
+        }
+
+        // Clear CCTV if no sensors left
+        if (this.pinnedSensors.length === 0 && !this.previewSensor) {
+            CCTVStrategy.stopAll();
+        }
+
+        this.refreshPanel();
+    }
+
+    /**
+     * Called when user clicks "X" (Close).
+     */
+    private closeSensor(sensor: SensorProperties) {
+        const id = this.getSensorId(sensor);
+
+        // Remove from Pinned
+        this.pinnedSensors = this.pinnedSensors.filter(s => this.getSensorId(s) !== id);
+
+        // Remove from Preview
+        if (this.previewSensor && this.getSensorId(this.previewSensor) === id) {
+            this.previewSensor = null;
+        }
+
+        if (this.pinnedSensors.length === 0 && !this.previewSensor) {
+            CCTVStrategy.stopAll();
+        }
+
         this.refreshPanel();
     }
 
     private refreshPanel() {
         const content = document.getElementById('info-content') as HTMLElement;
         const chart = document.getElementById('chart-container') as HTMLElement;
+        const panel = document.getElementById('info-panel');
 
-        if (content && chart) {
-            this.compositeStrategy.render(content, chart, this.pinnedSensors, (s) => this.removeSensor(s));
+        // Combine lists for rendering
+        const itemsToShow = [...this.pinnedSensors];
+        if (this.previewSensor) {
+            itemsToShow.push(this.previewSensor);
         }
+
+        if (itemsToShow.length > 0) {
+            panel?.classList.remove('hidden');
+            this.compositeStrategy.render(
+                content,
+                chart,
+                itemsToShow,
+                this.pinnedSensors, // Pass pinned list to know which icon to show
+                (s) => this.togglePin(s),
+                (s) => this.closeSensor(s)
+            );
+        } else {
+            panel?.classList.add('hidden');
+
+            if(content) {
+                content.innerHTML = '';
+            }
+
+            ChartRenderer.clear('chart-container');
+        }
+    }
+
+    // Helper to get a unique ID regardless of data source quirks
+    private getSensorId(s: SensorProperties): string {
+        return s.id || s.name || s.publicname || 'unknown';
     }
 }
 

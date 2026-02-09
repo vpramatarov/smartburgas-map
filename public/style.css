@@ -437,23 +437,68 @@ ul li {
     color: #333;
 }
 
-.remove-sensor-btn {
+.sensor-card.card-pinned {
+    border-left: 4px solid #3498db;
+}
+
+.sensor-card.card-preview {
+    border-left: 4px solid #95a5a6;
+    opacity: 0.95;
+}
+
+.sensor-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #eee;
+}
+
+.sensor-card-header h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    max-width: 70%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.card-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.btn-icon {
     background: none;
     border: none;
-    font-size: 18px;
-    color: #999;
     cursor: pointer;
-    line-height: 1;
-    padding: 0 5px;
+    padding: 4px;
+    border-radius: 4px;
+    color: #666;
+    transition: background 0.2s;
 }
 
-.remove-sensor-btn:hover {
-    color: #e74c3c;
+.btn-icon:hover {
+    background: #e9ecef;
+    color: #333;
 }
 
-.sensor-card .toggle-row {
-    padding: 4px 0;
+/* Active Pin State */
+.btn-icon.active {
+    color: #3498db; /* Blue pin when active */
 }
+
+.sensor-card-body {
+    padding: 12px;
+}
+
+/* Icons - If using Fontello, ensure you map these.
+   If using raw CSS shapes for testing, add: */
+.icon-pin::before { content: "\e800"; } /* Example Code */
+.icon-pin-outline::before { content: "\e801"; } /* Example Code */
 
 /*------ VIDEO PLAYER -------*/
 
