@@ -14,12 +14,20 @@ export class Utils {
             data.forEach(f => {
                 if (f.properties) {
                     f.properties.strategy = strategyName;
+
+                    if (f.properties.name?.length === 0) {
+                        f.properties.name = strategyName + '_' + Math.random().toString(36).substring(2, 9);
+                    }
                 }
             });
         } else {
             data.features.forEach(f => {
                 if (f.properties) {
                     f.properties.strategy = strategyName;
+
+                    if (f.properties.name?.length === 0) {
+                        f.properties.name = strategyName + '_' + Math.random().toString(36).substring(2, 9);
+                    }
                 }
             });
         }

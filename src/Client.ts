@@ -190,7 +190,6 @@ class SmartMap {
         const isAlreadyPinned = this.pinnedSensors.some(s => this.getSensorId(s) === this.getSensorId(sensor));
 
         if (isAlreadyPinned) {
-            // @todo: check why fails for traffic to pin different locations
             console.log('Sensor already pinned');
             return;
         }
