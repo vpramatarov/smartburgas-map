@@ -11,6 +11,7 @@ export type Config = {
     airQualityTime: Target;
     traffic: Target;
     cctv: Target;
+    billingMachines: Target;
 }
 
 export interface Geometry {

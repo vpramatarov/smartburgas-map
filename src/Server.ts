@@ -26,12 +26,18 @@ const cctvTarget: Target = {
     endpoint: process.env.CCTV_URL as string
 }
 
+const billingTarget: Target = {
+    key: 'billingMachines',
+    endpoint: process.env.BILLING_MACHINES_URL as string
+};
+
 const config: Config = {
     appUrl: process.env.URL || 'http://localhost',
     port: parseInt(process.env.PORT as string),
     airQualityTime: airQualityTimeTarget,
     traffic: trafficTarget,
-    cctv: cctvTarget
+    cctv: cctvTarget,
+    billingMachines: billingTarget
 }
 
 const targets: Target[] = [];
@@ -103,8 +109,7 @@ const buildExtraQuery = (req: Partial<Request>) => {
 // API Proxies
 app.get('/api/air-quality-time', async (req, res) => {
     try {
-        const target = config.airQualityTime;
-        const result = await getData(target.endpoint, req);
+        const result = await getData(config.airQualityTime.endpoint, req);
 
         if (!Array.isArray(result.data.features1)) {
             throw new Error("Invalid structure: 'features1' key missing.");
@@ -120,8 +125,7 @@ app.get('/api/air-quality-time', async (req, res) => {
 
 app.get('/api/traffic', async (req, res) => {
     try {
-        const target = config.traffic;
-        const result = await getData(target.endpoint, req);
+        const result = await getData(config.traffic.endpoint, req);
 
         if (!Array.isArray(result.data.features1)) {
             throw new Error("Invalid structure: 'features1' key missing.");
@@ -137,14 +141,25 @@ app.get('/api/traffic', async (req, res) => {
 
 app.get('/api/cctv', async (req, res) => {
     try {
-        const target = config.cctv;
-        const result = await getData(target.endpoint, req);
+        const result = await getData(config.cctv.endpoint, req);
 
         res.set('X-Last-Updated', new Date(result.lastUpdated).toISOString());
         res.json(result.data);
     } catch (error) {
         console.error('Error fetching cctv:', error);
         res.status(500).json({ error: 'Failed to fetch cctv data' });
+    }
+});
+
+app.get('/api/billing-machines', async (req, res) => {
+    try {
+        const result = await getData(config.billingMachines.endpoint, req);
+
+        res.set('X-Last-Updated', new Date(result.lastUpdated).toISOString());
+        res.json(result.data);
+    } catch (error) {
+        console.error('Error fetching billing machines:', error);
+        res.status(500).json({ error: 'Failed to fetch billing data' });
     }
 });
 

@@ -2,6 +2,7 @@ import { CsvExporter } from './CsvExporter.js';
 import { TrafficSensorStrategy } from './strategies/TrafficSensorStrategy.js';
 import { AirQualityTimeSensorStrategy } from "./strategies/AirQualityTimeSensorStrategy.js";
 import { CompositeDetailsStrategy } from "./strategies/CompositeDetailsStrategy.js";
+import { BillingMachineStrategy } from './strategies/BillingMachineStrategy.js';
 import { SensorProperties, SupportedLanguage } from './Types.js'
 import { ChartRenderer } from './components/ChartRenderer.js';
 import { CCTVStrategy } from "./strategies/CCTVStrategy.js";
@@ -19,7 +20,8 @@ class SmartMap {
         const strategies = [
             new AirQualityTimeSensorStrategy(),
             new TrafficSensorStrategy(),
-            new CCTVStrategy()
+            new CCTVStrategy(),
+            new BillingMachineStrategy()
         ];
         this.compositeStrategy = new CompositeDetailsStrategy(strategies);
 
@@ -33,8 +35,6 @@ class SmartMap {
         this.renderLanguageSwitcher();
 
         this.compositeStrategy.getStrategies().forEach(strategy => {
-            // Initialize: Strategy creates its layer and attaches click listeners
-            // strategy.initialize(this.map, (sensor) => this.pinSensor(sensor));
             strategy.initialize(this.map, (sensor) => this.onSensorSelect(sensor));
             strategy.loadData(this.currentLang);
         });
@@ -44,6 +44,7 @@ class SmartMap {
         this.setInitialToggle('toggle-air-quality-time');
         this.setInitialToggle('toggle-traffic');
         this.setInitialToggle('toggle-cctv');
+        this.setInitialToggle('toggle-billing-machines');
     }
 
     private initMap(): void {
@@ -143,7 +144,8 @@ class SmartMap {
         const toggleMap: { [key: string]: string } = {
             'toggle-air-quality-time': 'air_quality_time',
             'toggle-traffic': 'traffic_sensor',
-            'toggle-cctv': 'cctv'
+            'toggle-cctv': 'cctv',
+            'toggle-billing-machines': 'billing_machine'
         };
 
         for (const [elementId, strategyName] of Object.entries(toggleMap)) {
