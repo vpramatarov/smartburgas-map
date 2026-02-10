@@ -50,7 +50,7 @@ export class BillingMachineStrategy implements IDetailsStrategy {
         L.geoJSON(features, {
             pointToLayer: (_feature: GeoFeature, latlng: any) => {
                 return L.circleMarker(latlng, {
-                    radius: 6,
+                    radius: 8,
                     fillColor: options.color,
                     color: "#fff",
                     weight: 1,

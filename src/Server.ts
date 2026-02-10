@@ -31,13 +31,19 @@ const billingTarget: Target = {
     endpoint: process.env.BILLING_MACHINES_URL as string
 };
 
+const evTarget: Target = {
+    key: 'evStations',
+    endpoint: process.env.EV_URL
+};
+
 const config: Config = {
     appUrl: process.env.URL || 'http://localhost',
     port: parseInt(process.env.PORT as string),
     airQualityTime: airQualityTimeTarget,
     traffic: trafficTarget,
     cctv: cctvTarget,
-    billingMachines: billingTarget
+    billingMachines: billingTarget,
+    evStations: evTarget
 }
 
 const targets: Target[] = [];
@@ -160,6 +166,18 @@ app.get('/api/billing-machines', async (req, res) => {
     } catch (error) {
         console.error('Error fetching billing machines:', error);
         res.status(500).json({ error: 'Failed to fetch billing data' });
+    }
+});
+
+app.get('/api/ev-stations', async (req, res) => {
+    try {
+        const result = await getData(config.evStations.endpoint, req);
+        
+        res.set('X-Last-Updated', new Date(result.lastUpdated).toISOString());
+        res.json(result.data);
+    } catch (error) {
+        console.error('Error fetching EV stations:', error);
+        res.status(500).json({ error: 'Failed to fetch EV data' });
     }
 });
 

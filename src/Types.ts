@@ -12,6 +12,7 @@ export type Config = {
     traffic: Target;
     cctv: Target;
     billingMachines: Target;
+    evStations: Target;
 }
 
 export interface Geometry {
