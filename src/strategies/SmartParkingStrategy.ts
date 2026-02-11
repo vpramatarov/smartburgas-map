@@ -1,0 +1,192 @@
+// src/strategies/SmartParkingStrategy.ts
+import { IDetailsStrategy } from './IDetailsStrategy.js';
+import { ChartDataset, GeoFeature, GeoJSONInput, SensorProperties } from '../Types.js';
+import { Utils } from '../Utils.js';
+
+declare const L: any;
+
+export class SmartParkingStrategy implements IDetailsStrategy {
+    public name = 'smart_parking';
+    private layer: any;
+    private onPin: ((sensor: SensorProperties) => void) | undefined;
+
+    initialize(map: any, onPin: (sensor: SensorProperties) => void): void {
+        this.onPin = onPin;
+        this.layer = L.layerGroup();
+    }
+
+    getLayer(): any {
+        return this.layer;
+    }
+
+    async loadData(lang: string): Promise<void> {
+        if (!this.layer) {
+            return;
+        }
+
+        this.layer.clearLayers();
+        Utils.updateTimestampUI('smart-car-parking-time', 'Refreshing...');
+
+        try {
+            const res = await fetch(`/api/smart-parking?lang=${lang}`);
+            if (!res.ok) {
+                throw new Error(`${res.status}`);
+            }
+
+            Utils.updateTimestampUI('smart-car-parking-time', new Date(res.headers.get('X-Last-Updated') || new Date()));
+
+            const data = await res.json();
+            Utils.tagDataWithStrategy(data, this.name);
+
+            this.addGeoJsonToLayer(data, { color: "#2c3e50" });
+        } catch (err) {
+            console.error('Parking load error:', err);
+        }
+    }
+
+    private addGeoJsonToLayer(inputData: GeoJSONInput, options: { color: string }) {
+        let features: GeoFeature[] = Array.isArray(inputData) ? inputData : inputData.features || [];
+
+        L.geoJSON(features, {
+            pointToLayer: (_feature: GeoFeature, latlng: any) => {
+                return L.circleMarker(latlng, {
+                    radius: 8,
+                    fillColor: options.color,
+                    color: "#fff",
+                    weight: 1,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                });
+            },
+            onEachFeature: (feature: GeoFeature, layer: any) => {
+                const props = feature.properties;
+                const popupContent = `
+                    <div class="marker-popup-hover">
+                        <h4>${props.name}</h4>
+                        <p>Free: <strong>${props.additional_info.total_free_lots}</strong> / ${props.additional_info.total_lots}</p>
+                    </div>`;
+
+                layer.bindPopup(popupContent, {
+                    closeButton: false,
+                    offset: L.point(0, -5)
+                });
+
+                layer.on('mouseover', (e: any) => {
+                    e.target.openPopup();
+                    e.target.setStyle({ weight: 3, radius: 10 });
+                });
+
+                layer.on('mouseout', (e: any) => {
+                    e.target.closePopup();
+                    e.target.setStyle({ weight: 1, radius: 8 });
+                });
+
+                layer.on('click', () => {
+                    if (this.onPin) {
+                        this.onPin(props);
+                    }
+                });
+            }
+        }).addTo(this.layer);
+    }
+
+    renderCardContent(
+        container: HTMLElement,
+        sensor: SensorProperties,
+        uniqueIdPrefix: string,
+        onChartRequest: () => void
+    ): void {
+
+        if (sensor.additional_info.image) {
+            const img = document.createElement('img') as HTMLImageElement;
+            img.src = sensor.additional_info.image;
+            img.style.width = '100%';
+            img.style.borderRadius = '4px';
+            img.style.marginBottom = '10px';
+            if (sensor.name) {
+                img.alt = sensor.name
+            }
+            img.onerror = () => { img.style.display = 'none'; };
+            container.appendChild(img);
+        }
+
+        // Statistics
+        const free = parseInt(sensor.additional_info.total_free_lots || '0');
+        const total = parseInt(sensor.additional_info.total_lots || '0');
+        // Calculate usage if load is missing or weird
+        const usage = total > 0 ? Math.round(((total - free) / total) * 100) : 0;
+
+        // Progress bar for occupancy
+        const stats = document.createElement('div') as HTMLDivElement;
+        stats.innerHTML = `
+            <div class="data-row">
+                <span class="prop-label">Capacity:</span> 
+                <span class="prop-value">${free} free / ${total} total</span>
+            </div>
+            <div class="data-row">
+                 <div style="background:#eee; height:10px; width:100%; border-radius:5px; overflow:hidden;">
+                    <div style="background:${this.getUsageColor(usage)}; height:100%; width:${usage}%"></div>
+                 </div>
+                 <div style="text-align:right; font-size:11px; color:#666;">${usage}% Occupied</div>
+            </div>
+        `;
+        container.appendChild(stats);
+
+        if (sensor.description) {
+            const desc = document.createElement('div') as HTMLDivElement;
+            desc.className = 'sensor-description';
+            desc.style.marginTop = '10px';
+            desc.style.fontSize = '12px';
+            desc.innerHTML = sensor.description;
+            container.appendChild(desc);
+        }
+
+        if (sensor.data && sensor.data.length > 0) {
+            const toggleDiv = document.createElement('div') as HTMLDivElement;
+            toggleDiv.className = 'property-toggles';
+
+            const uniqueId = `${uniqueIdPrefix}-free_lots`;
+            toggleDiv.innerHTML = `
+                <div class="data-row toggle-row">
+                    <span class="prop-label">Free Spots History</span>
+                    <input type="checkbox" id="${uniqueId}" 
+                           data-property="free_lots" 
+                           data-sensor-index="${uniqueIdPrefix.split('-')[1]}" 
+                           class="chart-toggle-checkbox" />
+                    <label for="${uniqueId}" class="chart-toggle-btn"><span class="icon-chart-bar"></span></label>
+                </div>
+            `;
+
+            container.appendChild(toggleDiv);
+            toggleDiv.querySelector('input')?.addEventListener('change', onChartRequest);
+        }
+    }
+
+    private getUsageColor(percentage: number): string {
+        if (percentage < 50) {
+            return '#27ae60'; // Green (Plenty of space)
+        }
+
+        if (percentage < 85) {
+            return '#f39c12'; // Orange (Getting full)
+        }
+
+        return '#c0392b'; // Red (Full)
+    }
+
+    getChartData(sensor: SensorProperties, property: string): ChartDataset | null {
+        if (property !== 'free_lots') {
+            return null;
+        }
+
+        if (!sensor.data || sensor.data.length === 0) {
+            return null;
+        }
+
+        const points = [...sensor.data].sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
+        const values = points.map(d => parseInt(d.free_lots));
+        const times = points.map(d => d.time);
+
+        return {label: "Free Spaces", values: values, times: times, unit: "spots"};
+    }
+}
