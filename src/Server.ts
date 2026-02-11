@@ -1,11 +1,11 @@
-import express, { Request, Response, NextFunction } from 'express';
+import express, {NextFunction, Request, Response} from 'express';
 import axios from 'axios';
 import path from 'path';
-import {
-    Config, GeoFeature, GeoFeatureCollection, Target, SupportedLanguage
-} from './Types.js'
+import {Config, GeoFeature, GeoFeatureCollection, SupportedLanguage, Target} from './Types.js'
 
-import { fileURLToPath } from 'url';
+import {fileURLToPath} from 'url';
+import {Utils} from "./Utils.js";
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -33,7 +33,12 @@ const billingTarget: Target = {
 
 const evTarget: Target = {
     key: 'evStations',
-    endpoint: process.env.EV_URL
+    endpoint: process.env.EV_URL as string
+};
+
+const wasteTarget: Target = {
+    key: 'wasteCentres',
+    endpoint: process.env.WASTE_URL as string
 };
 
 const config: Config = {
@@ -43,7 +48,8 @@ const config: Config = {
     traffic: trafficTarget,
     cctv: cctvTarget,
     billingMachines: billingTarget,
-    evStations: evTarget
+    evStations: evTarget,
+    wasteCentres: wasteTarget
 }
 
 const targets: Target[] = [];
@@ -122,7 +128,7 @@ app.get('/api/air-quality-time', async (req, res) => {
         }
 
         res.set('X-Last-Updated', new Date(result.lastUpdated).toISOString());
-        res.json(createFeaturesCollectionFromApiResult(result));
+        res.json(createFeaturesCollectionFromApiResult(result, config.airQualityTime.key));
     } catch (error) {
         console.error('Error fetching air quality:', error);
         res.status(500).json({ error: 'Failed to fetch air quality data' });
@@ -138,7 +144,7 @@ app.get('/api/traffic', async (req, res) => {
         }
 
         res.set('X-Last-Updated', new Date(result.lastUpdated).toISOString());
-        res.json(createFeaturesCollectionFromApiResult(result));
+        res.json(createFeaturesCollectionFromApiResult(result, config.traffic.key));
     } catch (error) {
         console.error('Error fetching traffic:', error);
         res.status(500).json({ error: 'Failed to fetch traffic data' });
@@ -172,12 +178,24 @@ app.get('/api/billing-machines', async (req, res) => {
 app.get('/api/ev-stations', async (req, res) => {
     try {
         const result = await getData(config.evStations.endpoint, req);
-        
+
         res.set('X-Last-Updated', new Date(result.lastUpdated).toISOString());
         res.json(result.data);
     } catch (error) {
         console.error('Error fetching EV stations:', error);
         res.status(500).json({ error: 'Failed to fetch EV data' });
+    }
+});
+
+app.get('/api/waste-mobile', async (req, res) => {
+    try {
+        const result = await getData(config.wasteCentres.endpoint, req);
+
+        res.set('X-Last-Updated', new Date(result.lastUpdated).toISOString());
+        res.json(createFeaturesCollectionFromApiResult(result, config.wasteCentres.key));
+    } catch (error) {
+        console.error('Error fetching waste data:', error);
+        res.status(500).json({ error: 'Failed to fetch waste data' });
     }
 });
 
@@ -191,21 +209,22 @@ async function getData(url: string, req: Partial<Request>) {
 
 async function prefetchAll() {
     console.log('--- Initializing Prefetch ---');
-
-    // @todo: need to find better way to improve performance for traffic endpoint.
-    const d = new Date()
-    const currentDate = d.toISOString().split('T')[0];
-    const yesterday = new Date(d).setDate(d.getDate() - 1);
-    const yesterdayFormated = new Date(yesterday).toISOString().split('T')[0];
-    // Mock Request Object
-    const mockReq: Partial<Request> = {
-        query: { lang: 'bg', start_date: yesterdayFormated, end_date: currentDate }
-    };
-
     try {
-        const promises = targets.map(target =>
+        const promises = targets.map(target => {
+            let mockReq: Partial<Request> = {
+                query: { lang: 'bg' }
+            };
+
+            if (target.key === 'traffic') {
+                const today = new Date()
+                const yesterday = new Date(today).setDate(today.getDate() - 1);
+                mockReq = {
+                    query: { lang: 'bg', start_date: new Date(yesterday).toISOString().split('T')[0], end_date: today.toISOString().split('T')[0] }
+                };
+            }
+
             getData(target.endpoint, mockReq).catch(err => console.error(`Prefetch failed for ${target.key}: ${err.message}`))
-        );
+        });
 
         await Promise.all(promises);
         console.log('--- Prefetch Complete ---');
@@ -214,7 +233,7 @@ async function prefetchAll() {
     }
 }
 
-function createFeaturesCollectionFromApiResult(result: { data: {features1: GeoFeature[]}; }): GeoFeatureCollection {
+function createFeaturesCollectionFromApiResult(result: { data: {features1: GeoFeature[]}; }, target_key: string): GeoFeatureCollection {
     let features: GeoFeature[] = [];
 
     for (let i = 0; i < result.data.features1.length; i++) {
@@ -247,8 +266,10 @@ function createFeaturesCollectionFromApiResult(result: { data: {features1: GeoFe
                 "coordinates": [lat, lng]
             },
             properties: {
-                name: feature.properties.name,
-                description: feature.properties.description,
+                name: feature.properties.name || feature.properties.MobileCenterName || target_key + '_' + Utils.generateCustomId(),
+                address: feature.properties.address || feature.properties.MobileCenterAddress || '',
+                image: feature.properties.image || feature.properties.MobileCenterPics || null,
+                description: feature.properties.description || feature.properties.MobileCenterDescription || '',
                 data: feature.properties.data
             }
         };
