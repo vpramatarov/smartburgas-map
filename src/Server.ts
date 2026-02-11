@@ -43,7 +43,12 @@ const wasteTarget: Target = {
 
 const parkingTarget: Target = {
     key: 'smartParking',
-    endpoint: process.env.SMART_CAR_PARKS_TIME_URL as string,
+    endpoint: process.env.SMART_CAR_PARKS_TIME_URL as string
+};
+
+const taxiTarget: Target = {
+    key: 'taxiRanks',
+    endpoint: process.env.TAXI_RANKS_URL as string
 };
 
 const config: Config = {
@@ -55,7 +60,8 @@ const config: Config = {
     billingMachines: billingTarget,
     evStations: evTarget,
     wasteCentres: wasteTarget,
-    smartParking: parkingTarget
+    smartParking: parkingTarget,
+    taxiRanks: taxiTarget
 }
 
 const targets: Target[] = [];
@@ -217,6 +223,18 @@ app.get('/api/smart-parking', async (req, res) => {
     }
 });
 
+app.get('/api/taxi-ranks', async (req, res) => {
+    try {
+        const result = await getData(config.taxiRanks.endpoint, req);
+
+        res.set('X-Last-Updated', new Date(result.lastUpdated).toISOString());
+        res.json(result.data);
+    } catch (error) {
+        console.error('Error fetching taxi data:', error);
+        res.status(500).json({ error: 'Failed to fetch taxi data' });
+    }
+});
+
 async function getData(url: string, req: Partial<Request>) {
     const upstreamUrl = `${url}${buildExtraQuery(req)}`;
     console.log(`[Proxy] Fetching ${upstreamUrl}`);
@@ -260,15 +278,6 @@ function createFeaturesCollectionFromApiResult(result: { data: {features1: GeoFe
         let lng: number;
         let point = feature.properties.geometry.coordinates[0].toString();
 
-        // if (parseInt(point.split('.')[0]) < 26 || parseInt(point.split('.')[0]) > 28) {
-        //     lat = feature.properties.geometry.coordinates[1]; // may be the order is reversed?
-        //     lng = feature.properties.geometry.coordinates[0];
-        // } else {
-        //     // Burgas starts with 26,27,28
-        //     lat = feature.properties.geometry.coordinates[0];
-        //     lng = feature.properties.geometry.coordinates[1];
-        // }
-
         if (point > 40) {
             lat = feature.properties.geometry.coordinates[1]; // may be the order is reversed?
             lng = feature.properties.geometry.coordinates[0];
@@ -290,10 +299,6 @@ function createFeaturesCollectionFromApiResult(result: { data: {features1: GeoFe
                 total_free_lots: feature.properties.total_free_lots || '',
                 load: feature.properties.load || '',
                 image: feature.properties.pic_url || null
-            };
-        } else if (target_key === 'taxiRanks') {
-            additional_info = {
-                image: feature.properties.pic_url || null,
             };
         }
 

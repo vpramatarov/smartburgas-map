@@ -1,14 +1,16 @@
+import { SensorProperties, SupportedLanguage } from './Types.js'
 import { CsvExporter } from './CsvExporter.js';
+import { CompositeDetailsStrategy } from "./strategies/CompositeDetailsStrategy.js";
 import { TrafficSensorStrategy } from './strategies/TrafficSensorStrategy.js';
 import { AirQualityTimeSensorStrategy } from "./strategies/AirQualityTimeSensorStrategy.js";
-import { CompositeDetailsStrategy } from "./strategies/CompositeDetailsStrategy.js";
+import { CCTVStrategy } from "./strategies/CCTVStrategy.js";
 import { BillingMachineStrategy } from './strategies/BillingMachineStrategy.js';
 import { EVChargingStrategy } from './strategies/EVChargingStrategy.js';
 import { WasteCentreStrategy } from './strategies/WasteCentreStrategy.js';
 import { SmartParkingStrategy } from './strategies/SmartParkingStrategy.js';
-import { SensorProperties, SupportedLanguage } from './Types.js'
+import { TaxiRankStrategy } from './strategies/TaxiRankStrategy.js';
 import { ChartRenderer } from './components/ChartRenderer.js';
-import { CCTVStrategy } from "./strategies/CCTVStrategy.js";
+
 
 declare const L: any;
 
@@ -27,7 +29,8 @@ class SmartMap {
             new BillingMachineStrategy(),
             new EVChargingStrategy(),
             new WasteCentreStrategy(),
-            new SmartParkingStrategy()
+            new SmartParkingStrategy(),
+            new TaxiRankStrategy()
         ];
         this.compositeStrategy = new CompositeDetailsStrategy(strategies);
 
@@ -54,6 +57,7 @@ class SmartMap {
         this.setInitialToggle('toggle-ev-stations');
         this.setInitialToggle('toggle-waste');
         this.setInitialToggle('toggle-smart-parking');
+        this.setInitialToggle('toggle-taxi');
     }
 
     private initMap(): void {
@@ -157,7 +161,8 @@ class SmartMap {
             'toggle-billing-machines': 'billing_machine',
             'toggle-ev-stations': 'ev_station',
             'toggle-waste': 'waste_centre',
-            'toggle-smart-parking': 'smart_parking'
+            'toggle-smart-parking': 'smart_parking',
+            'toggle-taxi': 'taxi_rank'
         };
 
         for (const [elementId, strategyName] of Object.entries(toggleMap)) {

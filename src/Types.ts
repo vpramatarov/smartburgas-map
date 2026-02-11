@@ -15,6 +15,7 @@ export type Config = {
     evStations: Target;
     wasteCentres: Target;
     smartParking: Target;
+    taxiRanks: Target;
 }
 
 export interface Geometry {
@@ -29,12 +30,10 @@ export interface DynamicDataPoint {
 export interface SensorProperties {
     name?: string;
     description?: string;
-    // address?: string|null;
-    // image?: string|null;
     data?: DynamicDataPoint[];
     id?: string | number;
     strategy?: string;
-    additional_info: {[key: string]: any;}
+    additional_info: DynamicDataPoint
     [key: string]: any;
 }
 
