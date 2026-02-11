@@ -4,6 +4,7 @@ import { AirQualityTimeSensorStrategy } from "./strategies/AirQualityTimeSensorS
 import { CompositeDetailsStrategy } from "./strategies/CompositeDetailsStrategy.js";
 import { BillingMachineStrategy } from './strategies/BillingMachineStrategy.js';
 import { EVChargingStrategy } from './strategies/EVChargingStrategy.js';
+import { WasteCentreStrategy } from './strategies/WasteCentreStrategy.js';
 import { SensorProperties, SupportedLanguage } from './Types.js'
 import { ChartRenderer } from './components/ChartRenderer.js';
 import { CCTVStrategy } from "./strategies/CCTVStrategy.js";
@@ -23,7 +24,8 @@ class SmartMap {
             new TrafficSensorStrategy(),
             new CCTVStrategy(),
             new BillingMachineStrategy(),
-            new EVChargingStrategy()
+            new EVChargingStrategy(),
+            new WasteCentreStrategy()
         ];
         this.compositeStrategy = new CompositeDetailsStrategy(strategies);
 
@@ -48,6 +50,7 @@ class SmartMap {
         this.setInitialToggle('toggle-cctv');
         this.setInitialToggle('toggle-billing-machines');
         this.setInitialToggle('toggle-ev-stations');
+        this.setInitialToggle('toggle-waste');
     }
 
     private initMap(): void {
@@ -149,7 +152,8 @@ class SmartMap {
             'toggle-traffic': 'traffic_sensor',
             'toggle-cctv': 'cctv',
             'toggle-billing-machines': 'billing_machine',
-            'toggle-ev-stations': 'ev_station'
+            'toggle-ev-stations': 'ev_station',
+            'toggle-waste': 'waste_centre'
         };
 
         for (const [elementId, strategyName] of Object.entries(toggleMap)) {
@@ -173,7 +177,9 @@ class SmartMap {
         document.getElementById('close-panel')?.addEventListener('click', () => {
             document.getElementById('info-panel')?.classList.add('hidden');
             const content = document.getElementById('info-content');
-            if (content) content.innerHTML = '';
+            if (content) {
+                content.innerHTML = '';
+            }
 
             this.pinnedSensors = [];
             CCTVStrategy.stopAll();
