@@ -13,6 +13,7 @@ export type Config = {
     cctv: Target;
     billingMachines: Target;
     evStations: Target;
+    wasteCentres: Target;
 }
 
 export interface Geometry {
@@ -27,6 +28,8 @@ export interface DynamicDataPoint {
 export interface SensorProperties {
     name?: string;
     description?: string;
+    address?: string|null;
+    image?: string|null;
     data?: DynamicDataPoint[];
     id?: string | number;
     strategy?: string;

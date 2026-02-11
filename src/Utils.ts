@@ -16,7 +16,7 @@ export class Utils {
                     f.properties.strategy = strategyName;
 
                     if (f.properties.name?.length === 0) {
-                        f.properties.name = strategyName + '_' + Math.random().toString(36).substring(2, 9);
+                        f.properties.name = strategyName + '_' + this.generateCustomId();
                     }
                 }
             });
@@ -26,7 +26,7 @@ export class Utils {
                     f.properties.strategy = strategyName;
 
                     if (f.properties.name?.length === 0) {
-                        f.properties.name = strategyName + '_' + Math.random().toString(36).substring(2, 9);
+                        f.properties.name = strategyName + '_' + this.generateCustomId();
                     }
                 }
             });
@@ -39,5 +39,9 @@ export class Utils {
         const month = String(d.getMonth() + 1).padStart(2, '0');
         const day = String(d.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
+    }
+
+    public static generateCustomId(): string {
+        return Math.random().toString(36).substring(2, 9);
     }
 }
