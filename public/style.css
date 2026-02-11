@@ -108,8 +108,8 @@ ul li {
 
 #info-panel-container {
     background: #fff;
-    padding: 15px;
-    margin: 2%;
+    padding: 15px 5px;
+    margin: 1%;
     border-radius: 8px;
     position: relative;
 
@@ -157,9 +157,22 @@ ul li {
     font-weight: bold;
 }
 
+#info-panel .prop-additional {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    padding: 0 10px;
+}
+
+#info-panel .prop-additional div {
+    font-size: 0.8em;
+    text-align: right;
+}
+
 #info-panel .prop-value {
     color: #333;
     font-weight: normal;
+    font-size: 12px;
 }
 
 /* --- Chart Checkbox Toggle Styles --- */
@@ -418,7 +431,7 @@ ul li {
     border: 1px solid #ddd;
     border-radius: 6px;
     margin-bottom: 10px;
-    padding: 10px;
+    padding: 10px 5px;
     position: relative;
 }
 
@@ -450,7 +463,7 @@ ul li {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 12px;
+    padding: 10px 5px;
     background: #f8f9fa;
     border-bottom: 1px solid #eee;
 }
@@ -492,7 +505,7 @@ ul li {
 }
 
 .sensor-card-body {
-    padding: 12px;
+    padding: 5px;
 }
 
 /* Icons - If using Fontello, ensure you map these.
@@ -580,7 +593,7 @@ ul li {
 .cctv-cone-svg path {
     fill: rgba(46, 204, 113, 0.2); /* Increased opacity slightly */
     stroke: #2ecc71;
-    stroke-width: 2px; /* Thicker border to be seen */
+    stroke-width: 1px; /* Thicker border to be seen */
     stroke-linejoin: round;
     vector-effect: non-scaling-stroke; /* Keeps border crisp even when scaled */
 }
