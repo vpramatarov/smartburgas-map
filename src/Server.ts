@@ -41,6 +41,11 @@ const wasteTarget: Target = {
     endpoint: process.env.WASTE_URL as string
 };
 
+const parkingTarget: Target = {
+    key: 'smartParking',
+    endpoint: process.env.SMART_CAR_PARKS_TIME_URL as string,
+};
+
 const config: Config = {
     appUrl: process.env.URL || 'http://localhost',
     port: parseInt(process.env.PORT as string),
@@ -49,7 +54,8 @@ const config: Config = {
     cctv: cctvTarget,
     billingMachines: billingTarget,
     evStations: evTarget,
-    wasteCentres: wasteTarget
+    wasteCentres: wasteTarget,
+    smartParking: parkingTarget
 }
 
 const targets: Target[] = [];
@@ -199,6 +205,18 @@ app.get('/api/waste-mobile', async (req, res) => {
     }
 });
 
+app.get('/api/smart-parking', async (req, res) => {
+    try {
+        const result = await getData(config.smartParking.endpoint, req);
+
+        res.set('X-Last-Updated', new Date(result.lastUpdated).toISOString());
+        res.json(createFeaturesCollectionFromApiResult(result, config.smartParking.key));
+    } catch (error) {
+        console.error('Error fetching parking data:', error);
+        res.status(500).json({ error: 'Failed to fetch parking data' });
+    }
+});
+
 async function getData(url: string, req: Partial<Request>) {
     const upstreamUrl = `${url}${buildExtraQuery(req)}`;
     console.log(`[Proxy] Fetching ${upstreamUrl}`);
@@ -259,6 +277,26 @@ function createFeaturesCollectionFromApiResult(result: { data: {features1: GeoFe
             lng = feature.properties.geometry.coordinates[1];
         }
 
+        let additional_info = {};
+
+        if (target_key === 'wasteCentres') {
+            additional_info = {
+                address: feature.properties.MobileCenterAddress || '',
+                image: feature.properties.MobileCenterPics || null,
+            };
+        } else if (target_key === 'smartParking') {
+            additional_info = {
+                total_lots: feature.properties.total_lots || '',
+                total_free_lots: feature.properties.total_free_lots || '',
+                load: feature.properties.load || '',
+                image: feature.properties.pic_url || null
+            };
+        } else if (target_key === 'taxiRanks') {
+            additional_info = {
+                image: feature.properties.pic_url || null,
+            };
+        }
+
         features[i] = {
             type: "Feature",
             geometry: {
@@ -267,10 +305,9 @@ function createFeaturesCollectionFromApiResult(result: { data: {features1: GeoFe
             },
             properties: {
                 name: feature.properties.name || feature.properties.MobileCenterName || target_key + '_' + Utils.generateCustomId(),
-                address: feature.properties.address || feature.properties.MobileCenterAddress || '',
-                image: feature.properties.image || feature.properties.MobileCenterPics || null,
                 description: feature.properties.description || feature.properties.MobileCenterDescription || '',
-                data: feature.properties.data
+                data: feature.properties.data,
+                additional_info: additional_info
             }
         };
     }

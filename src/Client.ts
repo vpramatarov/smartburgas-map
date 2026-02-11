@@ -5,6 +5,7 @@ import { CompositeDetailsStrategy } from "./strategies/CompositeDetailsStrategy.
 import { BillingMachineStrategy } from './strategies/BillingMachineStrategy.js';
 import { EVChargingStrategy } from './strategies/EVChargingStrategy.js';
 import { WasteCentreStrategy } from './strategies/WasteCentreStrategy.js';
+import { SmartParkingStrategy } from './strategies/SmartParkingStrategy.js';
 import { SensorProperties, SupportedLanguage } from './Types.js'
 import { ChartRenderer } from './components/ChartRenderer.js';
 import { CCTVStrategy } from "./strategies/CCTVStrategy.js";
@@ -25,7 +26,8 @@ class SmartMap {
             new CCTVStrategy(),
             new BillingMachineStrategy(),
             new EVChargingStrategy(),
-            new WasteCentreStrategy()
+            new WasteCentreStrategy(),
+            new SmartParkingStrategy()
         ];
         this.compositeStrategy = new CompositeDetailsStrategy(strategies);
 
@@ -51,6 +53,7 @@ class SmartMap {
         this.setInitialToggle('toggle-billing-machines');
         this.setInitialToggle('toggle-ev-stations');
         this.setInitialToggle('toggle-waste');
+        this.setInitialToggle('toggle-smart-parking');
     }
 
     private initMap(): void {
@@ -153,7 +156,8 @@ class SmartMap {
             'toggle-cctv': 'cctv',
             'toggle-billing-machines': 'billing_machine',
             'toggle-ev-stations': 'ev_station',
-            'toggle-waste': 'waste_centre'
+            'toggle-waste': 'waste_centre',
+            'toggle-smart-parking': 'smart_parking'
         };
 
         for (const [elementId, strategyName] of Object.entries(toggleMap)) {

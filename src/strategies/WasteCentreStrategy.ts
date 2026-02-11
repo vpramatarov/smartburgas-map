@@ -60,7 +60,7 @@ export class WasteCentreStrategy implements IDetailsStrategy {
             },
             onEachFeature: (feature: GeoFeature, layer: any) => {
                 const props = feature.properties;
-                layer.bindPopup(`<div class="marker-popup-hover"><h4>${props.name}</h4><p>${props.address}</p></div>`, {
+                layer.bindPopup(`<div class="marker-popup-hover"><h4>${props.name}</h4><p>${props.additional_info.address}</p></div>`, {
                     closeButton: false,
                     offset: L.point(0, -5)
                 });
@@ -91,9 +91,9 @@ export class WasteCentreStrategy implements IDetailsStrategy {
         onChartRequest: () => void
     ): void {
 
-        if (sensor.image) {
+        if (sensor.additional_info.image) {
             const img = document.createElement('img') as HTMLImageElement;
-            img.src = sensor.image.trim();
+            img.src = sensor.additional_info.image.trim();
             img.style.width = '100%';
             img.style.borderRadius = '4px';
             img.style.marginBottom = '10px';
@@ -104,8 +104,8 @@ export class WasteCentreStrategy implements IDetailsStrategy {
             container.appendChild(img);
         }
 
-        if (sensor.address) {
-            container.innerHTML += `<div class="data-row">${sensor.address}</div>`;
+        if (sensor.additional_info.address) {
+            container.innerHTML += `<div class="data-row">${sensor.additional_info.address}</div>`;
         }
 
         if (sensor.description) {
