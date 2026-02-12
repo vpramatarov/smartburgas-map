@@ -115,19 +115,25 @@ export class SmartParkingStrategy implements IDetailsStrategy {
         const total = parseInt(sensor.additional_info.total_lots || '0');
         // Calculate usage if load is missing or weird
         const usage = total > 0 ? Math.round(((total - free) / total) * 100) : 0;
+        const last_sync = (sensor.data && sensor.data.length > 0) ? sensor.data[0].time : '';
 
         // Progress bar for occupancy
         const stats = document.createElement('div') as HTMLDivElement;
         stats.innerHTML = `
-            <div class="data-row">
-                <span class="prop-label">Capacity:</span> 
-                <span class="prop-value">${free} free / ${total} total</span>
+            <div class="data-row smart-parking">
+                <div>
+                    <span>
+                        <span class="prop-label">Capacity:</span> 
+                        <span class="prop-value">${free} free / ${total} total</span>
+                    </span>
+                    <span class="prop-additional" style="font-size: 12px;">${last_sync}</span>
+                </div>
             </div>
-            <div class="data-row">
-                 <div style="background:#eee; height:10px; width:100%; border-radius:5px; overflow:hidden;">
+            <div class="data-row smart-parking-progress">
+                 <div class="progress">
                     <div style="background:${this.getUsageColor(usage)}; height:100%; width:${usage}%"></div>
                  </div>
-                 <div style="text-align:right; font-size:11px; color:#666;">${usage}% Occupied</div>
+                 <div class="occupied">${usage}% Occupied</div>
             </div>
         `;
         container.appendChild(stats);

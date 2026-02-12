@@ -144,6 +144,27 @@ ul li {
     padding-bottom: 4px;
 }
 
+.data-row.smart-parking > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.data-row.smart-parking-progress .occupied {
+    text-align:right;
+    font-size:11px;
+    color:#666;
+    padding: 7px 0;
+}
+
+.data-row.smart-parking-progress .progress {
+    background:#eee;
+    height:10px;
+    width:100%;
+    border-radius:5px;
+    overflow:hidden;
+}
+
 #info-panel .toggle-row {
     display: flex;
     justify-content: space-between;
