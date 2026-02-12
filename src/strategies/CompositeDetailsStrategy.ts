@@ -55,8 +55,8 @@ export class CompositeDetailsStrategy {
             return;
         }
 
-        // Do not show button if only cctv strategies are pinned.
-        if (items.filter(s => s.strategy === 'cctv').length === items.length) {
+        // Do not show download csv button for strategies that does not have data.
+        if (items.filter(s => !s.data).length === items.length) {
             btnCsv?.classList.add('hidden');
         } else {
             btnCsv?.classList.remove('hidden');
