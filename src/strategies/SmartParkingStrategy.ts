@@ -7,6 +7,7 @@ declare const L: any;
 
 export class SmartParkingStrategy implements IDetailsStrategy {
     public name = 'smart_parking';
+    public checkbox_id = 'toggle-smart-parking';
     private layer: any;
     private onPin: ((sensor: SensorProperties) => void) | undefined;
 

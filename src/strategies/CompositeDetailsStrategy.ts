@@ -17,6 +17,15 @@ export class CompositeDetailsStrategy {
         return this.strategies
     }
 
+    toggleMap(): { [key: string]: string } {
+        let toggleMap: { [key: string]: string } = {};
+        this.getStrategies().forEach(strategy => {
+            toggleMap[strategy.checkbox_id] = strategy.name
+        });
+
+        return toggleMap;
+    }
+
     /**
      * Renders the Side Panel content
      * @param container DOM element for the list of cards

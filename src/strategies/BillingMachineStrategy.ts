@@ -7,6 +7,7 @@ declare const L: any;
 
 export class BillingMachineStrategy implements IDetailsStrategy {
     public name = 'billing_machine';
+    public checkbox_id = 'toggle-billing-machines';
     private layer: any;
     private onPin: ((sensor: SensorProperties) => void) | undefined;
 

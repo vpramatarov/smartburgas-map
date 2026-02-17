@@ -7,6 +7,7 @@ declare const L: any;
 
 export class WasteCentreStrategy implements IDetailsStrategy {
     public name = 'waste_centre';
+    public checkbox_id = 'toggle-waste';
     private layer: any;
     private onPin: ((sensor: SensorProperties) => void) | undefined;
 

@@ -7,6 +7,11 @@ export interface IDetailsStrategy {
     name: string;
 
     /**
+     * Unique name to identify the checkbox
+     */
+    checkbox_id: string
+
+    /**
      * Initializes the strategy with the map instance.
      * Should create the Leaflet layer but NOT add it to the map yet (unless default).
      * @param map The Leaflet map instance

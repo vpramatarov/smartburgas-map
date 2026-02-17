@@ -7,6 +7,7 @@ declare const L: any;
 
 export class TaxiRankStrategy implements IDetailsStrategy {
     public name = 'taxi_rank';
+    public checkbox_id = 'toggle-taxi';
     private layer: any;
     private onPin: ((sensor: SensorProperties) => void) | undefined;
 

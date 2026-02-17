@@ -46,18 +46,10 @@ class SmartMap {
         this.compositeStrategy.getStrategies().forEach(strategy => {
             strategy.initialize(this.map, (sensor) => this.onSensorSelect(sensor));
             strategy.loadData(this.currentLang);
+            // Note: The strategy layers are created but not added to map yet.
+            // Trigger the checkboxes to add them.
+            this.setInitialToggle(strategy.checkbox_id);
         });
-
-        // Note: The strategy layers are created but not added to map yet.
-        // Trigger the checkboxes to add them.
-        this.setInitialToggle('toggle-air-quality-time');
-        this.setInitialToggle('toggle-traffic');
-        this.setInitialToggle('toggle-cctv');
-        this.setInitialToggle('toggle-billing-machines');
-        this.setInitialToggle('toggle-ev-stations');
-        this.setInitialToggle('toggle-waste');
-        this.setInitialToggle('toggle-smart-parking');
-        this.setInitialToggle('toggle-taxi');
     }
 
     private initMap(): void {
@@ -152,18 +144,33 @@ class SmartMap {
             }
         });
 
-        // --- Layer Toggles ---
-        // We explicitly map the Checkbox ID to the Strategy Name
-        const toggleMap: { [key: string]: string } = {
-            'toggle-air-quality-time': 'air_quality_time',
-            'toggle-traffic': 'traffic_sensor',
-            'toggle-cctv': 'cctv',
-            'toggle-billing-machines': 'billing_machine',
-            'toggle-ev-stations': 'ev_station',
-            'toggle-waste': 'waste_centre',
-            'toggle-smart-parking': 'smart_parking',
-            'toggle-taxi': 'taxi_rank'
+        const btnSelectAll = document.getElementById('btn-select-all') as HTMLLinkElement;
+        const btnDeselectAll = document.getElementById('btn-deselect-all') as HTMLLinkElement;
+
+        const batchUpdate = (check: boolean) => {
+            const checkboxes = document.querySelectorAll('#controls input[type="checkbox"]') as NodeListOf<HTMLInputElement>;
+
+            checkboxes.forEach(box => {
+                if (box.checked !== check) {
+                    box.checked = check;
+                    // Note: Manually trigger the 'change' event so the map listeners know to add/remove the layer
+                    box.dispatchEvent(new Event('change'));
+                }
+            });
         };
+
+        btnSelectAll?.addEventListener('click', (e) => {
+            e.preventDefault(); // Stop jump to top
+            batchUpdate(true);
+        });
+
+        btnDeselectAll?.addEventListener('click', (e) => {
+            e.preventDefault();
+            batchUpdate(false);
+        });
+
+        // --- Layer Toggles ---
+        const toggleMap = this.compositeStrategy.toggleMap();
 
         for (const [elementId, strategyName] of Object.entries(toggleMap)) {
             const checkbox = document.getElementById(elementId) as HTMLInputElement;

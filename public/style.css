@@ -57,6 +57,29 @@ p {
     width: 20px;
 }
 
+/* Bulk Controls */
+.bulk-controls {
+    margin-bottom: 10px;
+    font-size: 13px;
+    color: #666;
+}
+
+.bulk-controls a {
+    color: #3498db;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.bulk-controls a:hover {
+    text-decoration: underline;
+    color: #2980b9;
+}
+
+.bulk-controls span {
+    color: #ccc;
+    margin: 0 4px;
+}
+
 label {
     cursor: pointer;
     display: block;

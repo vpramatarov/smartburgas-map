@@ -6,6 +6,7 @@ declare const L: any;
 
 export class TrafficSensorStrategy implements IDetailsStrategy {
     public name = 'traffic_sensor';
+    public checkbox_id = 'toggle-traffic';
     private layer: any; // L.LayerGroup
     private map: any;
     private onPin: ((sensor: SensorProperties) => void) | undefined;

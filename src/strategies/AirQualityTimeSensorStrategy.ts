@@ -6,6 +6,7 @@ declare const L: any;
 
 export class AirQualityTimeSensorStrategy implements IDetailsStrategy {
     public name = 'air_quality_time';
+    public checkbox_id = 'toggle-air-quality-time';
     private layer: any;
     private onPin: ((sensor: SensorProperties) => void) | undefined;
 

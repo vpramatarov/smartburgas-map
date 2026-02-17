@@ -7,6 +7,7 @@ declare const L: any;
 
 export class EVChargingStrategy implements IDetailsStrategy {
     public name = 'ev_station';
+    public checkbox_id = 'toggle-ev-stations';
     private layer: any;
     private onPin: ((sensor: SensorProperties) => void) | undefined;
 

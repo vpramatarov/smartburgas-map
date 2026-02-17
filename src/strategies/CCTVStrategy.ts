@@ -12,6 +12,7 @@ interface ActivePlayer {
 
 export class CCTVStrategy implements IDetailsStrategy {
     public name = 'cctv';
+    public checkbox_id = 'toggle-cctv';
     private layer: any;
     private onPin: ((sensor: SensorProperties) => void) | undefined;
     private static activePlayers: Map<string, ActivePlayer> = new Map();
