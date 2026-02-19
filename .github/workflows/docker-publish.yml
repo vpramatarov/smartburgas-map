@@ -1,0 +1,47 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    # Also triggers when you push version tags (e.g., v1.0.0)
+    tags: [ 'v*.*.*' ]
+
+env:
+  # The GitHub Container Registry URL
+  REGISTRY: ghcr.io
+  # This will automatically be "your-username/smartburgas-map"
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # These permissions are required for GitHub Actions to push the image securely
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          # GITHUB_TOKEN is a temporary password automatically provided by GitHub
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          # This automatically tags your image with 'main' or the version number
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
