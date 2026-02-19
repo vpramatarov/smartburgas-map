@@ -2,13 +2,12 @@ name: Build and Push Docker Image
 
 on:
   push:
-    # Also triggers when you push version tags (e.g., v1.0.0)
+    # Triggers when you push version tags (e.g., v1.0.0)
     tags: [ 'v*.*.*' ]
 
 env:
   # The GitHub Container Registry URL
   REGISTRY: ghcr.io
-  # This will automatically be "your-username/smartburgas-map"
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
@@ -42,6 +41,6 @@ jobs:
         with:
           context: .
           push: true
-          # This automatically tags your image with 'main' or the version number
+          # This automatically tags your image with the tag version number
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
