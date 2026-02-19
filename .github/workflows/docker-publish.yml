@@ -41,6 +41,6 @@ jobs:
         with:
           context: .
           push: true
-          # This automatically tags your image with the tag version number
+          # This automatically tags image with the tag version number
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
