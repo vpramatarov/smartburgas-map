@@ -173,14 +173,27 @@ class SmartMap {
             });
         };
 
+        // Helper to swap the active class
+        const setBulkActive = (isSelectAllActive: boolean) => {
+            if (isSelectAllActive) {
+                btnSelectAll?.classList.add('active');
+                btnDeselectAll?.classList.remove('active');
+            } else {
+                btnSelectAll?.classList.remove('active');
+                btnDeselectAll?.classList.add('active');
+            }
+        };
+
         btnSelectAll?.addEventListener('click', (e) => {
             e.preventDefault(); // Stop jump to top
             batchUpdate(true);
+            setBulkActive(true); // Set Select All as active
         });
 
         btnDeselectAll?.addEventListener('click', (e) => {
             e.preventDefault();
             batchUpdate(false);
+            setBulkActive(false); // Set Deselect All as active
         });
 
         // --- Layer Toggles ---
