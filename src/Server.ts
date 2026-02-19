@@ -89,6 +89,7 @@ app.use('/js', express.static(path.join(__dirname, '../dist')));
 // --- Middleware ---
 app.use((req: Request, res: Response, next: NextFunction) => {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    res.setHeader('Content-Security-Policy', `frame-ancestors ${process.env.ALLOW_FRAME_URL as string}`);
     next();
 });
 
@@ -129,6 +130,15 @@ const buildExtraQuery = (req: Partial<Request>) => {
 
     return params.toString() ? `?${params.toString()}` : '';
 };
+
+// --- Expose Public Config ---
+app.get('/api/config', (req, res) => {
+    // We send the ALLOW_FRAME_URL to the frontend.
+    // Fallback to '*' (allow all) if it's not set in .env for local development.
+    res.json({
+        allowFrameUrl: process.env.ALLOW_FRAME_URL as string || '*'
+    });
+});
 
 // API Proxies
 app.get('/api/air-quality-time', async (req, res) => {
