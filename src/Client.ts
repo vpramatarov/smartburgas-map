@@ -15,6 +15,7 @@ import { ChartRenderer } from './components/ChartRenderer.js';
 declare const L: any;
 
 class SmartMap {
+    private allowedOrigin: string = '*'; // Default to allow all until config loads
     private compositeStrategy: CompositeDetailsStrategy;
     private map: any;
     private pinnedSensors: SensorProperties[] = [];
@@ -34,7 +35,13 @@ class SmartMap {
         ];
         this.compositeStrategy = new CompositeDetailsStrategy(strategies);
 
-        const savedLang = localStorage.getItem('sb_lang') as SupportedLanguage;
+        let savedLang: SupportedLanguage | null = null;
+        try {
+            savedLang = localStorage.getItem('sb_lang') as SupportedLanguage;
+        } catch (e) {
+            console.warn("Iframe Storage Access Blocked. Defaulting language.");
+        }
+
         if (savedLang === 'bg' || savedLang === 'en') {
             this.currentLang = savedLang;
         }
@@ -42,6 +49,7 @@ class SmartMap {
         this.initMap();
         this.initListeners();
         this.renderLanguageSwitcher();
+        this.initIframeBridge();
 
         this.compositeStrategy.getStrategies().forEach(strategy => {
             strategy.initialize(this.map, (sensor) => this.onSensorSelect(sensor));
@@ -98,7 +106,13 @@ class SmartMap {
         }
 
         this.currentLang = lang;
-        localStorage.setItem('sb_lang', lang);
+
+        try {
+            localStorage.setItem('sb_lang', lang);
+        } catch (e) {
+            console.warn("Cannot save language preference in Iframe.");
+        }
+
         console.log(`Language switched to ${lang}. Refreshing data...`);
 
         // Refreshes data for ALL strategies
@@ -224,6 +238,15 @@ class SmartMap {
 
         this.previewSensor = sensor;
         this.refreshPanel();
+
+        this.postToParent({
+            event: 'SENSOR_SELECTED',
+            payload: {
+                id: this.getSensorId(sensor),
+                name: sensor.name,
+                strategy: sensor.strategy
+            }
+        });
     }
 
     /**
@@ -310,6 +333,69 @@ class SmartMap {
     private getSensorId(s: SensorProperties): string {
         return s.id || s.name || s.publicname || 'unknown';
     }
+
+    // --- Iframe Communication Bridge ---
+    private async initIframeBridge() {
+        try {
+            const response = await fetch('/api/config');
+            const config = await response.json();
+            if (config.allowFrameUrl) {
+                this.allowedOrigin = config.allowFrameUrl;
+            }
+        } catch (error) {
+            console.error("Failed to load map configuration:", error);
+        }
+
+        // Listen for commands FROM the parent website
+        window.addEventListener('message', (event) => {
+            // SECURITY CHECK: Verify origin
+            // If allowedOrigin is '*', we accept all (local dev only).
+            // Otherwise, block any requests that don't match the .env url.
+            if (this.allowedOrigin !== '*' && event.origin !== this.allowedOrigin) {
+                console.warn(`Blocked message from unauthorized origin: ${event.origin}`);
+                return;
+            }
+
+            const msg = event.data;
+
+            if (!msg || typeof msg !== 'object') {
+                return;
+            }
+
+            switch (msg.action) {
+                case 'SET_LANGUAGE':
+                    if (msg.payload === 'bg' || msg.payload === 'en') {
+                        // Manually trigger the language UI update
+                        const targetFlag = document.querySelector(`.lang-switcher span[data-flag="${msg.payload}"]`) as HTMLSpanElement;
+                        if (targetFlag) {
+                            targetFlag.click();
+                        }
+                    }
+                    break;
+
+                case 'SET_LAYER':
+                    // payload expected: { layerId: 'toggle-traffic', visible: true }
+                    const checkbox = document.getElementById(msg.payload.layerId) as HTMLInputElement;
+                    if (checkbox && checkbox.checked !== msg.payload.visible) {
+                        checkbox.checked = msg.payload.visible;
+                        checkbox.dispatchEvent(new Event('change'));
+                    }
+                    break;
+            }
+        });
+
+        // Tell the parent the map is fully loaded and ready to receive commands
+        this.postToParent({ event: 'MAP_READY' });
+    }
+
+    // Helper to send messages TO the parent website
+    private postToParent(message: object) {
+        // We only post if we are actually inside an iframe
+        if (window.parent !== window) {
+            window.parent.postMessage(message, this.allowedOrigin);
+        }
+    }
+
 }
 
 document.addEventListener('DOMContentLoaded', () => {
