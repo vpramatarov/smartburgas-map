@@ -50,11 +50,11 @@ export class TaxiRankStrategy implements IDetailsStrategy {
 
         L.geoJSON(features, {
             pointToLayer: (_feature: GeoFeature, latlng: any) => {
-                const iconClass = "icon-taxi";
+                const iconClass = "icon-taxi-sign_76588";
 
                 const iconHtml = `
                     <div class="custom-pin-marker" style="background-color: ${options.color};">
-                        <i class="${iconClass}"></i>
+                        <i class="${iconClass}" style="color: #000;"></i>
                     </div>
                 `;
 
