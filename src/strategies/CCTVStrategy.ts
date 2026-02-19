@@ -88,7 +88,7 @@ export class CCTVStrategy implements IDetailsStrategy {
                 // .cctv-zoom-wrapper wrapper reads the --cctv-zoom-scale variable.
                 // The inner .cctv-container handles the rotation.
                 const html = `
-                    <div class="cctv-root">
+                    <div class="cctv-root custom-pin-wrapper">
                         <div class="cctv-cone-scaler">
                             <div class="cctv-rotator" style="transform: rotate(${position}deg)">
                                 <svg class="cctv-cone-svg" viewBox="0 0 100 100">
@@ -97,7 +97,9 @@ export class CCTVStrategy implements IDetailsStrategy {
                             </div>
                         </div>
                         
-                        <div class="cctv-dot"></div>
+                        <div class="custom-pin-marker cctv-dot" style="background-color: #2ecc71;">
+                            <i class="icon-videocam"></i>
+                        </div>
                     </div>
                 `;
 
@@ -114,25 +116,11 @@ export class CCTVStrategy implements IDetailsStrategy {
                 const props = feature.properties;
                 layer.bindPopup(`<div class="marker-popup-hover"><h4>${props.publicname || 'Camera'}</h4><p>Click to Pin</p></div>`, {
                     closeButton: false,
-                    offset: L.point(0, -10)
+                    offset: L.point(0, 0)
                 });
 
-                layer.on('mouseover', (e: any) => {
-                    e.target.openPopup();
-                    const path = e.target.getElement()?.querySelector('path');
-                    if (path) {
-                        path.style.fillOpacity = '0.4'; // Darker on hover
-                    }
-                });
-
-                layer.on('mouseout', (e: any) => {
-                    e.target.closePopup();
-                    const path = e.target.getElement()?.querySelector('path');
-
-                    if (path) {
-                        path.style.fillOpacity = ''; // Reset
-                    }
-                });
+                layer.on('mouseover', (e: any) => { e.target.openPopup(); });
+                layer.on('mouseout', (e: any) => { e.target.closePopup(); });
 
                 layer.on('click', () => {
                     if (this.onPin) {

@@ -2,6 +2,7 @@ body, html {
     margin: 0;
     padding: 0;
     height: 100%;
+    overflow: hidden;
 }
 
 p {
@@ -14,7 +15,7 @@ p {
 
 #map {
     height: 100vh;
-    width: 100%;
+    width: 100vw;
 }
 
 #controls {
@@ -110,6 +111,41 @@ ul li {
 .marker-popup-hover p {
     margin: 0;
     font-size: 13px;
+}
+
+
+/* --- Custom Map Pins --- */
+.custom-pin-wrapper {
+    background: transparent;
+    border: none;
+}
+
+.custom-pin-marker {
+    width: 25px;
+    height: 25px;
+    border-radius: 50% 50% 50% 0; /* Creates the teardrop shape */
+    transform: rotate(-45deg);    /* Points the sharp corner straight down */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    border: 2px solid #fff;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy transition */
+}
+
+/* We must rotate the icon back 45 degrees so it stands upright */
+.custom-pin-marker i,
+.custom-pin-marker span {
+    transform: rotate(45deg);
+    color: white;
+    font-size: 13px;
+}
+
+/* Hover Effect: Handled entirely by CSS now! */
+.custom-pin-wrapper:hover .custom-pin-marker {
+    transform: rotate(-45deg) scale(1.15); /* Grows the pin slightly */
+    box-shadow: 3px 3px 6px rgba(0,0,0,0.4);
 }
 
 /** Info panel */
@@ -652,34 +688,36 @@ ul li {
 
 /* The Dot (Fixed Size) */
 .cctv-dot {
-    position: absolute;
-    top: 50%;
-    left: 50%;
+    /*position: absolute;*/
+    /*top: 50%;*/
+    /*left: 50%;*/
 
-    /* Size Match: Radius 8 = 16px diam + 2px border = 20px total visual size */
-    width: 16px;
-    height: 16px;
+    /*!* Size Match: Radius 8 = 16px diam + 2px border = 20px total visual size *!*/
+    /*width: 16px;*/
+    /*height: 16px;*/
 
-    /* Center positioning */
-    transform: translate(-50%, -50%);
+    /*!* Center positioning *!*/
+    /*transform: translate(-50%, -50%);*/
 
-    background-color: #2ecc71;
-    border: 2px solid #ffffff;
-    border-radius: 50%;
+    /*background-color: #2ecc71;*/
+    /*border: 2px solid #ffffff;*/
+    /*border-radius: 50%;*/
 
-    z-index: 200; /* Sit ON TOP of the cone */
-    box-shadow: 0 0 4px rgba(0,0,0,0.4);
+    /*z-index: 200;*/
+    /*box-shadow: 0 0 4px rgba(0,0,0,0.4);*/
 
-    cursor: pointer;
-    pointer-events: auto;
+    /*cursor: pointer;*/
+    /*pointer-events: auto;*/
+
+    z-index: 200;
 }
 
 /* Hover Effect on the Dot */
 .cctv-icon-wrapper:hover .cctv-dot {
-    background-color: #27ae60;
-    width: 18px; /* Slight grow effect */
-    height: 18px;
-    transition: all 0.2s ease;
+    /*background-color: #27ae60;*/
+    /*width: 18px; !* Slight grow effect *!*/
+    /*height: 18px;*/
+    /*transition: all 0.2s ease;*/
 }
 
 /* LOD Logic - Hide Scaler when zoomed out */
