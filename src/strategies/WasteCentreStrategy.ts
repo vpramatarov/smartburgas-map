@@ -138,15 +138,13 @@ export class WasteCentreStrategy implements IDetailsStrategy {
             const uniqueTypes = new Map<string, {name: string, color: string, weight: string, weight_unit: string, time: string}>();
 
             sensor.data.forEach((d: DynamicDataPoint) => {
-                if (!uniqueTypes.has(d.Garbage_id)) {
-                    uniqueTypes.set(d.Garbage_id, {
-                        name: d.Garbage_name,
-                        color: d.Garbage_Colour,
-                        weight: d.Garbage_Weight,
-                        weight_unit: d.Garbage_Weight_type,
-                        time: d.time
-                    });
-                }
+                uniqueTypes.set(d.Garbage_id, {
+                    name: d.Garbage_name,
+                    color: d.Garbage_Colour,
+                    weight: d.Garbage_Weight,
+                    weight_unit: d.Garbage_Weight_type,
+                    time: d.time
+                });
             });
 
             if (uniqueTypes.size > 0) {
