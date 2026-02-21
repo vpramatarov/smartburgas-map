@@ -5,7 +5,7 @@ export class Utils {
     public static updateTimestampUI(elementId: string, dateOrMsg: Date | string) {
         const el = document.getElementById(elementId);
         if (el) {
-            el.innerText = (typeof dateOrMsg === 'string') ? dateOrMsg : "Updated: " + dateOrMsg.toLocaleTimeString();
+            el.innerText = (typeof dateOrMsg === 'string') ? dateOrMsg : dateOrMsg.toLocaleTimeString();
         }
     }
 

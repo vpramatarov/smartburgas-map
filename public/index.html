@@ -13,23 +13,26 @@
 
 <div id="controls">
     <div class="lang-switcher">
-        <span data-flag="bg"><img src="images/bg-web.png" alt="BG"> BG</span>
-        <span data-flag="en"><img src="images/en-web.png" alt="EN"> EN</span>
+        <span data-flag="bg"><img src="images/bg-web.png" alt="BG"> <span data-i18n="bg">БГ</span></span>
+        <span data-flag="en"><img src="images/en-web.png" alt="EN"> <span data-i18n="en">АНГЛ</span></span>
     </div>
 
     <div class="bulk-controls">
-        <a href="#" id="btn-select-all" class="active">Select all</a>
+        <a href="#" id="btn-select-all" class="active" data-i18n="select_all">Избери всички</a>
         <span> | </span>
-        <a href="#" id="btn-deselect-all">Deselect all</a>
+        <a href="#" id="btn-deselect-all" data-i18n="deselect_all">Отмаркирай всички</a>
     </div>
 
-    <h4>Filter by feature type</h4>
+    <h4 data-i18n="filters">Filters</h4>
     <ul>
         <li>
             <label class="checkbox" for="toggle-air-quality-time">
                 <input type="checkbox" id="toggle-air-quality-time">
                 <span class="checkbox__checkmark"></span>
-                <span class="checkbox__body"><span class="icon-air"></span> Air Quality Sensors</span>
+                <span class="checkbox__body">
+                    <span class="icon-air"></span>
+                    <span data-i18n="layer_air_quality">Качество на въздуха</span>
+                </span>
                 <span id="air-quality-time" class="timestamp">-</span>
             </label>
         </li>
@@ -37,7 +40,10 @@
             <label class="checkbox" for="toggle-traffic">
                 <input type="checkbox" id="toggle-traffic">
                 <span class="checkbox__checkmark"></span>
-                <span class="checkbox__body"><span class="icon-car"></span> Traffic Detectors</span>
+                <span class="checkbox__body">
+                    <span class="icon-car"></span>
+                    <span data-i18n="layer_traffic">Трафик камери</span>
+                </span>
                 <span id="traffic-time" class="timestamp">-</span>
             </label>
         </li>
@@ -45,7 +51,10 @@
             <label class="checkbox" for="toggle-cctv">
                 <input type="checkbox" id="toggle-cctv">
                 <span class="checkbox__checkmark"></span>
-                <span class="checkbox__body"><span class="icon-videocam"></span> Camera</span>
+                <span class="checkbox__body" >
+                    <span class="icon-videocam"></span>
+                    <span data-i18n="layer_camera">Камери</span>
+                </span>
                 <span id="cctv-time" class="timestamp">-</span>
             </label>
         </li>
@@ -53,7 +62,10 @@
             <label class="checkbox" for="toggle-billing-machines">
                 <input type="checkbox" id="toggle-billing-machines">
                 <span class="checkbox__checkmark"></span>
-                <span class="checkbox__body"><span class="icon-dollar"></span> Billing Machines</span>
+                <span class="checkbox__body">
+                    <span class="icon-dollar"></span>
+                    <span data-i18n="layer_billing_machines">Банкомати</span>
+                </span>
                 <span id="billing-time" class="timestamp">-</span>
             </label>
         </li>
@@ -61,7 +73,10 @@
             <label class="checkbox" for="toggle-ev-stations">
                 <input type="checkbox" id="toggle-ev-stations">
                 <span class="checkbox__checkmark"></span>
-                <span class="checkbox__body"><span class="icon-battery"></span> EV Charging</span>
+                <span class="checkbox__body">
+                    <span class="icon-battery"></span>
+                    <span data-i18n="layer_ev_charging">Зареждане на ел. превозни средства</span>
+                </span>
                 <span id="ev-time" class="timestamp">-</span>
             </label>
         </li>
@@ -69,7 +84,10 @@
             <label class="checkbox" for="toggle-waste">
                 <input type="checkbox" id="toggle-waste">
                 <span class="checkbox__checkmark"></span>
-                <span class="checkbox__body"><span class="icon-recycle"></span> Mobile Waste Centers</span>
+                <span class="checkbox__body">
+                    <span class="icon-recycle"></span>
+                    <span data-i18n="layer_mobile_waste">Мобилни центрове за отпадъци</span>
+                </span>
                 <span id="waste-time" class="timestamp">-</span>
             </label>
         </li>
@@ -77,7 +95,10 @@
             <label class="checkbox" for="toggle-smart-parking">
                 <input type="checkbox" id="toggle-smart-parking">
                 <span class="checkbox__checkmark"></span>
-                <span class="checkbox__body"><span class="icon-car-parking"></span> Smart Car Parks</span>
+                <span class="checkbox__body">
+                    <span class="icon-car-parking"></span>
+                    <span data-i18n="layer_smart_parking">Смарт Паркинги</span>
+                </span>
                 <span id="smart-car-parking-time" class="timestamp">-</span>
             </label>
         </li>
@@ -85,7 +106,10 @@
             <label class="checkbox" for="toggle-taxi">
                 <input type="checkbox" id="toggle-taxi">
                 <span class="checkbox__checkmark"></span>
-                <span class="checkbox__body"><span class="icon-taxi-sign_76588"></span> Taxi Parking Spaces</span>
+                <span class="checkbox__body">
+                    <span class="icon-taxi-sign_76588"></span>
+                    <span data-i18n="layer_taxi_stands">Стоянки на таксита</span>
+                </span>
                 <span id="taxi-time" class="timestamp">-</span>
             </label>
         </li>
@@ -101,11 +125,15 @@
             <p></p>
         </div>
         <div id="chart-container">
-            <p id="no-chart-data" class="hidden">No data for chart.</p>
+            <p id="no-chart-data" class="hidden" data-i18n="no_chart_data">Няма данни за диаграма.</p>
         </div>
         <div class="actions">
-            <button id="btn-download-csv" class="action-btn"><span class="icon-download"></span> Download as CSV</button>
-            <button id="btn-full-chart" class="action-btn hidden"><span class="icon-resize-full"></span> Full Screen Chart</button>
+            <button id="btn-download-csv" class="action-btn" data-i18n="download_csv">
+                <span class="icon-download"></span> <span data-i18n="download_csv">Свали като CSV</span>
+            </button>
+            <button id="btn-full-chart" class="action-btn hidden" >
+                <span class="icon-resize-full"></span> <span data-i18n="full_screen_chart">Диаграма на цял екран</span>
+            </button>
         </div>
     </div>
 </div>
@@ -113,7 +141,7 @@
 <div id="chart-modal" class="modal hidden">
     <div class="modal-content">
         <div class="modal-header">
-            <h2 id="modal-title">Chart</h2>
+            <h2 id="modal-title" data-i18n="chart">Диаграма</h2>
             <button id="close-modal">×</button>
         </div>
         <div id="full-chart-container"></div>

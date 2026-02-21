@@ -1,6 +1,7 @@
 import { IDetailsStrategy } from './IDetailsStrategy.js';
 import { ChartRenderer } from '../components/ChartRenderer.js';
-import { ChartDataset, SensorProperties } from '../Types.js';
+import {ChartDataset, SensorProperties, SupportedLanguage} from '../Types.js';
+import { t } from '../Translations.js';
 
 /**
  * Manages the Side Panel.
@@ -34,6 +35,7 @@ export class CompositeDetailsStrategy {
      * @param pinnedItems Just the pinned items (to determine icon state)
      * @param onTogglePin Callback
      * @param onClose Callback
+     * @param lang The current active language
      */
     render(
         container: HTMLElement,
@@ -41,7 +43,8 @@ export class CompositeDetailsStrategy {
         items: SensorProperties[],
         pinnedItems: SensorProperties[],
         onTogglePin: (s: SensorProperties) => void,
-        onClose: (s: SensorProperties) => void
+        onClose: (s: SensorProperties) => void,
+        lang: SupportedLanguage
     ) {
         ChartRenderer.clear(chartContainer.id);
         const panel = document.getElementById('info-panel') as HTMLElement;
@@ -56,7 +59,7 @@ export class CompositeDetailsStrategy {
         container.innerHTML = '';
 
         if (items.length === 0) {
-            container.innerHTML = '<p style="text-align:center; color:#666; margin-top:20px;">No sensors pinned.<br>Click a map marker to add.</p>';
+            container.innerHTML = `<p style="text-align:center; color:#666; margin-top:20px;">${t('no_sensors_pinned', lang)}.<br>${t('click_map_marker_to_add', lang)}.</p>`;
             chartContainer.style.display = 'none';
             btnCsv?.classList.add('hidden');
             btnFullChart?.classList.add('hidden');
@@ -88,14 +91,14 @@ export class CompositeDetailsStrategy {
             header.className = 'sensor-card-header';
 
             const title = document.createElement('h3');
-            title.innerText = sensor.name || sensor.publicname || 'Unknown Sensor';
+            title.innerText = sensor.name || sensor.publicname || t('unknown_sensor', lang);
 
             const actions = document.createElement('div') as HTMLDivElement;
             actions.className = 'card-actions';
 
             const btnPin = document.createElement('button') as HTMLButtonElement;
             btnPin.className = isPinned ? 'btn-icon active' : 'btn-icon';
-            btnPin.title = isPinned ? "Unpin location" : "Pin location";
+            btnPin.title = isPinned ? t('unpin_location', lang) : t('pin_location', lang);
             btnPin.innerHTML = '<span class="icon-pin"></span>';
             btnPin.onclick = () => onTogglePin(sensor);
 
@@ -190,7 +193,7 @@ export class CompositeDetailsStrategy {
     /**
      * Handles Full Screen rendering for mixed strategies
      */
-    renderFull(chartConfig: any[], sensors: SensorProperties[]) {
+    renderFull(chartConfig: any[], sensors: SensorProperties[], lang: SupportedLanguage) {
         const containerId = 'full-chart-container';
         const container = document.getElementById(containerId) as HTMLElement;
 
@@ -216,9 +219,9 @@ export class CompositeDetailsStrategy {
         });
 
         if (datasets.length > 0) {
-            ChartRenderer.renderFull(containerId, "Combined Analysis", [], datasets);
+            ChartRenderer.renderFull(containerId, t('combined_analysis', lang), [], datasets);
         } else {
-            container.innerHTML = '<p>No data</p>';
+            container.innerHTML = `<p>${t('no_data', lang)}</p>`;
         }
     }
 

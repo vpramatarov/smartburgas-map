@@ -93,7 +93,7 @@ p {
 }
 
 .bulk-controls a {
-    color: rgb(119, 191, 34);
+    color: #ccc;
     text-decoration: none;
     font-weight: 500;
 }
@@ -623,11 +623,6 @@ ul li {
 .sensor-card-body {
     padding: 5px;
 }
-
-/* Icons - If using Fontello, ensure you map these.
-   If using raw CSS shapes for testing, add: */
-.icon-pin::before { content: "\e800"; } /* Example Code */
-.icon-pin-outline::before { content: "\e801"; } /* Example Code */
 
 /*------ VIDEO PLAYER -------*/
 

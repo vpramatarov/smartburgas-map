@@ -1,7 +1,15 @@
 // src/strategies/WasteCentreStrategy.ts
 import { IDetailsStrategy } from './IDetailsStrategy.js';
-import {ChartDataset, DynamicDataPoint, GeoFeature, GeoJSONInput, SensorProperties} from '../Types.js';
+import {
+    ChartDataset,
+    DynamicDataPoint,
+    GeoFeature,
+    GeoJSONInput,
+    SensorProperties,
+    SupportedLanguage
+} from '../Types.js';
 import { Utils } from '../Utils.js';
+import { t } from '../Translations.js';
 
 declare const L: any;
 
@@ -10,6 +18,7 @@ export class WasteCentreStrategy implements IDetailsStrategy {
     public checkbox_id = 'toggle-waste';
     private layer: any;
     private onPin: ((sensor: SensorProperties) => void) | undefined;
+    private currentLang: SupportedLanguage = 'bg'; // Default fallback
 
     initialize(map: any, onPin: (sensor: SensorProperties) => void): void {
         this.onPin = onPin;
@@ -25,8 +34,9 @@ export class WasteCentreStrategy implements IDetailsStrategy {
             return;
         }
 
+        this.currentLang = lang as SupportedLanguage;
         this.layer.clearLayers();
-        Utils.updateTimestampUI('waste-time', 'Refreshing...');
+        Utils.updateTimestampUI('waste-time', t('loading', this.currentLang));
 
         try {
             const res = await fetch(`/api/waste-mobile?lang=${lang}`);
@@ -202,7 +212,7 @@ export class WasteCentreStrategy implements IDetailsStrategy {
             label: meta.Garbage_name,
             values: values,
             times: times,
-            unit: meta.Garbage_Weight_type || 'kg',
+            unit: meta.Garbage_Weight_type || t('kg', this.currentLang),
         };
     }
 }

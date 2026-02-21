@@ -1,6 +1,7 @@
 import { IDetailsStrategy } from './IDetailsStrategy.js';
-import { ChartDataset, GeoFeature, GeoJSONInput, SensorProperties } from '../Types.js';
+import {ChartDataset, GeoFeature, GeoJSONInput, SensorProperties, SupportedLanguage} from '../Types.js';
 import { Utils } from "../Utils.js";
+import { t } from '../Translations.js';
 
 declare const Hls: any;
 declare const L: any;
@@ -16,6 +17,7 @@ export class CCTVStrategy implements IDetailsStrategy {
     private layer: any;
     private onPin: ((sensor: SensorProperties) => void) | undefined;
     private static activePlayers: Map<string, ActivePlayer> = new Map();
+    private currentLang: SupportedLanguage = 'bg'; // Default fallback
 
     initialize(map: any, onPin: (sensor: SensorProperties) => void): void {
         this.onPin = onPin;
@@ -58,8 +60,9 @@ export class CCTVStrategy implements IDetailsStrategy {
             return;
         }
 
+        this.currentLang = lang as SupportedLanguage;
         this.layer.clearLayers();
-        Utils.updateTimestampUI('cctv-time', 'Refreshing...');
+        Utils.updateTimestampUI('cctv-time', t('loading', this.currentLang));
 
         try {
             const res = await fetch(`/api/cctv?lang=${lang}`);
@@ -114,7 +117,9 @@ export class CCTVStrategy implements IDetailsStrategy {
             },
             onEachFeature: (feature: GeoFeature, layer: any) => {
                 const props = feature.properties;
-                layer.bindPopup(`<div class="marker-popup-hover"><h4>${props.publicname || 'Camera'}</h4><p>Click to Pin</p></div>`, {
+                const title = props.publicname || t('layer_camera', this.currentLang);
+
+                layer.bindPopup(`<div class="marker-popup-hover"><h4>${title}</h4><p>${t('click_to_pin', this.currentLang)}</p></div>`, {
                     closeButton: false,
                     offset: L.point(0, 0)
                 });

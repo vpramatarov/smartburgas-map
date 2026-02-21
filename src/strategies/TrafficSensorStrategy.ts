@@ -1,6 +1,7 @@
 import { IDetailsStrategy } from './IDetailsStrategy.js';
-import { ChartDataset, GeoFeature, GeoJSONInput, SensorProperties } from '../Types.js';
+import {ChartDataset, GeoFeature, GeoJSONInput, SensorProperties, SupportedLanguage} from '../Types.js';
 import { Utils } from '../Utils.js';
+import {t} from "../Translations.js";
 
 declare const L: any;
 
@@ -10,6 +11,7 @@ export class TrafficSensorStrategy implements IDetailsStrategy {
     private layer: any; // L.LayerGroup
     private map: any;
     private onPin: ((sensor: SensorProperties) => void) | undefined;
+    private currentLang: SupportedLanguage = 'bg'; // Default fallback
 
     initialize(map: any, onPin: (sensor: SensorProperties) => void): void {
         this.map = map;
@@ -34,8 +36,9 @@ export class TrafficSensorStrategy implements IDetailsStrategy {
             return;
         }
 
+        this.currentLang = lang as SupportedLanguage;
         this.layer.clearLayers();
-        Utils.updateTimestampUI('traffic-time', 'Refreshing...');
+        Utils.updateTimestampUI('traffic-time', t('loading', this.currentLang));
 
         try {
             const query = `?lang=${lang}&start_date=${dateParams.start}&end_date=${dateParams.end}`;
@@ -61,7 +64,7 @@ export class TrafficSensorStrategy implements IDetailsStrategy {
         onChartRequest: () => void
     ): void {
         if (!sensor.data || sensor.data.length === 0) {
-            container.innerHTML = '<p>No data</p>';
+            container.innerHTML = `<p>${t('no_data', this.currentLang)}</p>`;
             return;
         }
 
@@ -75,12 +78,12 @@ export class TrafficSensorStrategy implements IDetailsStrategy {
         if (lastItem) {
             container.innerHTML = `
                 <div class="data-row">
-                    <span class="prop-label">Car Count:</span> 
+                    <span class="prop-label">${t('car_count', this.currentLang)}:</span> 
                     <span class="prop-value">${lastItem.car_count}</span>
                 </div>
                 <div class="data-row">
-                    <span class="prop-label">Car Speed:</span> 
-                    <span class="prop-value">${typeof lastItem.car_speed === 'undefined' ? 'N/A' : lastItem.car_speed + ' km/h'} </span>
+                    <span class="prop-label">${t('car_speed', this.currentLang)}:</span> 
+                    <span class="prop-value">${typeof lastItem.car_speed === 'undefined' ? t('no_data', this.currentLang) : lastItem.car_speed + ' ' + t('km_h', this.currentLang)} </span>
                 </div>
                 <div class="data-row">
                     <span class="timestamp">${lastItem.time}</span>
@@ -105,7 +108,7 @@ export class TrafficSensorStrategy implements IDetailsStrategy {
             `;
         };
 
-        toggleDiv.innerHTML = createToggleHtml('car_count', 'Car Count') + createToggleHtml('car_speed', 'Car Speed');
+        toggleDiv.innerHTML = createToggleHtml('car_count', t('car_count', this.currentLang)) + createToggleHtml('car_speed', t('car_speed', this.currentLang));
         container.appendChild(toggleDiv);
         const boxes = toggleDiv.querySelectorAll('input');
         boxes.forEach(box => box.addEventListener('change', onChartRequest));
@@ -130,8 +133,8 @@ export class TrafficSensorStrategy implements IDetailsStrategy {
         dataPoints.sort((a, b) => a.timestamp - b.timestamp);
         const sortedValues = dataPoints.map(d => d.value);
         const sortedTimes = dataPoints.map(d => d.isoTime);
-        const label = property === 'car_speed' ? 'Speed' : 'Car Count';
-        const unit = property === 'car_speed' ? 'km/h' : 'cars';
+        const label = property === 'car_speed' ? t('speed', this.currentLang) : t('car_count', this.currentLang);
+        const unit = property === 'car_speed' ? t('km_h', this.currentLang) : t('cars', this.currentLang);
 
         return { label: label, values: sortedValues, times: sortedTimes, unit: unit };
     }
@@ -161,7 +164,7 @@ export class TrafficSensorStrategy implements IDetailsStrategy {
             },
             onEachFeature: (feature: GeoFeature, layer: any) => {
                 const props = feature.properties;
-                layer.bindPopup(`<div class="marker-popup-hover"><h4>${props.name}</h4><p>Click to Pin</p></div>`, {
+                layer.bindPopup(`<div class="marker-popup-hover"><h4>${props.name}</h4><p>${t('click_to_pin', this.currentLang)}</p></div>`, {
                     closeButton: false,
                     offset: L.point(0, 0)
                 });
@@ -202,7 +205,7 @@ export class TrafficSensorStrategy implements IDetailsStrategy {
 
         // Validate Valid Dates
         if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-            return { error: "Invalid date format provided." };
+            return { error: t('invalid_date_format', this.currentLang) };
         }
 
         // Validate Logic: Range Check
@@ -211,13 +214,13 @@ export class TrafficSensorStrategy implements IDetailsStrategy {
         const approximateMonths = diffDays / 30;
 
         if (diffDays < 2) {
-            return { error: "Date range must be at least 2 days." };
+            return { error: t('min_date_range', this.currentLang) };
         }
         if (approximateMonths > 6) {
-            return { error: "Date range cannot exceed 6 months." };
+            return { error: t('max_date_range', this.currentLang) };
         }
         if (start > end) {
-            return { error: "Start date cannot be after end date." };
+            return { error: t('start_date_after_end_date', this.currentLang) };
         }
 
         return { start: Utils.formatDateToLocal(start), end: Utils.formatDateToLocal(end) };

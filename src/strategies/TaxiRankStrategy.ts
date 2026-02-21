@@ -1,7 +1,8 @@
 // src/strategies/TaxiRankStrategy.ts
 import { IDetailsStrategy } from './IDetailsStrategy.js';
-import { ChartDataset, GeoFeature, GeoJSONInput, SensorProperties } from '../Types.js';
+import {ChartDataset, GeoFeature, GeoJSONInput, SensorProperties, SupportedLanguage} from '../Types.js';
 import { Utils } from '../Utils.js';
+import { t } from '../Translations.js';
 
 declare const L: any;
 
@@ -10,6 +11,7 @@ export class TaxiRankStrategy implements IDetailsStrategy {
     public checkbox_id = 'toggle-taxi';
     private layer: any;
     private onPin: ((sensor: SensorProperties) => void) | undefined;
+    private currentLang: SupportedLanguage = 'bg'; // Default fallback
 
     initialize(map: any, onPin: (sensor: SensorProperties) => void): void {
         this.onPin = onPin;
@@ -25,8 +27,9 @@ export class TaxiRankStrategy implements IDetailsStrategy {
             return;
         }
 
+        this.currentLang = lang as SupportedLanguage;
         this.layer.clearLayers();
-        Utils.updateTimestampUI('taxi-time', 'Refreshing...');
+        Utils.updateTimestampUI('taxi-time', t('loading', this.currentLang));
 
         try {
             const res = await fetch(`/api/taxi-ranks?lang=${lang}`);
@@ -70,7 +73,7 @@ export class TaxiRankStrategy implements IDetailsStrategy {
             },
             onEachFeature: (feature: GeoFeature, layer: any) => {
                 const props = feature.properties;
-                layer.bindPopup(`<div class="marker-popup-hover"><h4>${props.name}</h4><p>Click for details</p></div>`, {
+                layer.bindPopup(`<div class="marker-popup-hover"><h4>${props.name}</h4><p>${t('click_for_details', this.currentLang)}</p></div>`, {
                     closeButton: false,
                     offset: L.point(0, 0)
                 });

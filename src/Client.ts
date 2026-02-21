@@ -1,4 +1,6 @@
 import { SensorProperties, SupportedLanguage } from './Types.js'
+import { t } from './Translations.js';
+import { TranslationKeys } from './locales/bg.js';
 import { CsvExporter } from './CsvExporter.js';
 import { CompositeDetailsStrategy } from "./strategies/CompositeDetailsStrategy.js";
 import { TrafficSensorStrategy } from './strategies/TrafficSensorStrategy.js';
@@ -45,6 +47,13 @@ class SmartMap {
         if (savedLang === 'bg' || savedLang === 'en') {
             this.currentLang = savedLang;
         }
+
+        document.querySelectorAll('[data-i18n]').forEach((element) => {
+            const key = element.getAttribute('data-i18n') as keyof TranslationKeys;
+            if (key) {
+                element.textContent = t(key, this.currentLang);
+            }
+        });
 
         this.initMap();
         this.initListeners();
@@ -113,6 +122,35 @@ class SmartMap {
             console.warn("Cannot save language preference in Iframe.");
         }
 
+        document.querySelectorAll('[data-i18n]').forEach((element) => {
+            const key = element.getAttribute('data-i18n') as keyof TranslationKeys;
+            if (key) {
+                element.textContent = t(key, this.currentLang);
+            }
+        });
+
+        this.pinnedSensors = [];
+        this.previewSensor = null;
+
+        // Hide the panel visually
+        const panel = document.getElementById('info-panel') as HTMLElement;
+        if (panel) {
+            panel.classList.add('hidden');
+        }
+
+        // Tell the composite strategy to render the now-empty arrays, which clears the DOM inside the panel cleanly.
+        const panelContainer = document.getElementById('info-content') as HTMLElement;
+        const chartContainer = document.getElementById('chart-container') as HTMLElement;
+        this.compositeStrategy.render(
+            panelContainer,
+            chartContainer,
+            [], // Empty items
+            this.pinnedSensors,
+            (s) => this.togglePin(s),
+            (s) => this.closeSensor(s),
+            this.currentLang
+        );
+
         console.log(`Language switched to ${lang}. Refreshing data...`);
 
         // Refreshes data for ALL strategies
@@ -139,7 +177,7 @@ class SmartMap {
                 const configRaw = btnFullChart.dataset.chartConfig || '[]';
                 try {
                     const config = JSON.parse(configRaw);
-                    this.compositeStrategy.renderFull(config, data);
+                    this.compositeStrategy.renderFull(config, data, this.currentLang);
                 } catch (e) {
                     console.error("Failed to parse chart config", e);
                 }
@@ -197,9 +235,7 @@ class SmartMap {
         });
 
         // --- Layer Toggles ---
-        const toggleMap = this.compositeStrategy.toggleMap();
-
-        for (const [elementId, strategyName] of Object.entries(toggleMap)) {
+        for (const [elementId, strategyName] of Object.entries(this.compositeStrategy.toggleMap())) {
             const checkbox = document.getElementById(elementId) as HTMLInputElement;
             checkbox?.addEventListener('change', (e: Event) => {
                 const strategy = this.compositeStrategy.getStrategies().get(strategyName);
@@ -313,7 +349,7 @@ class SmartMap {
     private refreshPanel() {
         const content = document.getElementById('info-content') as HTMLElement;
         const chart = document.getElementById('chart-container') as HTMLElement;
-        const panel = document.getElementById('info-panel');
+        const panel = document.getElementById('info-panel') as HTMLElement;
 
         // Combine lists for rendering
         const itemsToShow = [...this.pinnedSensors];
@@ -329,7 +365,8 @@ class SmartMap {
                 itemsToShow,
                 this.pinnedSensors, // Pass pinned list to know which icon to show
                 (s) => this.togglePin(s),
-                (s) => this.closeSensor(s)
+                (s) => this.closeSensor(s),
+                this.currentLang
             );
         } else {
             panel?.classList.add('hidden');

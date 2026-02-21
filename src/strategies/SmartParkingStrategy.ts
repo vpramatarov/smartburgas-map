@@ -1,7 +1,8 @@
 // src/strategies/SmartParkingStrategy.ts
 import { IDetailsStrategy } from './IDetailsStrategy.js';
-import { ChartDataset, GeoFeature, GeoJSONInput, SensorProperties } from '../Types.js';
+import {ChartDataset, GeoFeature, GeoJSONInput, SensorProperties, SupportedLanguage} from '../Types.js';
 import { Utils } from '../Utils.js';
+import { t } from '../Translations.js';
 
 declare const L: any;
 
@@ -10,6 +11,7 @@ export class SmartParkingStrategy implements IDetailsStrategy {
     public checkbox_id = 'toggle-smart-parking';
     private layer: any;
     private onPin: ((sensor: SensorProperties) => void) | undefined;
+    private currentLang: SupportedLanguage = 'bg'; // Default fallback
 
     initialize(map: any, onPin: (sensor: SensorProperties) => void): void {
         this.onPin = onPin;
@@ -25,8 +27,9 @@ export class SmartParkingStrategy implements IDetailsStrategy {
             return;
         }
 
+        this.currentLang = lang as SupportedLanguage;
         this.layer.clearLayers();
-        Utils.updateTimestampUI('smart-car-parking-time', 'Refreshing...');
+        Utils.updateTimestampUI('smart-car-parking-time', t('loading', this.currentLang));
 
         try {
             const res = await fetch(`/api/smart-parking?lang=${lang}`);
@@ -73,7 +76,7 @@ export class SmartParkingStrategy implements IDetailsStrategy {
                 const popupContent = `
                     <div class="marker-popup-hover">
                         <h4>${props.name}</h4>
-                        <p>Free: <strong>${props.additional_info.total_free_lots}</strong> / ${props.additional_info.total_lots}</p>
+                        <p><span>${t('free', this.currentLang)}</span>: <strong>${props.additional_info.total_free_lots}</strong> / ${props.additional_info.total_lots}</p>
                     </div>`;
 
                 layer.bindPopup(popupContent, {
@@ -126,8 +129,8 @@ export class SmartParkingStrategy implements IDetailsStrategy {
             <div class="data-row smart-parking">
                 <div>
                     <span>
-                        <span class="prop-label">Capacity:</span> 
-                        <span class="prop-value">${free} free / ${total} total</span>
+                        <span class="prop-label">${t('capacity', this.currentLang)}:</span> 
+                        <span class="prop-value">${free} ${t('free', this.currentLang)} / ${total} ${t('total', this.currentLang)}</span>
                     </span>
                     <span class="prop-additional" style="font-size: 12px;">${last_sync}</span>
                 </div>
@@ -136,7 +139,7 @@ export class SmartParkingStrategy implements IDetailsStrategy {
                  <div class="progress">
                     <div style="background:${this.getUsageColor(usage)}; height:100%; width:${usage}%"></div>
                  </div>
-                 <div class="occupied">${usage}% Occupied</div>
+                 <div class="occupied">${usage}% ${t('occupied', this.currentLang)}</div>
             </div>
         `;
         container.appendChild(stats);
@@ -157,7 +160,7 @@ export class SmartParkingStrategy implements IDetailsStrategy {
             const uniqueId = `${uniqueIdPrefix}-free_lots`;
             toggleDiv.innerHTML = `
                 <div class="data-row toggle-row">
-                    <span class="prop-label">Free Spots History</span>
+                    <span class="prop-label">${t('free_spots_history', this.currentLang)}</span>
                     <input type="checkbox" id="${uniqueId}" 
                            data-property="free_lots" 
                            data-sensor-index="${uniqueIdPrefix.split('-')[1]}" 
@@ -196,6 +199,6 @@ export class SmartParkingStrategy implements IDetailsStrategy {
         const values = points.map(d => parseInt(d.free_lots));
         const times = points.map(d => d.time);
 
-        return {label: "Free Spaces", values: values, times: times, unit: "spots"};
+        return {label: t('free_spots', this.currentLang), values: values, times: times, unit: t('spots', this.currentLang)};
     }
 }
