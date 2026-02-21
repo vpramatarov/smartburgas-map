@@ -187,6 +187,12 @@ export class CompositeDetailsStrategy {
                 // For now, let's just dump the intent structure.
                 btnFullChart.dataset.chartConfig = JSON.stringify(selectedPropsGlobal);
             }
+        } else {
+            // clear the chart if datasets are suddenly empty
+            ChartRenderer.clear(chartContainer.id);
+            chartContainer.style.display = 'none';
+            noChartText?.classList.remove('hidden');
+            btnFullChart?.classList.add('hidden');
         }
     }
 

@@ -15,7 +15,7 @@ export class Utils {
                 if (f.properties) {
                     f.properties.strategy = strategyName;
 
-                    if (f.properties.name?.length === 0) {
+                    if (!f.properties.name || f.properties.name.length === 0) {
                         f.properties.name = strategyName + '_' + this.generateCustomId();
                     }
                 }
@@ -25,7 +25,7 @@ export class Utils {
                 if (f.properties) {
                     f.properties.strategy = strategyName;
 
-                    if (f.properties.name?.length === 0) {
+                    if (!f.properties.name || f.properties.name.length === 0) {
                         f.properties.name = strategyName + '_' + this.generateCustomId();
                     }
                 }

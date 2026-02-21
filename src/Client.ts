@@ -131,6 +131,7 @@ class SmartMap {
 
         this.pinnedSensors = [];
         this.previewSensor = null;
+        CCTVStrategy.stopAll();
 
         // Hide the panel visually
         const panel = document.getElementById('info-panel') as HTMLElement;
@@ -323,6 +324,7 @@ class SmartMap {
         }
 
         this.refreshPanel();
+        CCTVStrategy.garbageCollect();
     }
 
     /**
@@ -344,6 +346,7 @@ class SmartMap {
         }
 
         this.refreshPanel();
+        CCTVStrategy.garbageCollect();
     }
 
     private refreshPanel() {

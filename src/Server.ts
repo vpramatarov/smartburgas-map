@@ -288,7 +288,7 @@ function createFeaturesCollectionFromApiResult(result: { data: {features1: GeoFe
         let lng: number;
         let point = feature.properties.geometry.coordinates[0].toString();
 
-        if (point > 40) {
+        if (parseFloat(point) > 40) {
             lat = feature.properties.geometry.coordinates[1]; // may be the order is reversed?
             lng = feature.properties.geometry.coordinates[0];
         } else {

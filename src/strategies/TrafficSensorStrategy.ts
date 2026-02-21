@@ -244,6 +244,7 @@ export class TrafficSensorStrategy implements IDetailsStrategy {
             return new Date(year, month, day, hour, minute, second).getTime();
         }
 
-        return new Date(clean).getTime();
+        const fallbackTime = new Date(clean).getTime();
+        return isNaN(fallbackTime) ? 0 : fallbackTime;
     }
 }
