@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "concurrently \"tsc -w\" \"nodemon -L dist/server.js\"",
+    "start": "concurrently \"tsc -w\" \"nodemon -L dist/Server.js\"",
     "build": "tsc"
   },
   "dependencies": {
