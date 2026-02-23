@@ -266,8 +266,14 @@ class SmartMap {
         });
 
         document.getElementById('btn-download-csv')?.addEventListener('click', () => {
-            if (this.pinnedSensors.length > 0) {
-                CsvExporter.download(this.pinnedSensors);
+            const data = [...this.pinnedSensors];
+
+            if (this.previewSensor) {
+                data.push(this.previewSensor);
+            }
+
+            if (data.length > 0) {
+                CsvExporter.download(data);
             } else {
                 alert("Please pin at least one sensor to export data.");
             }

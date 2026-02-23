@@ -66,7 +66,7 @@ export class CsvExporter {
         const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
 
         const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
+        const link = document.createElement("a") as HTMLAnchorElement;
         link.setAttribute("href", url);
         link.setAttribute("download", `${filename}.csv`);
         link.style.visibility = 'hidden';
