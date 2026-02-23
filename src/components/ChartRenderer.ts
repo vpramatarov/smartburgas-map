@@ -23,7 +23,7 @@ export class ChartRenderer {
      * @param datasets Data to render
      */
     public static render(containerId: string, defaultLabels: string[], datasets: ChartDataset[]) {
-        const container = document.getElementById(containerId);
+        const container = document.getElementById(containerId) as HTMLDivElement;
 
         if (!container) {
             return;
@@ -52,10 +52,10 @@ export class ChartRenderer {
             autosize: true,
             height: 250,
             margin: { l: 40, r: 20, t: 10, b: 60 },
-            font: { family: 'Arial, sans-serif', size: 10 },
+            font: { family: 'Arial, sans-serif', size: 10, color: '#fff' },
             xaxis: { type: 'date', tickangle: -45, automargin: true },
             yaxis: { gridcolor: '#eee', zerolinecolor: '#ccc' },
-            paper_bgcolor: 'rgba(0,0,0,0)',
+            paper_bgcolor: 'rgba(0,0,0,0.9)',
             plot_bgcolor: 'rgba(0,0,0,0)',
             showlegend: datasets.length > 1,
             legend: { x: 0, y: 1.1, orientation: 'h' } // Legend on top

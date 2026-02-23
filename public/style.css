@@ -323,8 +323,14 @@ ul li {
 
 /** Chart */
 #chart-container {
-    margin-top: 40px;
     max-height: 250px;
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    z-index: 999999;
+    box-sizing: border-box;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
+    width: 100%;
 }
 
 #no-chart-data {
@@ -455,6 +461,7 @@ ul li {
 #chart-container.js-plotly-plot .plotly .modebar-container .modebar {
     width: 100%;
     left: 0;
+    bottom: 0;
     background: rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: row;
