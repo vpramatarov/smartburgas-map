@@ -11,6 +11,7 @@ import { EVChargingStrategy } from './strategies/EVChargingStrategy.js';
 import { WasteCentreStrategy } from './strategies/WasteCentreStrategy.js';
 import { SmartParkingStrategy } from './strategies/SmartParkingStrategy.js';
 import { TaxiRankStrategy } from './strategies/TaxiRankStrategy.js';
+import { AdministrativeRegionStrategy } from './strategies/AdministrativeRegionStrategy.js';
 import { ChartRenderer } from './components/ChartRenderer.js';
 
 
@@ -19,6 +20,7 @@ declare const L: any;
 class SmartMap {
     private allowedOrigin: string = '*'; // Default to allow all until config loads
     private compositeStrategy: CompositeDetailsStrategy;
+    private currentFilterGeometry: any | null = null;
     private map: any;
     private pinnedSensors: SensorProperties[] = [];
     private previewSensor: SensorProperties | null = null;
@@ -33,7 +35,10 @@ class SmartMap {
             new EVChargingStrategy(),
             new WasteCentreStrategy(),
             new SmartParkingStrategy(),
-            new TaxiRankStrategy()
+            new TaxiRankStrategy(),
+            new AdministrativeRegionStrategy((geometry) => {
+                this.onRegionFilterChange(geometry);
+            })
         ];
         this.compositeStrategy = new CompositeDetailsStrategy(strategies);
 
@@ -129,6 +134,17 @@ class SmartMap {
             }
         });
 
+        this.clearSidePanel();
+
+        console.log(`Language switched to ${lang}. Refreshing data...`);
+
+        // Refreshes data for ALL strategies
+        this.compositeStrategy.getStrategies().forEach(strategy => {
+            strategy.loadData(this.currentLang);
+        });
+    }
+
+    private clearSidePanel() {
         this.pinnedSensors = [];
         this.previewSensor = null;
         CCTVStrategy.stopAll();
@@ -151,13 +167,6 @@ class SmartMap {
             (s) => this.closeSensor(s),
             this.currentLang
         );
-
-        console.log(`Language switched to ${lang}. Refreshing data...`);
-
-        // Refreshes data for ALL strategies
-        this.compositeStrategy.getStrategies().forEach(strategy => {
-            strategy.loadData(this.currentLang);
-        });
     }
 
     private initListeners(): void {
@@ -453,6 +462,19 @@ class SmartMap {
         if (window.parent !== window) {
             window.parent.postMessage(message, this.allowedOrigin);
         }
+    }
+
+    private onRegionFilterChange(geometry: any | null) {
+        console.log("Applying Spatial Filter:", geometry ? "Active" : "Cleared");
+        this.currentFilterGeometry = geometry;
+
+        // Iterate ALL strategies and tell them to filter
+        this.compositeStrategy.getStrategies().forEach(strategy => {
+            strategy.applyRegionFilter(geometry);
+        });
+
+        // Clear the side panel if the selected item is now filtered out
+        this.clearSidePanel()
     }
 
 }
