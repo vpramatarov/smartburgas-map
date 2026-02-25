@@ -12,10 +12,26 @@
 <body>
 
 <div id="controls">
-    <div class="lang-switcher">
-        <span data-flag="bg"><img src="images/bg-web.png" alt="BG"> <span data-i18n="bg">БГ</span></span>
-        <span data-flag="en"><img src="images/en-web.png" alt="EN"> <span data-i18n="en">АНГЛ</span></span>
+    <div class="lang-switcher-wrapper">
+        <!-- Bulgarian Option -->
+        <input type="radio" name="lang" id="bg" value="bg" checked>
+        <label for="bg" class="lang-option">
+            <span class="flag" data-flag="bg"><img src="images/bg-web.png" alt="BG"></span>
+            <span data-i18n="bg">БГ</span>
+        </label>
+
+        <!-- English Option -->
+        <input type="radio" name="lang" id="en" value="en">
+        <label for="en" class="lang-option">
+            <span class="flag" data-flag="en"><img src="images/en-web.png" alt="EN"></span>
+            <span data-i18n="en">АНГЛ</span>
+        </label>
+
+        <!-- The animated background slider -->
+        <div class="selection-pill"></div>
     </div>
+
+    <hr>
 
     <div class="bulk-controls">
         <a href="#" id="btn-select-all" class="active" data-i18n="select_all">Избери всички</a>

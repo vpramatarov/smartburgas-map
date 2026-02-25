@@ -98,6 +98,8 @@ export class AdministrativeRegionStrategy implements IDetailsStrategy {
             return;
         }
 
+        container.innerHTML = '';
+
         // Extract unique names and sort them
         const regionNames = Array.from(new Set(features.map(f => f.properties?.CAU))).sort();
 

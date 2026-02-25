@@ -97,20 +97,15 @@ class SmartMap {
             return;
         }
 
-        const flagElements = document.querySelectorAll('.lang-switcher span') as NodeListOf<HTMLSpanElement>;
-        flagElements?.forEach((flagEl) => {
-            const flagLang = flagEl.dataset.flag as SupportedLanguage;
-            if (this.currentLang === flagLang) {
-                flagEl.classList.add('active');
-            }
+        const radioButtons = document.querySelectorAll('input[name="lang"]') as NodeListOf<HTMLInputElement>;
 
-            flagEl.addEventListener('click', (e) => {
-                e.preventDefault();
-                flagEl.nextElementSibling?.classList.remove('active');
-                flagEl.previousElementSibling?.classList.remove('active');
-                flagEl.classList.add('active');
-                this.setLanguage(flagLang);
-            })
+        radioButtons?.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const $currentInputEl = e.target as HTMLInputElement;
+                const lang = $currentInputEl.value as SupportedLanguage;
+                this.setLanguage(lang);
+                console.log(`Language changed to: ${lang}`);
+            });
         });
     }
 
