@@ -26,6 +26,9 @@ export interface IDetailsStrategy {
      */
     loadData(lang: string, options?: Record<string, any>): Promise<void>;
 
+    // Filter the currently loaded data by a geographic shape
+    applyRegionFilter(geometry: any | null): void;
+
     /**
      * Returns the Leaflet layer group for this strategy.
      * Used by the Client to toggle visibility.
