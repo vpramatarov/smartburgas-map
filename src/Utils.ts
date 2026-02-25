@@ -1,4 +1,4 @@
-import {GeoJSONInput} from "./Types.js";
+import {FilterGeometry, GeoJSONInput, Position} from "./Types.js";
 
 export class Utils {
 
@@ -49,13 +49,13 @@ export class Utils {
      * Standard Ray-Casting algorithm to check if a point is inside a polygon.
      * Supports GeoJSON Polygon and MultiPolygon.
      */
-    public static isPointInPolygon(point: [number, number], geometry: any): boolean {
+    public static isPointInPolygon(point: [number, number], geometry: FilterGeometry|null): boolean {
         if (!geometry) return true; // No filter = inside
 
         const x = point[0], y = point[1];
 
         // Helper: Check single polygon ring
-        const insidePoly = (rings: any[]) => {
+        const insidePoly = (rings: Position[][]) => {
             let inside = false;
             // The first ring is the outer boundary
             const coords = rings[0];
