@@ -93,16 +93,10 @@ export class AdministrativeRegionStrategy implements IDetailsStrategy {
      * Generates the checkboxes in the sidebar based on the unique CAU names.
      */
     private renderSidebarControls(features: GeoFeature[]) {
-        const container = document.getElementById('region-filters') as HTMLDivElement;
+        const container = document.getElementById('region-filters-wrapper') as HTMLDivElement;
         if (!container) {
             return;
         }
-
-        container.innerHTML = `<h4>${t('regions', this.currentLang)}</h4>`;
-
-        const wrapper = document.createElement('div') as HTMLDivElement;
-        wrapper.id = 'region-filters-wrapper';
-        container.appendChild(wrapper);
 
         // Extract unique names and sort them
         const regionNames = Array.from(new Set(features.map(f => f.properties?.CAU))).sort();
@@ -143,7 +137,7 @@ export class AdministrativeRegionStrategy implements IDetailsStrategy {
 
             div.appendChild(checkbox);
             div.appendChild(label);
-            wrapper.appendChild(div);
+            container.appendChild(div);
         });
     }
 
