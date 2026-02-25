@@ -1,4 +1,4 @@
-import { ChartDataset, SensorProperties } from '../Types.js'
+import {ChartDataset, FilterGeometry, SensorProperties} from '../Types.js'
 
 export interface IDetailsStrategy {
     /**
@@ -27,7 +27,7 @@ export interface IDetailsStrategy {
     loadData(lang: string, options?: Record<string, any>): Promise<void>;
 
     // Filter the currently loaded data by a geographic shape
-    applyRegionFilter(geometry: any | null): void;
+    applyRegionFilter(geometry: FilterGeometry | null): void;
 
     /**
      * Returns the Leaflet layer group for this strategy.
