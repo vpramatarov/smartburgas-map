@@ -1,5 +1,6 @@
 import express, {NextFunction, Request, Response} from 'express';
 import axios from 'axios';
+import fs from 'fs';
 import path from 'path';
 import {Config, GeoFeature, GeoFeatureCollection, SupportedLanguage, Target} from './Types.js'
 
@@ -137,6 +138,29 @@ app.get('/api/config', (req, res) => {
     // Fallback to '*' (allow all) if it's not set in .env for local development.
     res.json({
         allowFrameUrl: process.env.ALLOW_FRAME_URL as string || '*'
+    });
+});
+
+// --- Administrative Regions ---
+app.get('/api/admin-regions', (req, res) => {
+    // Construct path relative to the process root (where package.json is)
+    const filePath = path.join(__dirname, '../cau.json');
+
+    fs.readFile(filePath, 'utf8', (err, data) => {
+        if (err) {
+            console.error('Error reading cau.json:', err);
+            // Return 500 if file is missing or unreadable
+            res.status(500).json({ error: 'Failed to load regions data' });
+            return;
+        }
+
+        try {
+            const jsonData = JSON.parse(data);
+            res.json(jsonData);
+        } catch (parseError) {
+            console.error('Error parsing JSON:', parseError);
+            res.status(500).json({ error: 'Invalid JSON data' });
+        }
     });
 });
 
