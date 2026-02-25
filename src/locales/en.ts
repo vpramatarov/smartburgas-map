@@ -6,6 +6,9 @@ export const en: TranslationKeys = {
     bg: 'BG',
     en: 'EN',
 
+    // --- Regions ---
+    regions: 'Regions',
+
     // --- Bulk Controls ---
     select_all: 'Select all',
     deselect_all: 'Deselect all',

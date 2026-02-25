@@ -5,6 +5,9 @@ export const bg = {
     bg: 'БГ',
     en: 'АНГЛ',
 
+    // --- Regions ---
+    regions: 'Региони',
+
     // --- Bulk Controls ---
     select_all: 'Избери всички',
     deselect_all: 'Отмаркирай всички',
