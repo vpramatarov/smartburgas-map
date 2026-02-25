@@ -29,6 +29,7 @@ p {
     border-radius: 5px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
     font-family: sans-serif;
+    max-width: 350px;
 }
 
 /* Language Switcher */
@@ -339,29 +340,48 @@ ul li {
 }
 
 /** Region controls */
-.region-controls {
+#region-filters-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
     margin: 15px 0;
-    padding-bottom: 10px;
+    padding-bottom: 15px;
     border-bottom: 1px solid #eee;
-    max-height: 200px;
-    overflow-y: auto; /* Scroll if there are many regions */
+    max-height: 300px;
 }
 
 .region-item {
-    display: flex;
-    align-items: center;
-    margin-bottom: 6px;
-    font-size: 13px;
-    cursor: pointer;
+    margin: 0;
 }
 
-.region-item input {
-    margin-right: 8px;
-    cursor: pointer;
+.region-item input[type="checkbox"] {
+    display: none;
 }
 
-.region-item:hover {
-    color: #fff;
+.region-item label {
+    display: inline-block;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #222;
+    background-color: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    user-select: none;
+}
+
+/* Hover Effect */
+.region-item label:hover {
+    background-color: #e2e8f0;
+    transform: translateY(-1px);
+}
+
+.region-item input[type="checkbox"]:checked + label {
+    background-color: rgb(119, 191, 34);
+    border-color: rgb(119, 191, 34);
+    box-shadow: 0 2px 5px rgba(52, 152, 219, 0.3);
 }
 
 /** Style checkbox (Filters) */
