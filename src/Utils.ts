@@ -44,4 +44,47 @@ export class Utils {
     public static generateCustomId(): string {
         return Math.random().toString(36).substring(2, 9);
     }
+
+    /**
+     * Standard Ray-Casting algorithm to check if a point is inside a polygon.
+     * Supports GeoJSON Polygon and MultiPolygon.
+     */
+    public static isPointInPolygon(point: [number, number], geometry: any): boolean {
+        if (!geometry) return true; // No filter = inside
+
+        const x = point[0], y = point[1];
+
+        // Helper: Check single polygon ring
+        const insidePoly = (rings: any[]) => {
+            let inside = false;
+            // The first ring is the outer boundary
+            const coords = rings[0];
+            for (let i = 0, j = coords.length - 1; i < coords.length; j = i++) {
+                const xi = coords[i][0], yi = coords[i][1];
+                const xj = coords[j][0], yj = coords[j][1];
+
+                const intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi); // magic
+                if (intersect) {
+                    inside = !inside;
+                }
+            }
+            return inside; // We ignore holes (inner rings) for simplicity, or add generic logic if needed
+        };
+
+        if (geometry.type === 'Polygon') {
+            return insidePoly(geometry.coordinates);
+        }
+
+        if (geometry.type === 'MultiPolygon') {
+            // Check if point is inside ANY of the polygons in the MultiPolygon
+            for (const polyCoords of geometry.coordinates) {
+                if (insidePoly(polyCoords)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        return false;
+    }
 }
