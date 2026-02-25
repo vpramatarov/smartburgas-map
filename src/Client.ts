@@ -256,7 +256,7 @@ class SmartMap {
         // --- Panel Actions ---
         document.getElementById('close-panel')?.addEventListener('click', () => {
             document.getElementById('info-panel')?.classList.add('hidden');
-            const content = document.getElementById('info-content');
+            const content = document.getElementById('info-content') as HTMLDivElement;
             if (content) {
                 content.innerHTML = '';
             }
