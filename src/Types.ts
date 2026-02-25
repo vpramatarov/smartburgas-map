@@ -18,10 +18,28 @@ export type Config = {
     taxiRanks: Target;
 }
 
+// Standard GeoJSON Coordinate [longitude, latitude]
+export type Position = number[];
+
 export interface Geometry {
     type: string;
-    coordinates: number[];
+    coordinates: Position;
 }
+
+// GeoJSON Polygon Geometry
+export interface PolygonGeometry {
+    type: 'Polygon';
+    coordinates: Position[][];
+}
+
+// GeoJSON MultiPolygon Geometry
+export interface MultiPolygonGeometry {
+    type: 'MultiPolygon';
+    coordinates: Position[][][]; // Array of Polygons
+}
+
+// The union type
+export type FilterGeometry = PolygonGeometry | MultiPolygonGeometry;
 
 export interface DynamicDataPoint {
     [key: string]: any;
