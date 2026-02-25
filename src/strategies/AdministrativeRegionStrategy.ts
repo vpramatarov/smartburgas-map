@@ -100,6 +100,10 @@ export class AdministrativeRegionStrategy implements IDetailsStrategy {
 
         container.innerHTML = `<h4>${t('regions', this.currentLang)}</h4>`;
 
+        const wrapper = document.createElement('div') as HTMLDivElement;
+        wrapper.id = 'region-filters-wrapper';
+        container.appendChild(wrapper);
+
         // Extract unique names and sort them
         const regionNames = Array.from(new Set(features.map(f => f.properties?.CAU))).sort();
 
@@ -139,7 +143,7 @@ export class AdministrativeRegionStrategy implements IDetailsStrategy {
 
             div.appendChild(checkbox);
             div.appendChild(label);
-            container.appendChild(div);
+            wrapper.appendChild(div);
         });
     }
 
