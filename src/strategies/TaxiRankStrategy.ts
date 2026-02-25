@@ -12,6 +12,8 @@ export class TaxiRankStrategy implements IDetailsStrategy {
     private layer: any;
     private onPin: ((sensor: SensorProperties) => void) | undefined;
     private currentLang: SupportedLanguage = 'bg'; // Default fallback
+    private cachedData: any[] = [];
+    private layerOptions: { color: string } = { color: "#f1c40f" };
 
     initialize(map: any, onPin: (sensor: SensorProperties) => void): void {
         this.onPin = onPin;
@@ -38,14 +40,35 @@ export class TaxiRankStrategy implements IDetailsStrategy {
             }
 
             Utils.updateTimestampUI('taxi-time', new Date(res.headers.get('X-Last-Updated') || new Date()));
-
             const data = await res.json();
             Utils.tagDataWithStrategy(data, this.name);
-
-            this.addGeoJsonToLayer(data, { color: "#f1c40f" });
+            this.cachedData = Array.isArray(data) ? data : data.features || [];
+            this.applyRegionFilter(null); // Initially with no filter
+            this.addGeoJsonToLayer(data, this.layerOptions);
         } catch (err) {
             console.error('Taxi Rank load error:', err);
         }
+    }
+
+    applyRegionFilter(filterGeometry: any | null): void {
+        if (!this.layer) {
+            return;
+        }
+
+        this.layer.clearLayers();
+
+        // Filter the cached data
+        const filteredFeatures = this.cachedData.filter(feature => {
+            // Ensure the feature has geometry
+            if (!feature.geometry || !feature.geometry.coordinates) {
+                return false;
+            }
+
+            return Utils.isPointInPolygon(feature.geometry.coordinates, filterGeometry);
+        });
+
+        // Re-use the existing addGeoJsonToLayer logic
+        this.addGeoJsonToLayer(filteredFeatures, this.layerOptions);
     }
 
     private addGeoJsonToLayer(inputData: GeoJSONInput, options: { color: string }) {
