@@ -338,6 +338,32 @@ ul li {
     color:#999;
 }
 
+/** Region controls */
+.region-controls {
+    margin: 15px 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+    max-height: 200px;
+    overflow-y: auto; /* Scroll if there are many regions */
+}
+
+.region-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.region-item input {
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+.region-item:hover {
+    color: #fff;
+}
+
 /** Style checkbox (Filters) */
 .checkbox {
     display: inline-block;
