@@ -1,4 +1,4 @@
-import { SensorProperties, SupportedLanguage } from './Types.js'
+import {FilterGeometry, SensorProperties, SupportedLanguage} from './Types.js'
 import { t } from './Translations.js';
 import { TranslationKeys } from './locales/bg.js';
 import { CsvExporter } from './CsvExporter.js';
@@ -20,7 +20,7 @@ declare const L: any;
 class SmartMap {
     private allowedOrigin: string = '*'; // Default to allow all until config loads
     private compositeStrategy: CompositeDetailsStrategy;
-    private currentFilterGeometry: any | null = null;
+    private currentFilterGeometry: FilterGeometry | null = null;
     private map: any;
     private pinnedSensors: SensorProperties[] = [];
     private previewSensor: SensorProperties | null = null;
@@ -464,7 +464,7 @@ class SmartMap {
         }
     }
 
-    private onRegionFilterChange(geometry: any | null) {
+    private onRegionFilterChange(geometry: FilterGeometry | null) {
         console.log("Applying Spatial Filter:", geometry ? "Active" : "Cleared");
         this.currentFilterGeometry = geometry;
 
@@ -476,7 +476,6 @@ class SmartMap {
         // Clear the side panel if the selected item is now filtered out
         this.clearSidePanel()
     }
-
 }
 
 document.addEventListener('DOMContentLoaded', () => {
