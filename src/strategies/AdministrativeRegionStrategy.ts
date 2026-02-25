@@ -1,6 +1,7 @@
 // src/strategies/AdministrativeRegionStrategy.ts
 import { IDetailsStrategy } from './IDetailsStrategy.js';
-import { ChartDataset, SensorProperties } from '../Types.js';
+import {ChartDataset, FilterGeometry, GeoFeature, SensorProperties, SupportedLanguage} from '../Types.js';
+import {t} from "../Translations.js";
 
 declare const L: any;
 
@@ -8,17 +9,15 @@ export class AdministrativeRegionStrategy implements IDetailsStrategy {
     public name = 'admin_regions';
     public checkbox_id = 'toggle-admin-regions';
     private layer: any;
-    private onFilterChange: (geometry: any | null) => void;
-    private selectedLayer: any = null;
-
+    private currentLang: SupportedLanguage = 'bg'; // Default fallback
+    private onFilterChange: (geometry: FilterGeometry | null) => void;
     // State to track the currently active region
     private currentSelection: { name: string, layer: any } | null = null;
-
     // Cache the features to link sidebar buttons to map layers
     private featureMap: Map<string, any> = new Map();
 
     // We pass a callback specifically for the filter action
-    constructor(onFilterChange: (geometry: any | null) => void) {
+    constructor(onFilterChange: (geometry: FilterGeometry | null) => void) {
         this.onFilterChange = onFilterChange;
     }
 
@@ -33,6 +32,7 @@ export class AdministrativeRegionStrategy implements IDetailsStrategy {
 
     async loadData(lang: string): Promise<void> {
         this.layer.clearLayers();
+        this.currentLang = lang as SupportedLanguage;
 
         try {
             const res = await fetch('/api/admin-regions');
@@ -53,7 +53,7 @@ export class AdministrativeRegionStrategy implements IDetailsStrategy {
                     dashArray: '4, 4'
                 },
                 onEachFeature: (feature: any, layer: any) => {
-                    const regionName = feature.properties?.CAU || 'Unknown';
+                    const regionName = feature.properties?.CAU || t('status_unknown', this.currentLang);
 
                     // Store reference for the sidebar to use later
                     this.featureMap.set(regionName, layer);
@@ -92,13 +92,13 @@ export class AdministrativeRegionStrategy implements IDetailsStrategy {
     /**
      * Generates the checkboxes in the sidebar based on the unique CAU names.
      */
-    private renderSidebarControls(features: any[]) {
+    private renderSidebarControls(features: GeoFeature[]) {
         const container = document.getElementById('region-filters') as HTMLDivElement;
         if (!container) {
             return;
         }
 
-        container.innerHTML = '<h4>Regions</h4>'; // Optional header // TODO: translate
+        container.innerHTML = `<h4>${t('regions', this.currentLang)}</h4>`;
 
         // Extract unique names and sort them
         const regionNames = Array.from(new Set(features.map(f => f.properties?.CAU))).sort();
@@ -147,7 +147,7 @@ export class AdministrativeRegionStrategy implements IDetailsStrategy {
      * Centralized Logic for Selecting a Region
      * Handles: Unchecking others, Highlighting Map, Triggering Filter
      */
-    private selectRegion(name: string, layer: any, geometry: any) {
+    private selectRegion(name: string, layer: any, geometry: FilterGeometry) {
         // If clicking the already selected one, do nothing (or deselect if logic requires)
         if (this.currentSelection?.name === name) {
             return;
@@ -207,7 +207,7 @@ export class AdministrativeRegionStrategy implements IDetailsStrategy {
     }
 
     // This layer itself is not filtered by other polygons
-    applyRegionFilter(geometry: any | null): void {}
+    applyRegionFilter(geometry: FilterGeometry | null): void {}
 
     // No side panel content for regions
     renderCardContent(container: HTMLElement, sensor: SensorProperties): void {}

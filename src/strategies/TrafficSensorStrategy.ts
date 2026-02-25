@@ -1,5 +1,5 @@
 import { IDetailsStrategy } from './IDetailsStrategy.js';
-import {ChartDataset, GeoFeature, GeoJSONInput, SensorProperties, SupportedLanguage} from '../Types.js';
+import {ChartDataset, FilterGeometry, GeoFeature, GeoJSONInput, SensorProperties, SupportedLanguage} from '../Types.js';
 import { Utils } from '../Utils.js';
 import {t} from "../Translations.js";
 
@@ -61,7 +61,7 @@ export class TrafficSensorStrategy implements IDetailsStrategy {
         }
     }
 
-    applyRegionFilter(filterGeometry: any | null): void {
+    applyRegionFilter(filterGeometry: FilterGeometry | null): void {
         if (!this.layer) {
             return;
         }

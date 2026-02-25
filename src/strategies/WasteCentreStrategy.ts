@@ -2,7 +2,7 @@
 import { IDetailsStrategy } from './IDetailsStrategy.js';
 import {
     ChartDataset,
-    DynamicDataPoint,
+    DynamicDataPoint, FilterGeometry,
     GeoFeature,
     GeoJSONInput,
     SensorProperties,
@@ -57,7 +57,7 @@ export class WasteCentreStrategy implements IDetailsStrategy {
         }
     }
 
-    applyRegionFilter(filterGeometry: any | null): void {
+    applyRegionFilter(filterGeometry: FilterGeometry | null): void {
         if (!this.layer) {
             return;
         }
