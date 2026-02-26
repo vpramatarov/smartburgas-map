@@ -36,6 +36,7 @@ p {
 .lang-switcher-wrapper {
     position: relative;
     display: inline-flex;
+    gap: 20px;
     align-items: center;
     background-color: #e3e3e6;
     padding: 2px;
@@ -91,7 +92,7 @@ input[name="lang"]#bg:checked ~ .selection-pill {
 }
 
 input[name="lang"]#en:checked ~ .selection-pill {
-    transform: translateX(100%);
+    transform: translateX(102px);
 }
 
 /* Active Text Styling */
@@ -118,6 +119,7 @@ input[name="lang"]:checked + label .flag {
 
 /* Bulk Controls */
 .bulk-controls {
+    margin-top: 10px;
     margin-bottom: 10px;
     font-size: 13px;
     text-align: center;
@@ -492,6 +494,11 @@ ul li {
     border: 1px solid transparent;
 }
 
+.action-btn:not(.hidden) {
+    align-items: center;
+    display: flex;
+}
+
 .action-btn:hover {
     background: #000;
     color: #fff;
@@ -499,6 +506,9 @@ ul li {
 
 #info-panel-container .actions {
     margin-top: 15px;
+    display: flex;
+    gap: 10px;
+    flex-direction: row;
 }
 
 #btn-download-csv {
