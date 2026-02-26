@@ -277,9 +277,9 @@ class SmartMap {
             }
 
             if (data.length > 0) {
-                CsvExporter.download(data);
+                CsvExporter.download(data, this.currentLang);
             } else {
-                alert("Please pin at least one sensor to export data.");
+                alert(t('no_pinned_sensors_for_export', this.currentLang));
             }
         });
     }
