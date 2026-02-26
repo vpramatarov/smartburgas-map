@@ -35,7 +35,8 @@ p {
 /* Language Switcher */
 .lang-switcher-wrapper {
     position: relative;
-    display: inline-flex;
+    display: inline-grid;
+    grid-template-columns: 80px 80px;
     gap: 20px;
     align-items: center;
     background-color: #e3e3e6;
@@ -92,7 +93,7 @@ input[name="lang"]#bg:checked ~ .selection-pill {
 }
 
 input[name="lang"]#en:checked ~ .selection-pill {
-    transform: translateX(102px);
+    transform: translateX(calc(100% + 22px));
 }
 
 /* Active Text Styling */
