@@ -1,4 +1,5 @@
-import { SensorProperties } from './Types.js';
+import {SensorProperties, SupportedLanguage} from './Types.js';
+import {t} from "./Translations.js";
 
 export class CsvExporter {
 
@@ -6,13 +7,21 @@ export class CsvExporter {
      * Downloads the CSV file for the given list of sensors.
      * Columns: FeatureName, DataType, Variable, Date, TimeStamp, Value, Unit
      */
-    public static download(sensors: SensorProperties[], filename: string = 'export_data') {
+    public static download(sensors: SensorProperties[], lang: SupportedLanguage, filename: string = 'export_data') {
         if (!sensors || sensors.length === 0) {
             console.warn("No sensors to export.");
             return;
         }
 
-        const headers = ["FeatureName", "DataType", "Variable", "Date", "TimeStamp", "Value", "Unit"];
+        const headers = [
+            t('feature_name', lang),
+            t('data_type', lang),
+            t('variable', lang),
+            t('date', lang),
+            t('timestamp', lang),
+            t('value', lang),
+            t('unit', lang)
+        ];
         const rows: string[] = [];
         rows.push(headers.map(h => `"${h}"`).join(','));
 
