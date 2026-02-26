@@ -61,6 +61,16 @@ export const bg = {
     max_date_range: 'Периодът от дати не може да надвишава 6 месеца.',
     start_date_after_end_date: 'Началната дата не може да бъде след крайната дата.',
 
+    // --- CSV Export ---
+    feature_name: 'Име на свойството',
+    data_type: 'Тип данни',
+    variable: 'Променлива',
+    date: 'Дата',
+    timestamp: 'Времева марка',
+    value: 'Стойност',
+    unit: 'Единица',
+    no_pinned_sensors_for_export: 'Моля, закачете поне един сензор за експортиране на данни.',
+
     // --- Misc ---
     filters: 'Филтри',
     no_chart_data: 'Няма данни за диаграма.',

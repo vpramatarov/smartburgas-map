@@ -62,6 +62,16 @@ export const en: TranslationKeys = {
     max_date_range: 'Date range cannot exceed 6 months.',
     start_date_after_end_date: 'Start date cannot be after end date.',
 
+    // --- CSV Export ---
+    feature_name: 'Feature name',
+    data_type: 'Data type',
+    variable: 'Variable',
+    date: 'Date',
+    timestamp: 'Timestamp',
+    value: 'Value',
+    unit: 'Unit',
+    no_pinned_sensors_for_export: 'Please pin at least one sensor to export data.',
+
     // --- Misc ---
     filters: 'Filters',
     no_chart_data: 'No data for chart.',
