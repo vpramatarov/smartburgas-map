@@ -9,6 +9,8 @@
     "esModuleInterop": true,
     "skipLibCheck": true
   },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "tests/**/*", "e2e/**/*", "playwright.config.ts", "vitest.config.ts"],
   "watchOptions": {
     "watchFile": "priorityPollingInterval",
     "watchDirectory": "fixedPollingInterval",
