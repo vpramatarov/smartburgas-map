@@ -1,5 +1,5 @@
 # Base: Shared setup
-FROM node:25-alpine AS base
+FROM node:25-bookworm AS base
 WORKDIR /app
 COPY package*.json ./
 
