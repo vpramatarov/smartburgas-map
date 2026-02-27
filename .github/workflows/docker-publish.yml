@@ -35,6 +35,14 @@ jobs:
 
       - name: Run Frontend UI Tests (Playwright)
         run: npm run test:e2e
+
+      - name: Upload Playwright Report
+        uses: actions/upload-artifact@v4
+        if: failure() # ONLY upload if the E2E tests fail
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7 # Automatically deletes after 1 week to save storage
   build:
     needs: test # run if 'test' passes successfully
     runs-on: ubuntu-latest
