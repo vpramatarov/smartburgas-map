@@ -127,6 +127,7 @@ export class AirQualityTimeSensorStrategy implements IDetailsStrategy {
         const latestData = sensor.data[sensor.data.length - 1];
         const toggleContainer = document.createElement('div') as HTMLDivElement;
         toggleContainer.className = 'property-toggles';
+        const time = latestData['time'] || '';
 
         for (const p in latestData) {
             if (p.endsWith('_unit') || p === 'time') {
@@ -144,7 +145,13 @@ export class AirQualityTimeSensorStrategy implements IDetailsStrategy {
             const rowDiv = document.createElement('div') as HTMLDivElement;
             rowDiv.classList.add('data-row', 'toggle-row');
             const textDiv = document.createElement('div') as HTMLDivElement;
-            textDiv.innerHTML = `<span class="prop-label">${p}:</span> <span class="prop-value">${value} ${unit}</span>`;
+            let innerHtml = `<span class="prop-label">${p}:</span> <span class="prop-value">${value} ${unit}</span>`;
+
+            if (time) {
+                innerHtml += `<div class="prop-value">${time}</div>`;
+            }
+
+            textDiv.innerHTML = innerHtml;
             const checkbox = document.createElement('input') as HTMLInputElement;
             checkbox.type = 'checkbox';
             checkbox.id = uniqueId;

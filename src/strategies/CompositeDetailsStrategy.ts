@@ -90,7 +90,7 @@ export class CompositeDetailsStrategy {
             const header = document.createElement('div') as HTMLDivElement;
             header.className = 'sensor-card-header';
 
-            const title = document.createElement('h3');
+            const title = document.createElement('h3') as HTMLHeadingElement;
             title.innerText = sensor.name || sensor.publicname || t('unknown_sensor', lang);
 
             const actions = document.createElement('div') as HTMLDivElement;
