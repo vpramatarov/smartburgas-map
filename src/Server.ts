@@ -363,5 +363,5 @@ app.listen(config.port, async () => {
     await prefetchAll();
 
     // run every 5 minutes (300,000 milliseconds) in the background
-    setInterval(prefetchAll, 5 * 60 * 1000);
+    // setInterval(prefetchAll, 5 * 60 * 1000);
 });

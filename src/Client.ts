@@ -249,6 +249,7 @@ class SmartMap {
                     if ((e.target as HTMLInputElement).checked) {
                         // If data hasn't been loaded yet, we could trigger loadData here too
                         // But we load all on startup for now.
+                        strategy.loadData(this.currentLang)
                         layer.addTo(this.map);
                     } else {
                         this.map.removeLayer(layer);
