@@ -11,7 +11,32 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  # TEST THE APPLICATION
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '25'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Backend & Unit Tests (Vitest)
+        run: npm test
+
+      - name: Install Playwright Browsers (Chromium only to save time/CPU)
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Frontend UI Tests (Playwright)
+        run: npm run test:e2e
   build:
+    needs: test # run if 'test' passes successfully
     runs-on: ubuntu-latest
     # These permissions are required for GitHub Actions to push the image securely
     permissions:
@@ -44,3 +69,19 @@ jobs:
           # This automatically tags image with the tag version number
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+  # CLEANUP OLD DOCKER IMAGES
+  cleanup:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write # Required to delete packages
+    steps:
+      - name: Delete old images
+        uses: snok/container-retention-policy@v2
+        with:
+          image-names: ${{ github.event.repository.name }}
+          cut-off: 30 days ago # Keeps images less than 30 days old
+          keep-at-least: 3 # Always keep the 3 most recent images
+          account-type: personal # Or 'org' for organization repo
+          token: ${{ secrets.GITHUB_TOKEN }}
