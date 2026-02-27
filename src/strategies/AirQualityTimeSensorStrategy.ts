@@ -124,7 +124,7 @@ export class AirQualityTimeSensorStrategy implements IDetailsStrategy {
             return;
         }
 
-        const latestData = sensor.data[sensor.data.length - 1];
+        const latestData = sensor.data[0];
         const toggleContainer = document.createElement('div') as HTMLDivElement;
         toggleContainer.className = 'property-toggles';
         const time = latestData['time'] || '';
