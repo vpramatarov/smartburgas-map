@@ -1,0 +1,725 @@
+{
+	"type": "FeatureCollection",
+	"features": [
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Ивайло/Сливница",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4648547172546,
+					42.4950383505309
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Проектантска",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4670433998108,
+					42.5090052067522
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Мария Луиза",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4607428908348,
+					42.4942581474199
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Ивайло",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4657706916332,
+					42.4925053742648
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ул.М.Лермонтов и ул.Митрополит Симеон",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4748,
+					42.4927
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ул.Цар Иван Шишман и ул.Св.Патриарх Евтимий",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4685,
+					42.4917
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ул.Цар Симеон I-ви и ул.Съединение",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4776,
+					42.4953
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Кирил и Методий",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4745267629623,
+					42.4962031984045
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Панацея",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4719303846359,
+					42.5027014252002
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Хан Аспарух",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4746823310852,
+					42.4980680964282
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Ж.П. Гара",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4721825122833,
+					42.491072958713
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Кристъл Палас",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4680492281914,
+					42.492836155244
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Славянска",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4780458211899,
+					42.4925919015958
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ул.Адам Мицкевич",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4795,
+					42.5007
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Подземен паркинг",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4732446670532,
+					42.4972711213633
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Краснодар",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4639561772346,
+					42.49349276761
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Сливница",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.470498085022,
+					42.4962565949856
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "РУО",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4633902311325,
+					42.5031681008278
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Старата поща",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4697363376617,
+					42.4919431909192
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Приморец",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4787271022797,
+					42.4905448800849
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ДНА",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.468341588974,
+					42.4958061835063
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Братя Миладинови бл.57",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4634975194931,
+					42.5056082039508
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Стария Магазин",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4758034944534,
+					42.4950007744318
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "бул.Демокрация и бул.Алеко Богориди",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4808,
+					42.4943
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ул.Княз Александър Батенберг 1",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4755,
+					42.4906
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ул.М.Лермонтов и ул.Георги Кирков",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4744,
+					42.4948
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "вход Морска гара",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4805,
+					42.4888
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ул.Цар Симеон I-ви и ул.Пиротска",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4729,
+					42.4997
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Фердинандова",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4692515283823,
+					42.4931879480429
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Инканто",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4722146987915,
+					42.4980621636488
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Гочев",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4706321954727,
+					42.5016494148223
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Атаген",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4734216928482,
+					42.5030019963427
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Иван Богоров",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4737221002579,
+					42.5008584179176
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Младежки дом",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4659383296967,
+					42.4963515221283
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Адам Мицкевич 2",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4781155586243,
+					42.5008198565627
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Шар Планина",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4677675962448,
+					42.5061292347011
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Военна болница",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4674296379089,
+					42.5073304560319
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Бизнес Инкубатор",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4805241823196,
+					42.4924425800697
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Левски",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4711780250072,
+					42.4990563907288
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Коджакафалията",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.471129745245,
+					42.5004250956834
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Демокрация",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4798509478569,
+					42.4929469096204
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Гурко",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4752348661423,
+					42.4993752717499
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Стара планина",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4709057807922,
+					42.5044830790924
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Конт Андрованти",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4721959233284,
+					42.4928143998971
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Блок Аерофлот",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4684140086174,
+					42.499510733893
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Фотинов",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4751517176628,
+					42.493694496531
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Асен Златаров",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4788719415665,
+					42.4975173343472
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Климент Охридски",
+				"description": "Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона",
+				"pic_url": "http://pics.smartburgas.eu/parking/zone/parkingmashine.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4687707424164,
+					42.4944776732336
+				]
+			}
+		}
+	]
+}

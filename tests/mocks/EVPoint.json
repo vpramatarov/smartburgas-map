@@ -1,0 +1,260 @@
+{
+	"type": "FeatureCollection",
+	"features": [
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Смарт Бизнес Център",
+				"description": "20 KW",
+				"pic_url": null
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4642230570316,
+					42.5315546068201
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Бургас-Лазур",
+				"description": "1 бр. двойна станция с два конектора",
+				"pic_url": null
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.480084635481,
+					42.4999537028872
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Тенис център Авеню",
+				"description": "20 KW",
+				"pic_url": null
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4703907966614,
+					42.5506262321304
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ж.к Изгрев 21, Северна индустриална зона",
+				"description": "20 KW",
+				"pic_url": null
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4536310136318,
+					42.5291016803923
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "МОЛ Бургас",
+				"description": "120 KW",
+				"pic_url": null
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4586145579815,
+					42.5308865348726
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "парк Арена",
+				"description": "Платена зарядна станция за електромобили",
+				"pic_url": "http://pics.smartburgas.eu/parking/charger/chargerareana.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4577945,
+					42.5126102
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Moto-Pfohe Rent a car Burgas",
+				"description": "120 KW",
+				"pic_url": null
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4474954605103,
+					42.5345618303733
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ж.к. Братя Миладинови, ул. „Родопи“",
+				"description": "Една бързо зарядна станция с мощност 22 kW DC  и една стандартна зарядна станция с мощност 22 kW AC. ",
+				"pic_url": "https://smartburgas.eu/uploads/files/rodopi1.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4674105271697,
+					42.504733465616
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Младежки дом",
+				"description": "Четири бързо зарядни станции с мощност 22 kW DC",
+				"pic_url": "https://smartburgas.eu/uploads/files/Mdom.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4656912311912,
+					42.496150543398
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Площад „Жени Патева“",
+				"description": "Две бързо зарядни станции с мощност 22 kW DC",
+				"pic_url": "https://smartburgas.eu/uploads/files/Pateva.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4689360335469,
+					42.4919968383607
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Български Червен кръст, ул. „Христо Фотев“",
+				"description": "Три бързо зарядни станции с мощност 22 kW DC",
+				"pic_url": "https://smartburgas.eu/uploads/files/RedCros.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.461792640388,
+					42.5006614086946
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Спортна Зала „Бойчо Брънзов“",
+				"description": "Една бързо зарядна станция с мощност 50 kW DC ",
+				"pic_url": "https://smartburgas.eu/uploads/files/BBranzov.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4670852,
+					42.5155816
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Паркинг „Гурко“",
+				"description": "Една 22 kW AC стандартна и една 22 kW DC бързо зарядна станции",
+				"pic_url": "https://smartburgas.eu/uploads/files/Gurko.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4750454351306,
+					42.5004226237852
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Сарафово ",
+				"description": "Една бързо зарядна станция с мощност 50 kW DC",
+				"pic_url": "https://smartburgas.eu/uploads/files/Sarafovo.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.5152333080769,
+					42.5545354872231
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Морска Градина,  „Приморска“ алея ",
+				"description": "Три стандартни зарядни станции с мощност 22 kW AC",
+				"pic_url": "https://smartburgas.eu/uploads/files/Morska.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4818488582969,
+					42.5068230293432
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "бул.Стефан Стамболов 103 (паркинг Метро)",
+				"description": "Платена зарядна станция за електромобили",
+				"pic_url": "http://pics.smartburgas.eu/parking/charger/chargermetro.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4526278086261,
+					42.5295249877974
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ж.к. „Лазур“",
+				"description": "Една бързо зарядна станция с мощност 22 kW DC  и една стандартна зарядна станция с мощност 22 kW AC",
+				"pic_url": "https://smartburgas.eu/uploads/files/Lazur.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4788266792893,
+					42.5034130547022
+				]
+			}
+		}
+	]
+}

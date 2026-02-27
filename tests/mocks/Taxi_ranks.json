@@ -1,0 +1,890 @@
+{
+	"type": "FeatureCollection",
+	"features": [
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "бул.\"Демокрация\", пред ІІІ-та поликлиника, в паркинга",
+				"description": "5 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/t23.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4769,
+					42.5015
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ул.\"У.Гладстон\", срещу Младежки дом",
+				"description": "4 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/t20.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4657,
+					42.4963
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ж.к.\"Изгрев\", пред бл.43, след автобусна спирка",
+				"description": "3 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/defaulttaxi.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4633,
+					42.5229
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ул.\"Хр.Ботев\", в уширението преди  ДНА ",
+				"description": "5 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/t19.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4692,
+					42.4966
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "бул.\"Сан Стефано\", в локала пред бл.6 ",
+				"description": "7 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/t17i.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4598389863968,
+					42.5009273215615
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ул.\"Васил Левски\", в паркинга на НХК",
+				"description": "3 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/defaulttaxi.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4689920246601,
+					42.4986138324699
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ж.к.\"М.Рудник\", на паркинга пред бл.469 ",
+				"description": "10 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/defaulttaxi.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4132,
+					42.453
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "на ул.\"Цар Симеон I-ви\", до ОУ \"А.Георгиев-Коджакафалията\"",
+				"description": "4 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/t15.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4711,
+					42.5014
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "бул.\"Демокрация\" до ОУ \"В.Априлов\" в съществуващия джоб",
+				"description": "10 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/defaulttaxi.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4739,
+					42.5043
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "бул.\"Стефан Стамболов\", северно от бл.132  (подхода към НОИ)",
+				"description": "3 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/defaulttaxi.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4665954709053,
+					42.5099620325481
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "бул.\"Стефан Стамболов\", в джоба пред БСУ",
+				"description": "5 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/defaulttaxi.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4701,
+					42.5033
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "бул.\"Стефан Стамболов\", в джоба пред РСС",
+				"description": "4 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/defaulttaxi.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4701,
+					42.5036
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ж.к.\"М.Рудник\", в уширението пред супермаркет Сара ",
+				"description": "3 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/defaulttaxi.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4142,
+					42.4599
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "кв.\"Лозово\", паркинг в центъра",
+				"description": "3 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/defaulttaxi.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4089,
+					42.5328
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ж.к.\"Изрев\", до парк \"Велека\", пред  бл.72",
+				"description": "3 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/defaulttaxi.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4607911705971,
+					42.5232257726103
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ж.к.\"Изгрев\", срещу бл.15 - бл.17 ",
+				"description": "5 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/t9.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4582967162132,
+					42.527808994127
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ж.к.\"Изгрев\", северно от бл.31, в улицата вътрешен локал ",
+				"description": "4 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/defaulttaxi.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4635538458824,
+					42.530483347277
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ул.\"Хр. Ботев\" 70, в изграден джоб след автобусната спирка",
+				"description": "2 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/defaulttaxi.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.46746,
+					42.50161
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "на паркинга на централен вход на ЖПГара",
+				"description": "6 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/defaulttaxi.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4724,
+					42.4911
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ул.\"Княз Ал. Батенберг\", преди кръстовището с ул.\"Константин Фотинов\"",
+				"description": "5 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/defaulttaxi.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4755,
+					42.4907
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "паркинг на входа на Експозиционен център \"Флора\" ",
+				"description": "6 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/t24.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4808889627457,
+					42.5034584736426
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ж.к.\"Зорница\", в локално платно зад автобусната спирка, северозападно от бл.2 и бл.3",
+				"description": "5 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/t2.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4631810188293,
+					42.5152686572201
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ж.к.\"Зорница\", паркинг пред бл.40 (в района на Спортна зала Бойчо Брънзов)",
+				"description": "5 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/t3.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4663996696472,
+					42.5149226726957
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Паркинг на РУМ \"Велека\"",
+				"description": "4 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/t10.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4655950069427,
+					42.5244316072674
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Паркинг пред стар корпус на УМБАЛ",
+				"description": "3 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/t4.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4645462632179,
+					42.5136751354485
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ул.\"Въстаническа\", в района на бл.100, на паркинга пред пазара",
+				"description": "3 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/t13.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4144,
+					42.45
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Паркинг пред нов корпус на УМБАЛ",
+				"description": "10 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/t6.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4655333161354,
+					42.5129744351491
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ул.\"Адам Мицкевич\" до бл.1, на обособени паркоместа",
+				"description": "3 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/t30.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4782335758209,
+					42.5007949832403
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Летище Бургас, паркинг в района на детелината",
+				"description": "6 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/defaulttaxi.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.5202,
+					42.5639
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "на паркинга на Автогара Запад, между ул.\"Дебелт\", ул.\"Пирин\" и ул.\"Арда\"",
+				"description": "5 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/t31.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4573767185211,
+					42.5031570395682
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ул.\"Княз Борис I-ви\", в района на Борисова градинка (между ул.\"У.Гладстон\" и ул.\"Ивайло\") ",
+				"description": "5 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/defaulttaxi.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4653,
+					42.4966
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ж.к.\"Изгрев\", в улицата между бл.69 и бензиностанция Петрол",
+				"description": "5 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/t8.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4639132618904,
+					42.5277734143776
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "на ул.\"М.Лермонтов\" и ул.\"Богориди\"",
+				"description": "4 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/t16.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4740935862064,
+					42.4934847794033
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ул.\"Васил Левски\", в паркинга пред Районен съд",
+				"description": "3 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/defaulttaxi.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4714,
+					42.4991
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "паркинг в Морската градина, по пътя за солниците, пред ЖП прелеза ",
+				"description": "7 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/t27.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4835,
+					42.509
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "бул.\"Демокрация\",  на паркинга в ж.к.\"Лазур\"  пред бл.77",
+				"description": "5 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/t28.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4748647212982,
+					42.5034408313234
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "бул.\"Демокрация\" зад хотел \"Космос\" (посока ул.\"Дунав\") до бл. 164 след АС ",
+				"description": "3 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/t29.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4683550000191,
+					42.5098117638889
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ул.\"Фердинандова\", пред водна палата",
+				"description": "5 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/t18.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4708856642246,
+					42.4934828016654
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "кв.\"Долно Езерово\", паркинг в центъра",
+				"description": "3 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/defaulttaxi.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.372339963913,
+					42.5167845720096
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ул.\"Ген.Гурко\", между бул.\"Ст.Стамболов\" и ул.\"Тр.Китанчев\" (на паркинг преди бул.\"Демокрация\")",
+				"description": "3 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/defaulttaxi.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4761,
+					42.4999
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "Парк езеро, паркинг вход Здравна каса ",
+				"description": "3 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/t1.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4749398231506,
+					42.5140764853307
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ж.к.\"П.Р.Славейков\", на паркинга между бл.41 и бл.42",
+				"description": "6 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/t34.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4492911994457,
+					42.5252149549032
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "бул.\"Захари Стоянов\", в локалното платно между ул. \"Миньорска\" и ул.\"Залесителна\" ",
+				"description": "3 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/defaulttaxi.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4085,
+					42.4608
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ул.\"Копривщица\", на съществуващия паркинг пред бл.81 (в района на ОУ \"П.Яворов\")",
+				"description": "3 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/t35.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4725741147995,
+					42.508360682667
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ул.\"Одрин\", пред ритуална зала \"Вардар\" в паркинга между дърветата ",
+				"description": "5 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/t26.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4663165211678,
+					42.5032292466944
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ул.\"Цар Петър\", бивша спирка \"Централна поща\"",
+				"description": "3 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/t22.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4714,
+					42.4922
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "на ул.\"Цар Симеон І-ви\", в пресечката с бул.\"А.Богориди\"",
+				"description": "4 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/t21.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4788,
+					42.494
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "на ул.\"Славянска между ул.\"Хан Аспарух\" и ул.\"Лермонтов\" (на гърба на храм \"Св.Св.Кирил и Методий\"",
+				"description": "4 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/defaulttaxi.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4745,
+					42.4963
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ж.к.\"М.Рудник\", в района на втора спирка, южно от СОУ \"Петко Росен\"",
+				"description": "10 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/t12.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4179509282112,
+					42.4620950719926
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "бул.\"Демокрация\" №104, след автоб. спирка ",
+				"description": "3 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/defaulttaxi.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4752,
+					42.5031
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ж.к.\"Зорница\", на паркинга пред бл.19 (надлез Никола Петков) ",
+				"description": "3 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/t7.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4655,
+					42.5201
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "кв.\"Сарафово\", паркинг в центъра",
+				"description": "3 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/defaulttaxi.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.5256,
+					42.563
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "в района на УМБАЛ, по улицата към Спортна зала Бойчо Брънзов, между бл.1 и бл.9 ",
+				"description": "7 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/t5.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4643960595131,
+					42.5142397801193
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "бул. \"Захари Стоянов\", в района на дискотека \"Флирт\", в локалното платно, югоизточно от бул.\"З.Стоянов\" и югозападно от ул.\"Въстаническа\"",
+				"description": "3 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/defaulttaxi.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4057,
+					42.4577
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "бул.\"24-ти черноморски пехотен полк\", пред бар-грил Хепи, на съществуващия паркинг ",
+				"description": "3 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/t25.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4804571270943,
+					42.500887014484
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ул.\"Цар Калоян\", на паркинга между ул.\"Цариградска\" и ул.\"Св.Кл.Охридски\" (в южния край)",
+				"description": "2 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/t14.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.464,
+					42.493
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ж.к.\"Изгрев\", до Търговски център, в локала към бл.51-двупосочно преди автоб.спирка",
+				"description": "6 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/defaulttaxi.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.462762594223,
+					42.5196593742328
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "бул.\"Демокрация\", в зоната на кръстовище с бул.\"Алеко Богориди\", на паркинга в разделителната ивица ",
+				"description": "3 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/t11.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4808,
+					42.4943
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"name": "ул.\"Г.Минков\", на обособения паркинг пред ТЦ Престиж ",
+				"description": "2 броя таксиметрови автомобила",
+				"pic_url": "http://pics.smartburgas.eu/parking/taxi/t32.jpg"
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4568,
+					42.5187
+				]
+			}
+		}
+	]
+}

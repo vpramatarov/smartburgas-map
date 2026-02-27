@@ -1,0 +1,192 @@
+{
+	"type": "FeatureCollection",
+	"features": [
+		{
+			"type": "Feature",
+			"properties": {
+				"publicname": "Zahari Stoyanov Blvd. and Kooperator St",
+				"description": "Zahari Stoyanov Blvd. and Kooperator St",
+				"pic_url": "http://pics.smartburgas.eu/cam/kooperator.jpg",
+				"video_url2": "https://pics.smartburgas.eu/m3u8/kooperator.m3u8",
+				"position": 280
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4042797088623,
+					42.4566059881564
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"publicname": "Биоразнообразие, Атанасовско Езеро",
+				"description": "Biodiversity, Atanasovsko Lake",
+				"pic_url": "http://pics.smartburgas.eu/cam/kaitklub.jpg",
+				"video_url2": "https://pics.smartburgas.eu/m3u8/biorasnoobrasie.m3u8",
+				"position": 80
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4710939065142,
+					42.5313026463298
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"publicname": "Sea Garden, Promenade",
+				"description": "Sea Garden, Promenade",
+				"pic_url": "http://pics.smartburgas.eu/cam/k44.jpg",
+				"video_url2": "https://pics.smartburgas.eu/m3u8/k44.m3u8",
+				"position": 160
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4822582304478,
+					42.4934705180569
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"publicname": "Roundabout at the Metro - Main road Burgas Sofia",
+				"description": "Roundabout at the Metro - Main road Burgas Sofia",
+				"pic_url": "http://pics.smartburgas.eu/cam/livecam1.jpg",
+				"video_url2": "https://pics.smartburgas.eu/m3u8/burgas_live_4k.m3u8",
+				"position": 5
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4519723385249,
+					42.5269739297743
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"publicname": "Boulevard Yakim Yakimov",
+				"description": "Boulevard Yakim Yakimov",
+				"pic_url": "http://pics.smartburgas.eu/cam/livecam15.jpg",
+				"video_url2": "https://pics.smartburgas.eu/m3u8/burgas_live_5_4k.m3u8",
+				"position": 240
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4505512986038,
+					42.5260376116624
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"publicname": "Neptune Sea Garden",
+				"description": "Neptune Sea Garden",
+				"pic_url": "http://pics.smartburgas.eu/cam/neptun.jpg",
+				"video_url2": "https://pics.smartburgas.eu/m3u8/burgas_live2_4k.m3u8",
+				"position": 120
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.481292924082,
+					42.4925381650574
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"publicname": "Municipality of Burgas",
+				"description": "Municipality of Burgas",
+				"pic_url": "http://pics.smartburgas.eu/cam/obshtina.jpg",
+				"video_url2": "https://pics.smartburgas.eu/m3u8/burgas_town_Center.m3u8",
+				"position": 90
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4722676820068,
+					42.4933220238387
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"publicname": "Ferdinandova Street and Hristo Botev Street",
+				"description": "Ferdinandova Street and Hristo Botev Street",
+				"pic_url": "http://pics.smartburgas.eu/cam/botev.jpg",
+				"video_url2": "https://pics.smartburgas.eu/m3u8/ferdinandova_boteva.m3u8",
+				"position": 90
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4706965684891,
+					42.493422557882
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"publicname": "Mostik Primorski Park",
+				"description": "Mostik Primorski Park",
+				"pic_url": "http://pics.smartburgas.eu/cam/mostik.jpg",
+				"video_url2": "https://pics.smartburgas.eu/m3u8/burgas_live3_4k.m3u8",
+				"position": 90
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4831795692444,
+					42.4953473636475
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"publicname": "Bike lane Kapani - Solnitsi",
+				"description": "Bike lane Kapani - Solnitsi",
+				"pic_url": "http://pics.smartburgas.eu/cam/k4solnici.jpg",
+				"video_url2": "https://pics.smartburgas.eu/m3u8/burgas_live4_4k.m3u8",
+				"position": 10
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4875224643636,
+					42.5217681087092
+				]
+			}
+		},
+		{
+			"type": "Feature",
+			"properties": {
+				"publicname": "Sea Casino - Overview",
+				"description": "Sea Casino - Overview",
+				"pic_url": "http://pics.smartburgas.eu/cam/k25.jpg",
+				"video_url2": "https://pics.smartburgas.eu/m3u8/k25.m3u8",
+				"position": 80
+			},
+			"geometry": {
+				"type": "Point",
+				"coordinates": [
+					27.4826849343045,
+					42.4948389242505
+				]
+			}
+		}
+	]
+}
