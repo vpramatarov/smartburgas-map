@@ -361,4 +361,7 @@ function createFeaturesCollectionFromApiResult(result: { data: {features1: GeoFe
 app.listen(config.port, async () => {
     console.log(`\n🚀 Server running at ${config.appUrl}:${config.port}`);
     await prefetchAll();
+
+    // run every 5 minutes (300,000 milliseconds) in the background
+    setInterval(prefetchAll, 5 * 60 * 1000);
 });
