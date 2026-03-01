@@ -217,7 +217,7 @@ ul li {
     top: 0;
     height: 100vh;
     right: 20px;
-    width: 400px;
+    width: 480px;
     border-radius: 8px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     overflow-y: auto;
@@ -251,7 +251,7 @@ ul li {
 
 #close-panel {
     position: absolute;
-    top: 10px;
+    top: 20px;
     right: 10px;
     border: none;
     background: transparent;
@@ -259,6 +259,12 @@ ul li {
     cursor: pointer;
     color: #999;
     z-index: 1002;
+    border-radius: 4px;
+}
+
+#close-panel:hover {
+    color: #000;
+    background: #e9ecef;
 }
 
 #info-panel h2 {
@@ -273,7 +279,7 @@ ul li {
     padding-bottom: 4px;
 }
 
-.data-row.smart-parking > div {
+.data-row.flex > div {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -301,8 +307,8 @@ ul li {
 }
 
 #info-panel .prop-label {
-    color: #555;
-    font-size: 12px;
+    color: #666;
+    font-size: 14px;
     text-transform: uppercase;
     font-weight: bold;
 }
@@ -320,9 +326,9 @@ ul li {
 }
 
 #info-panel .prop-value {
-    color: #333;
-    font-weight: normal;
-    font-size: 12px;
+    color: #000;
+    font-weight: bold;
+    font-size: 14px;
 }
 
 /* --- Chart Checkbox Toggle Styles --- */
@@ -680,7 +686,7 @@ ul li {
 
 .sensor-card-header h3 {
     margin: 0;
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 600;
     color: #333;
     max-width: 70%;
