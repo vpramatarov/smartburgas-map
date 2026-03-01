@@ -62,7 +62,7 @@ export const bg = {
     start_date_after_end_date: 'Началната дата не може да бъде след крайната дата.',
 
     // --- CSV Export ---
-    feature_name: 'Име на свойството',
+    feature_id_or_name: 'Ид или Име на свойството',
     data_type: 'Тип данни',
     variable: 'Променлива',
     date: 'Дата',

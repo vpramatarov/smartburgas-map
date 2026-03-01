@@ -63,7 +63,7 @@ export const en: TranslationKeys = {
     start_date_after_end_date: 'Start date cannot be after end date.',
 
     // --- CSV Export ---
-    feature_name: 'Feature name',
+    feature_id_or_name: 'Feature ID or name',
     data_type: 'Data type',
     variable: 'Variable',
     date: 'Date',
