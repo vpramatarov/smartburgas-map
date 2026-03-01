@@ -99,7 +99,7 @@ export class CompositeDetailsStrategy {
             }
 
             let filter: HTMLHeadingElement | null = null;
-            console.log(strategy.layerOptions);
+
             if (strategy.layerOptions.translate_name_key) {
                 filter = document.createElement('h2') as HTMLHeadingElement;
                 const translation_key = strategy.layerOptions.translate_name_key as keyof TranslationKeys;
