@@ -293,7 +293,7 @@ async function prefetchAll() {
                 };
             }
 
-            getData(target.endpoint, mockReq).catch(err => console.error(`Prefetch failed for ${target.key}: ${err.message}`))
+            return getData(target.endpoint, mockReq).catch(err => console.error(`Prefetch failed for ${target.key}: ${err.message}`))
         });
 
         await Promise.all(promises);
