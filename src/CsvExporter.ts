@@ -1,5 +1,6 @@
 import {SensorProperties, SupportedLanguage} from './Types.js';
 import {t} from "./Translations.js";
+import {Utils} from "./Utils.js";
 
 export class CsvExporter {
 
@@ -14,7 +15,7 @@ export class CsvExporter {
         }
 
         const headers = [
-            t('feature_name', lang),
+            t('feature_id_or_name', lang),
             t('data_type', lang),
             t('variable', lang),
             t('date', lang),
@@ -30,13 +31,17 @@ export class CsvExporter {
                 return;
             }
 
-            const featureName = sensor.name || "";
+            const featureName = String(sensor.id || sensor.name || "");
             const dataType = sensor.strategy || "";
 
             sensor.data.forEach(item => {
                 const timeRaw = item['time'];
                 const timestamp = this.parseDate(timeRaw);
-                const dateStr = timestamp > 0 ? new Date(timestamp).toUTCString() : timeRaw;
+                let dateStr = timeRaw;
+                if (timestamp > 0) {
+                    dateStr = Utils.formatDateTimeToLocal(timestamp);
+                }
+
                 const timeStampStr = timestamp > 0 ? timestamp.toString() : "";
 
                 Object.keys(item).forEach(key => {

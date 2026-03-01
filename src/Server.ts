@@ -343,6 +343,7 @@ function createFeaturesCollectionFromApiResult(result: { data: {features1: GeoFe
                 "coordinates": [lat, lng]
             },
             properties: {
+                id: feature.properties.detector_id || feature.properties.id || feature.properties.MobileCenterId || feature.properties.parking_id || null,
                 name: feature.properties.name || feature.properties.MobileCenterName || target_key + '_' + Utils.generateCustomId(),
                 description: feature.properties.description || feature.properties.MobileCenterDescription || '',
                 data: feature.properties.data,

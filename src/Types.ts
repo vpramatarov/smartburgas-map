@@ -49,7 +49,7 @@ export interface SensorProperties {
     name?: string;
     description?: string;
     data?: DynamicDataPoint[];
-    id?: string | number;
+    id?: string | number | null;
     strategy?: string;
     additional_info: DynamicDataPoint
     [key: string]: any;
