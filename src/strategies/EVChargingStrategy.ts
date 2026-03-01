@@ -9,11 +9,11 @@ declare const L: any;
 export class EVChargingStrategy implements IDetailsStrategy {
     public name = 'ev_station';
     public checkbox_id = 'toggle-ev-stations';
+    public layerOptions: { translate_name_key: string, color: string } = { translate_name_key: 'layer_ev_charging', color: "#f39c12" };
     private layer: any;
     private onPin: ((sensor: SensorProperties) => void) | undefined;
     private currentLang: SupportedLanguage = 'bg'; // Default fallback
     private cachedData: any[] = [];
-    private layerOptions: { color: string } = { color: "#f39c12" };
 
     initialize(map: any, onPin: (sensor: SensorProperties) => void): void {
         this.onPin = onPin;

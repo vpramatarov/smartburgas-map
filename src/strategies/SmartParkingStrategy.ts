@@ -9,11 +9,11 @@ declare const L: any;
 export class SmartParkingStrategy implements IDetailsStrategy {
     public name = 'smart_parking';
     public checkbox_id = 'toggle-smart-parking';
+    public layerOptions: { translate_name_key: string, color: string } = { translate_name_key: 'layer_smart_parking', color: "#2c3e50" };
     private layer: any;
     private onPin: ((sensor: SensorProperties) => void) | undefined;
     private currentLang: SupportedLanguage = 'bg'; // Default fallback
     private cachedData: any[] = [];
-    private layerOptions: { color: string } = { color: "#2c3e50" };
 
     initialize(map: any, onPin: (sensor: SensorProperties) => void): void {
         this.onPin = onPin;
@@ -149,13 +149,13 @@ export class SmartParkingStrategy implements IDetailsStrategy {
         // Progress bar for occupancy
         const stats = document.createElement('div') as HTMLDivElement;
         stats.innerHTML = `
-            <div class="data-row smart-parking">
+            <div class="data-row flex">
                 <div>
                     <span>
                         <span class="prop-label">${t('capacity', this.currentLang)}:</span> 
                         <span class="prop-value">${free} ${t('free', this.currentLang)} / ${total} ${t('total', this.currentLang)}</span>
                     </span>
-                    <span class="prop-additional" style="font-size: 12px;">${last_sync}</span>
+                    <span class="prop-additional" style="font-size: 14px;">${last_sync}</span>
                 </div>
             </div>
             <div class="data-row smart-parking-progress">
@@ -171,7 +171,7 @@ export class SmartParkingStrategy implements IDetailsStrategy {
             const desc = document.createElement('div') as HTMLDivElement;
             desc.className = 'sensor-description';
             desc.style.marginTop = '10px';
-            desc.style.fontSize = '12px';
+            desc.style.fontSize = '14px';
             desc.innerHTML = sensor.description;
             container.appendChild(desc);
         }

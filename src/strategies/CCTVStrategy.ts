@@ -14,12 +14,12 @@ interface ActivePlayer {
 export class CCTVStrategy implements IDetailsStrategy {
     public name = 'cctv';
     public checkbox_id = 'toggle-cctv';
+    public layerOptions: { translate_name_key: string, color: string } = { translate_name_key: 'layer_camera', color: "#2ecc71" };
     private layer: any;
     private onPin: ((sensor: SensorProperties) => void) | undefined;
     private static activePlayers: Map<string, ActivePlayer> = new Map();
     private currentLang: SupportedLanguage = 'bg'; // Default fallback
     private cachedData: any[] = [];
-    private layerOptions: { color: string } = { color: "#2ecc71" };
 
     initialize(map: any, onPin: (sensor: SensorProperties) => void): void {
         this.onPin = onPin;

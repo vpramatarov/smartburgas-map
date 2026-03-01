@@ -8,11 +8,11 @@ declare const L: any;
 export class AirQualityTimeSensorStrategy implements IDetailsStrategy {
     public name = 'air_quality_time';
     public checkbox_id = 'toggle-air-quality-time';
+    public layerOptions: { translate_name_key: string, color: string } = { translate_name_key: 'layer_air_quality', color: "#008000" };
     private layer: any;
     private onPin: ((sensor: SensorProperties) => void) | undefined;
     private currentLang: SupportedLanguage = 'bg'; // Default fallback
     private cachedData: any[] = [];
-    private layerOptions: { color: string } = { color: "#008000" };
 
     initialize(map: any, onPin: (sensor: SensorProperties) => void): void {
         this.onPin = onPin;
@@ -143,12 +143,12 @@ export class AirQualityTimeSensorStrategy implements IDetailsStrategy {
             const unit = latestData[p + '_unit'] || '';
             const uniqueId = `${uniqueIdPrefix}-${p}`;
             const rowDiv = document.createElement('div') as HTMLDivElement;
-            rowDiv.classList.add('data-row', 'toggle-row');
+            rowDiv.classList.add('data-row', 'toggle-row', 'flex');
             const textDiv = document.createElement('div') as HTMLDivElement;
-            let innerHtml = `<span class="prop-label">${p}:</span> <span class="prop-value">${value} ${unit}</span>`;
+            let innerHtml = `<span><span class="prop-label">${p}:</span> <span class="prop-value">${value} ${unit}</span></span>`;
 
             if (time) {
-                innerHtml += `<div class="prop-value">${time}</div>`;
+                innerHtml += `<span class="prop-additional">${time}</span>`;
             }
 
             textDiv.innerHTML = innerHtml;

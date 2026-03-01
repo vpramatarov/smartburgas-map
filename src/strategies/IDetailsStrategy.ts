@@ -11,6 +11,8 @@ export interface IDetailsStrategy {
      */
     checkbox_id: string
 
+    layerOptions: { translate_name_key?: string, color: string }
+
     /**
      * Initializes the strategy with the map instance.
      * Should create the Leaflet layer but NOT add it to the map yet (unless default).

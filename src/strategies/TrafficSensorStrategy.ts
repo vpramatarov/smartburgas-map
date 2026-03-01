@@ -8,12 +8,12 @@ declare const L: any;
 export class TrafficSensorStrategy implements IDetailsStrategy {
     public name = 'traffic_sensor';
     public checkbox_id = 'toggle-traffic';
+    public layerOptions: { translate_name_key: string, color: string } = { translate_name_key: 'layer_traffic', color: "#e74c3c" };
     private layer: any; // L.LayerGroup
     private map: any;
     private onPin: ((sensor: SensorProperties) => void) | undefined;
     private currentLang: SupportedLanguage = 'bg'; // Default fallback
     private cachedData: any[] = [];
-    private layerOptions: { color: string } = { color: "#e74c3c" };
 
     initialize(map: any, onPin: (sensor: SensorProperties) => void): void {
         this.map = map;

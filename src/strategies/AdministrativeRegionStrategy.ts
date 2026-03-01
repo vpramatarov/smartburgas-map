@@ -8,6 +8,7 @@ declare const L: any;
 export class AdministrativeRegionStrategy implements IDetailsStrategy {
     public name = 'admin_regions';
     public checkbox_id = 'toggle-admin-regions';
+    public layerOptions: { color: string } = { color: "#3498db" };
     private layer: any;
     private currentLang: SupportedLanguage = 'bg'; // Default fallback
     private onFilterChange: (geometry: FilterGeometry | null) => void;
@@ -45,10 +46,10 @@ export class AdministrativeRegionStrategy implements IDetailsStrategy {
 
             const geoJsonLayer = L.geoJSON(data, {
                 style: {
-                    color: '#3498db',
+                    color: this.layerOptions.color,
                     weight: 1,
                     opacity: 0.5,
-                    fillColor: '#3498db',
+                    fillColor: this.layerOptions.color,
                     fillOpacity: 0.05, // Very transparent
                     dashArray: '4, 4'
                 },
@@ -158,7 +159,7 @@ export class AdministrativeRegionStrategy implements IDetailsStrategy {
             const prevLayer = this.currentSelection.layer;
             // Reset style (using default logic from geoJSON layer would be cleaner, but manual reset works for now)
             prevLayer.setStyle({
-                color: '#3498db',
+                color: this.layerOptions.color,
                 weight: 1,
                 fillOpacity: 0.05,
                 dashArray: '4, 4'
@@ -196,7 +197,7 @@ export class AdministrativeRegionStrategy implements IDetailsStrategy {
         if (this.currentSelection) {
             const prevLayer = this.currentSelection.layer;
             prevLayer.setStyle({
-                color: '#3498db',
+                color: this.layerOptions.color,
                 weight: 1,
                 fillOpacity: 0.05,
                 dashArray: '4, 4'

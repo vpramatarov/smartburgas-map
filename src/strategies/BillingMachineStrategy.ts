@@ -9,11 +9,11 @@ declare const L: any;
 export class BillingMachineStrategy implements IDetailsStrategy {
     public name = 'billing_machine';
     public checkbox_id = 'toggle-billing-machines';
+    public layerOptions: { translate_name_key: string, color: string } = { translate_name_key: 'layer_billing_machines',  color: "#3498db" };
     private layer: any;
     private onPin: ((sensor: SensorProperties) => void) | undefined;
     private currentLang: SupportedLanguage = 'bg'; // Default fallback
     private cachedData: any[] = [];
-    private layerOptions: { color: string } = { color: "#3498db" };
 
     initialize(map: any, onPin: (sensor: SensorProperties) => void): void {
         this.onPin = onPin;

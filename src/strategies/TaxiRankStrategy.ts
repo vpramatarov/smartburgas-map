@@ -9,11 +9,11 @@ declare const L: any;
 export class TaxiRankStrategy implements IDetailsStrategy {
     public name = 'taxi_rank';
     public checkbox_id = 'toggle-taxi';
+    public layerOptions: { translate_name_key: string, color: string } = { translate_name_key: 'layer_taxi_stands', color: "#f1c40f" };
     private layer: any;
     private onPin: ((sensor: SensorProperties) => void) | undefined;
     private currentLang: SupportedLanguage = 'bg'; // Default fallback
     private cachedData: any[] = [];
-    private layerOptions: { color: string } = { color: "#f1c40f" };
 
     initialize(map: any, onPin: (sensor: SensorProperties) => void): void {
         this.onPin = onPin;

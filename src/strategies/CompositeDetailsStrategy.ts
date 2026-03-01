@@ -2,6 +2,7 @@ import { IDetailsStrategy } from './IDetailsStrategy.js';
 import { ChartRenderer } from '../components/ChartRenderer.js';
 import {ChartDataset, SensorProperties, SupportedLanguage} from '../Types.js';
 import { t } from '../Translations.js';
+import {TranslationKeys} from "../locales/bg.js";
 
 /**
  * Manages the Side Panel.
@@ -93,6 +94,18 @@ export class CompositeDetailsStrategy {
             const title = document.createElement('h3') as HTMLHeadingElement;
             title.innerText = sensor.name || sensor.publicname || t('unknown_sensor', lang);
 
+            if (strategyName === 'traffic_sensor' && sensor.id) {
+                title.innerText += ` | ID: ${sensor.id}`
+            }
+
+            let filter: HTMLHeadingElement | null = null;
+            console.log(strategy.layerOptions);
+            if (strategy.layerOptions.translate_name_key) {
+                filter = document.createElement('h2') as HTMLHeadingElement;
+                const translation_key = strategy.layerOptions.translate_name_key as keyof TranslationKeys;
+                filter.innerText = t(translation_key, lang);
+            }
+
             const actions = document.createElement('div') as HTMLDivElement;
             actions.className = 'card-actions';
 
@@ -106,6 +119,10 @@ export class CompositeDetailsStrategy {
             btnClose.className = 'btn-icon';
             btnClose.innerHTML = '<span class="icon-cancel"></span>';
             btnClose.onclick = () => onClose(sensor);
+
+            if (filter) {
+                card.appendChild(filter)
+            }
 
             actions.appendChild(btnPin);
             actions.appendChild(btnClose);

@@ -16,11 +16,11 @@ declare const L: any;
 export class WasteCentreStrategy implements IDetailsStrategy {
     public name = 'waste_centre';
     public checkbox_id = 'toggle-waste';
+    public layerOptions: { translate_name_key: string, color: string } = { translate_name_key: 'layer_mobile_waste', color: "#9b59b6" };
     private layer: any;
     private onPin: ((sensor: SensorProperties) => void) | undefined;
     private currentLang: SupportedLanguage = 'bg'; // Default fallback
     private cachedData: any[] = [];
-    private layerOptions: { color: string } = { color: "#9b59b6" };
 
     initialize(map: any, onPin: (sensor: SensorProperties) => void): void {
         this.onPin = onPin;
