@@ -363,7 +363,7 @@ ul li {
 
 /** Chart */
 #chart-container {
-    max-height: 250px;
+    max-height: 300px;
     position: sticky;
     bottom: 0;
     left: 0;

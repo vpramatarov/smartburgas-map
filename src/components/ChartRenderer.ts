@@ -50,7 +50,7 @@ export class ChartRenderer {
 
         const layout = {
             autosize: true,
-            height: 250,
+            height: 300,
             margin: { l: 40, r: 20, t: 10, b: 60 },
             font: { family: 'Arial, sans-serif', size: 10, color: '#fff' },
             xaxis: this.getXAxisConfig(),
