@@ -49,4 +49,47 @@ test.describe('Smart Burgas Map UI', () => {
         await expect(secondCheckbox).toBeChecked();
         await expect(firstCheckbox).not.toBeChecked();
     });
+
+    test('should display chart and allow filtering via range selector', async ({ page }) => {
+        // Wait for the map and markers to finish loading from the API
+        const firstMarker = page.locator('.custom-pin-wrapper:has(.icon-air)').first();
+        await expect(firstMarker).toBeVisible({ timeout: 10000 });
+
+        // Click the first available marker to open the side panel
+        await firstMarker.dispatchEvent('click');
+
+        // Wait for the side panel to appear
+        const infoPanel = page.locator('#info-panel');
+        await expect(infoPanel).not.toHaveClass(/hidden/);
+
+        // Click the visible label just like a real user would
+        const chartToggleBtn = page.locator('.chart-toggle-btn').first();
+        await expect(chartToggleBtn).toBeVisible();
+        await chartToggleBtn.click();
+
+        // Verify the Plotly chart rendered.
+        // NOTE: No space! Plotly adds the class directly TO the container.
+        const plotlyChart = page.locator('#chart-container.js-plotly-plot');
+        await expect(plotlyChart).toBeVisible();
+
+        // Locate the Plotly Range Selector buttons (rendered as SVG text)
+        // Plotly uses <text class="button"> or similar groupings for these.
+        const oneWeekBtn = page.locator('text="1w"');
+        const oneMonthBtn = page.locator('text="1m"');
+        const allBtn = page.locator('text="All"');
+
+        await expect(oneWeekBtn).toBeVisible();
+        await expect(oneMonthBtn).toBeVisible();
+        await expect(allBtn).toBeVisible();
+
+        // Click the '1w' button
+        // Force the click because Plotly overlays invisible SVG shapes for bounding boxes
+        await oneWeekBtn.click({ force: true });
+
+        // Wait a brief moment for Plotly's internal transition/re-layout to process
+        await page.waitForTimeout(500);
+
+        // Verify the chart is still visible and didn't crash during the re-layout
+        await expect(plotlyChart).toBeVisible();
+    });
 });
