@@ -53,7 +53,7 @@ export class ChartRenderer {
             height: 250,
             margin: { l: 40, r: 20, t: 10, b: 60 },
             font: { family: 'Arial, sans-serif', size: 10, color: '#fff' },
-            xaxis: { type: 'date', tickangle: -45, automargin: true },
+            xaxis: this.getXAxisConfig(),
             yaxis: { gridcolor: '#eee', zerolinecolor: '#ccc' },
             paper_bgcolor: 'rgba(0,0,0,0.9)',
             plot_bgcolor: 'rgba(0,0,0,0)',
@@ -87,17 +87,24 @@ export class ChartRenderer {
             };
         });
 
+        const fullXAxisConfig = {
+            ...this.getXAxisConfig(),
+            gridcolor: '#444',
+            zerolinecolor: '#666'
+        };
+
         const layout = {
             title: { text: title, font: { color: '#eee' } },
             autosize: true,
             font: { family: 'Arial, sans-serif', size: 12, color: '#eee' },
-            xaxis: {
-                type: 'date',
-                tickangle: -45,
-                automargin: true,
-                gridcolor: '#444',
-                zerolinecolor: '#666'
-            },
+            // xaxis: {
+            //     type: 'date',
+            //     tickangle: -45,
+            //     automargin: true,
+            //     gridcolor: '#444',
+            //     zerolinecolor: '#666'
+            // },
+            xaxis: fullXAxisConfig,
             yaxis: {
                 gridcolor: '#444',
                 zerolinecolor: '#666'
@@ -128,5 +135,31 @@ export class ChartRenderer {
         const g = (bigint >> 8) & 255;
         const b = bigint & 255;
         return `${r},${g},${b}`;
+    }
+
+    /**
+     * Reusable X-Axis configuration containing the range slider and selectors
+     */
+    private static getXAxisConfig() {
+        return {
+            type: 'date',
+            tickangle: -45,
+            automargin: true,
+            rangeselector: {
+                buttons: [
+                    { count: 1, label: '1d', step: 'day', stepmode: 'backward' },
+                    { count: 7, label: '1w', step: 'day', stepmode: 'backward' },
+                    { count: 1, label: '1m', step: 'month', stepmode: 'backward' },
+                    { step: 'all', label: 'All' }
+                ],
+                bgcolor: '#444',
+                activecolor: '#666',
+                font: { color: '#fff' }
+            },
+            rangeslider: {
+                visible: true,
+                thickness: 0.1 // Keeps the slider from taking up too much vertical space
+            }
+        };
     }
 }
