@@ -102,7 +102,7 @@ jobs:
         uses: snok/container-retention-policy@v2
         with:
           image-names: ${{ github.event.repository.name }}
-          cut-off: 30 days ago # Keeps images less than 30 days old
+          cut-off: 30 days ago UTC # Keeps images less than 30 days old
           keep-at-least: 3 # Always keep the 3 most recent images
           account-type: personal # Or 'org' for organization repo
           token: ${{ secrets.GITHUB_TOKEN }}
