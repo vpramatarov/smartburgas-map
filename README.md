@@ -29,6 +29,13 @@ For Production run `docker build -t smartburgas-map .`
 `docker run -d --name smartburgas-map -p 3000:3000 --env-file .env ghcr.io/vpramatarov/smartburgas-map:latest`
 
 
+### Pull & Run for production via docker compose
+
+Make sure the `.env` file is in the exact same folder as the `docker-compose.prod.yaml` file.
+
+Run `docker-compose -f docker-compose.prod.yaml up -d`
+
+
 ### Sending/receiving postMessage communication via iframe to/from underlying map.
 
 Website where iframe is integrated sample code (HTML/JS):
