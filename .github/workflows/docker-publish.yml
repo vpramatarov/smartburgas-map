@@ -105,4 +105,4 @@ jobs:
           cut-off: 30 days ago UTC # Keeps images less than 30 days old
           keep-at-least: 3 # Always keep the 3 most recent images
           account-type: personal # Or 'org' for organization repo
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.DELETE_PACKAGES_PAT }}
