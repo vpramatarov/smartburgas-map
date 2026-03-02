@@ -35,6 +35,18 @@ jobs:
 
       - name: Run Frontend UI Tests (Playwright)
         run: npm run test:e2e
+        env:
+          PORT: 3000
+          URL: 'http://localhost'
+          ALLOW_FRAME_URL: '*'
+          TRAFFIC_URL: ${{ secrets.TRAFFIC_URL }}
+          AIR_QUALITY_TIME_URL: ${{ secrets.AIR_QUALITY_TIME_URL }}
+          CCTV_URL: ${{ secrets.CCTV_URL }}
+          BILLING_MACHINES_URL: ${{ secrets.BILLING_MACHINES_URL }}
+          EV_URL: ${{ secrets.EV_URL }}
+          WASTE_URL: ${{ secrets.WASTE_URL }}
+          SMART_CAR_PARKS_TIME_URL: ${{ secrets.SMART_CAR_PARKS_TIME_URL }}
+          TAXI_RANKS_URL: ${{ secrets.TAXI_RANKS_URL }}
 
       - name: Upload Playwright Report
         uses: actions/upload-artifact@v4
@@ -73,6 +85,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          target: production
           push: true
           # This automatically tags image with the tag version number
           tags: ${{ steps.meta.outputs.tags }}
