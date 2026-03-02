@@ -31,7 +31,7 @@ jobs:
         run: npm test
 
       - name: Install Playwright Browsers (Chromium only to save time/CPU)
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium && npx playwright install-deps chromium
 
       - name: Run Frontend UI Tests (Playwright)
         run: npm run test:e2e
