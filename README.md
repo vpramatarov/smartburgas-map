@@ -18,7 +18,7 @@ For Production run `docker build -t smartburgas-map .`
 ### Pull & Run docker image
 
 1. Pull the latest image from GitHub<br>
-`docker pull ghcr.io/vpramatarov/smartburgas-map:master`
+`docker pull ghcr.io/vpramatarov/smartburgas-map:latest`
 
 2. Stop and remove the old container (if running)<br>
 `docker stop smartburgas-map || true`
@@ -26,7 +26,7 @@ For Production run `docker build -t smartburgas-map .`
 
 3. Run the new image
 <br>Make sure to pass in your .env variables or mount an env file<br>
-`docker run -d --name smartburgas-map -p 3000:3000 --env-file .env ghcr.io/vpramatarov/smartburgas-map:master`
+`docker run -d --name smartburgas-map -p 3000:3000 --env-file .env ghcr.io/vpramatarov/smartburgas-map:latest`
 
 
 ### Sending/receiving postMessage communication via iframe to/from underlying map.
