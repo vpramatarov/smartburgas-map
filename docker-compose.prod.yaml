@@ -1,0 +1,8 @@
+services:
+  app:
+    image: ghcr.io/vpramatarov/smartburgas-map:latest
+    ports:
+      - "80:${PORT}"
+    env_file:
+      - .env
+    restart: always
