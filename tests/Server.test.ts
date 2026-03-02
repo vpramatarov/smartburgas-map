@@ -9,7 +9,7 @@ import mockAirQualityData from './mocks/Air_quality_time.json';
 import mockTrafficData from './mocks/Cars_count.json';
 import mockCctvData from './mocks/CCTV.json';
 import mockBillingMachinesData from './mocks/Billing_machines.json';
-import mockEvPointsData from './mocks/EvPoint.json';
+import mockEvPointsData from './mocks/EVPoint.json';
 import mockMobileTrashData from './mocks/Mobiletrash.json';
 import mockParkingData from './mocks/SmartCarParks_time.json';
 import mockTaxiRanksData from './mocks/Taxi_ranks.json';
