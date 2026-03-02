@@ -17,7 +17,7 @@ export default defineConfig({
 
     // This tells Playwright to boot your Express server before running tests!
     webServer: {
-        command: 'npm start',
+        command: 'npm run build && node dist/Server.js',
         url: 'http://localhost:3000',
         reuseExistingServer: !process.env.CI,
         timeout: 120 * 1000,
