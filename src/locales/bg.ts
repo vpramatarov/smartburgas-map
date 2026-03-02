@@ -19,7 +19,7 @@ export const bg = {
     layer_mobile_waste: 'Мобилни центрове за отпадъци',
     layer_bikes: 'Велосипеди под наем',
     layer_camera: 'Камери',
-    layer_billing_machines: 'Банкомати',
+    layer_billing_machines: 'Паркомати',
     layer_ev_charging: 'Зареждане на ел. превозни средства',
     layer_taxi_stands: 'Стоянки на таксита',
 
