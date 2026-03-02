@@ -325,6 +325,10 @@ ul li {
     text-align: right;
 }
 
+#info-panel .prop-additional div:first-child {
+    font-weight: bold;
+}
+
 #info-panel .prop-value {
     color: #000;
     font-weight: bold;
