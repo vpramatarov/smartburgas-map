@@ -135,7 +135,6 @@ export class BillingMachineStrategy implements IDetailsStrategy {
         if (sensor.description) {
             const desc = document.createElement('div') as HTMLDivElement;
             desc.className = 'sensor-description';
-            desc.style.fontSize = '13px';
             desc.style.color = '#555';
             desc.innerHTML = sensor.description;
             container.appendChild(desc);

@@ -283,6 +283,18 @@ class SmartMap {
                 alert(t('no_pinned_sensors_for_export', this.currentLang));
             }
         });
+
+        const mobileFilterBtn = document.getElementById('mobile-filter-btn') as HTMLButtonElement;
+        const closeControlsBtn = document.getElementById('close-controls') as HTMLButtonElement;
+        const controlsPanel = document.getElementById('controls') as HTMLDivElement;
+
+        mobileFilterBtn?.addEventListener('click', () => {
+            controlsPanel?.classList.add('open');
+        });
+
+        closeControlsBtn?.addEventListener('click', () => {
+            controlsPanel?.classList.remove('open');
+        });
     }
 
     /**

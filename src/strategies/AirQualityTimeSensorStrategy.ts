@@ -136,7 +136,7 @@ export class AirQualityTimeSensorStrategy implements IDetailsStrategy {
 
             let value = latestData[p];
 
-            if (value === undefined || value === null) {
+            if (value === undefined || value === null || value.length < 1) {
                 continue;
             }
 

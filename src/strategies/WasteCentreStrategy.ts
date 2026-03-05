@@ -147,7 +147,6 @@ export class WasteCentreStrategy implements IDetailsStrategy {
         if (sensor.description) {
             const desc = document.createElement('div') as HTMLDivElement;
             desc.className = 'sensor-description';
-            desc.style.fontSize = '12px';
             desc.style.color = '#666';
             desc.style.marginBottom = '10px';
             if (sensor.description) {

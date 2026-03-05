@@ -3,13 +3,19 @@ body, html {
     padding: 0;
     height: 100%;
     overflow: hidden;
+    font-size: 14px;
+}
+
+.leaflet-container {
+    font-size: 0.9em;
 }
 
 p {
     margin-bottom: 1em;
 }
 
-.hidden {
+.hidden,
+.mobile-only{
     display: none;
 }
 
@@ -60,7 +66,7 @@ p {
     width: 80px;
     height: 36px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 1em;
     font-weight: 600;
     color: #86868b;
     transition: color 0.35s cubic-bezier(0.4, 0, 0.2, 1);
@@ -68,7 +74,7 @@ p {
 }
 
 .flag {
-    font-size: 16px;
+    font-size: 1.15em;
     filter: grayscale(0.2);
     transition: filter 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -122,7 +128,7 @@ input[name="lang"]:checked + label .flag {
 .bulk-controls {
     margin-top: 10px;
     margin-bottom: 10px;
-    font-size: 13px;
+    font-size: 1em;
     text-align: center;
 }
 
@@ -172,7 +178,7 @@ ul li {
 
 .marker-popup-hover p {
     margin: 0;
-    font-size: 13px;
+    font-size: 1em;
 }
 
 
@@ -201,7 +207,7 @@ ul li {
 .custom-pin-marker span {
     transform: rotate(45deg);
     color: white;
-    font-size: 13px;
+    font-size: 1em;
 }
 
 /* Hover Effect: Handled entirely by CSS now! */
@@ -255,7 +261,7 @@ ul li {
     right: 10px;
     border: none;
     background: transparent;
-    font-size: 20px;
+    font-size: 2em;
     cursor: pointer;
     color: #999;
     z-index: 1002;
@@ -269,7 +275,7 @@ ul li {
 
 #info-panel h2 {
     margin-top: 0;
-    font-size: 18px;
+    font-size: 1.25em;
     color: #333;
 }
 
@@ -277,6 +283,7 @@ ul li {
     margin-bottom: 8px;
     border-bottom: 1px solid #eee;
     padding-bottom: 4px;
+    font-size: 1em;
 }
 
 .data-row.flex > div {
@@ -286,9 +293,9 @@ ul li {
 }
 
 .data-row.smart-parking-progress .occupied {
-    text-align:right;
-    font-size:11px;
-    color:#666;
+    text-align: right;
+    font-size: 0.75em;
+    color: #666;
     padding: 7px 0;
 }
 
@@ -308,7 +315,7 @@ ul li {
 
 #info-panel .prop-label {
     color: #666;
-    font-size: 14px;
+    font-size: 1em;
     text-transform: uppercase;
     font-weight: bold;
 }
@@ -318,10 +325,11 @@ ul li {
     flex-direction: column;
     align-items: flex-end;
     padding: 0 10px;
+    font-size: 1em;
 }
 
 #info-panel .prop-additional div {
-    font-size: 0.8em;
+    font-size: 0.75em;
     text-align: right;
 }
 
@@ -332,7 +340,7 @@ ul li {
 #info-panel .prop-value {
     color: #000;
     font-weight: bold;
-    font-size: 14px;
+    font-size: 1em;
 }
 
 /* --- Chart Checkbox Toggle Styles --- */
@@ -344,7 +352,7 @@ ul li {
     padding: 4px 8px;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 1em;
     transition: all 0.2s;
     background: transparent;
     color: #999;
@@ -378,8 +386,8 @@ ul li {
 }
 
 #no-chart-data {
-    font-size:12px;
-    color:#999;
+    font-size: 1em;
+    color: #999;
 }
 
 /** Region controls */
@@ -404,7 +412,7 @@ ul li {
 .region-item label {
     display: inline-block;
     padding: 6px 12px;
-    font-size: 12px;
+    font-size: 1em;
     font-weight: 500;
     color: #222;
     background-color: #f1f5f9;
@@ -451,6 +459,7 @@ ul li {
 }
 .checkbox input:checked ~ .checkbox__checkmark:after {
     left: 14px;
+    background: #fff;
 }
 .checkbox:hover input ~ .checkbox__checkmark {
     background-color: #eee;
@@ -476,19 +485,19 @@ ul li {
     width: 12px;
     height: 12px;
     display: block;
-    background-color: #fff;
+    background-color: rgb(119, 191, 34);
     border-radius: 50%;
     transition: left 0.25s ease;
 }
 .checkbox .checkbox__body {
     color: #ccc;
     line-height: 1.4;
-    font-size: 0.9em;
+    font-size: 1.15em;
     transition: color 0.25s ease;
 }
 
 .timestamp {
-    font-size: 11px;
+    font-size: 0.75em;
     color: #666;
     display: block;
 }
@@ -498,7 +507,7 @@ ul li {
     padding: 10px;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 1em;
     font-weight: bold;
     transition: background 0.2s;
     background: transparent;
@@ -627,7 +636,7 @@ ul li {
 
 #close-modal {
     color: #aaa;
-    font-size: 28px;
+    font-size: 2em;
     font-weight: bold;
     background: none;
     border: none;
@@ -666,7 +675,7 @@ ul li {
 
 .sensor-header h3 {
     margin: 0;
-    font-size: 14px;
+    font-size: 1.25em;
     color: #333;
 }
 
@@ -690,13 +699,17 @@ ul li {
 
 .sensor-card-header h3 {
     margin: 0;
-    font-size: 16px;
+    font-size: 1.25em;
     font-weight: 600;
     color: #333;
     max-width: 70%;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.sensor-description {
+    font-size: 1em;
 }
 
 .card-actions {
@@ -813,41 +826,126 @@ ul li {
     vector-effect: non-scaling-stroke; /* Keeps border crisp even when scaled */
 }
 
-/* The Dot (Fixed Size) */
 .cctv-dot {
-    /*position: absolute;*/
-    /*top: 50%;*/
-    /*left: 50%;*/
-
-    /*!* Size Match: Radius 8 = 16px diam + 2px border = 20px total visual size *!*/
-    /*width: 16px;*/
-    /*height: 16px;*/
-
-    /*!* Center positioning *!*/
-    /*transform: translate(-50%, -50%);*/
-
-    /*background-color: #2ecc71;*/
-    /*border: 2px solid #ffffff;*/
-    /*border-radius: 50%;*/
-
-    /*z-index: 200;*/
-    /*box-shadow: 0 0 4px rgba(0,0,0,0.4);*/
-
-    /*cursor: pointer;*/
-    /*pointer-events: auto;*/
-
     z-index: 200;
-}
-
-/* Hover Effect on the Dot */
-.cctv-icon-wrapper:hover .cctv-dot {
-    /*background-color: #27ae60;*/
-    /*width: 18px; !* Slight grow effect *!*/
-    /*height: 18px;*/
-    /*transition: all 0.2s ease;*/
 }
 
 /* LOD Logic - Hide Scaler when zoomed out */
 .leaflet-container.cctv-lod-low .cctv-cone-scaler {
     display: none;
+}
+
+/* Responsive */
+@media (max-width: 991px) {
+    /* --- Transform Info Panel into a Bottom Sheet --- */
+    #info-panel {
+        top: auto;
+        right: 0;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        height: 60vh;
+        border-radius: 20px 20px 0 0;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.25);
+    }
+
+    #info-panel-container {
+        margin: 0;
+        border-radius: 20px 20px 0 0;
+        padding: 15px 15px 30px;
+    }
+
+    #close-panel {
+        top: 15px;
+        right: 15px;
+    }
+
+    .mobile-only {
+        display: flex;
+    }
+
+    #mobile-filter-btn {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        z-index: 1000;
+        background: #222;
+        color: #fff;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 1em;
+        font-weight: bold;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        align-items: center;
+        gap: 5px;
+        cursor: pointer;
+    }
+
+    #controls {
+        top: 0;
+        left: 0;
+        height: 100vh;
+        max-width: 55%;
+        border-radius: 0;
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow-y: auto;
+        padding-top: 40px;
+    }
+
+    #controls.open {
+        transform: translateX(0);
+        box-shadow: 10px 0 20px rgba(0,0,0,0.5);
+    }
+
+    #close-controls {
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        background: transparent;
+        border: none;
+        color: #aaa;
+        font-size: 2em;
+        cursor: pointer;
+    }
+
+    .modal-content {
+        width: 100%;
+        height: 100%;
+        max-width: none;
+        max-height: none;
+        border-radius: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        border: none;
+    }
+
+    #modal-chart-container {
+        flex-grow: 1;
+        width: 100%;
+        height: 100%;
+    }
+
+    .leaflet-bottom.leaflet-right,
+    .leaflet-bottom.leaflet-left {
+        bottom: 85vh !important;
+        transition: bottom 0.3s ease;
+    }
+
+    .info-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .info-actions button,
+    .info-actions a {
+        width: 100%;
+        text-align: center;
+        padding: 12px;
+        box-sizing: border-box;
+    }
 }

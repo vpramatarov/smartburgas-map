@@ -155,7 +155,7 @@ export class SmartParkingStrategy implements IDetailsStrategy {
                         <span class="prop-label">${t('capacity', this.currentLang)}:</span> 
                         <span class="prop-value">${free} ${t('free', this.currentLang)} / ${total} ${t('total', this.currentLang)}</span>
                     </span>
-                    <span class="prop-additional" style="font-size: 14px;">${last_sync}</span>
+                    <span class="prop-additional">${last_sync}</span>
                 </div>
             </div>
             <div class="data-row smart-parking-progress">
@@ -171,7 +171,6 @@ export class SmartParkingStrategy implements IDetailsStrategy {
             const desc = document.createElement('div') as HTMLDivElement;
             desc.className = 'sensor-description';
             desc.style.marginTop = '10px';
-            desc.style.fontSize = '14px';
             desc.innerHTML = sensor.description;
             container.appendChild(desc);
         }

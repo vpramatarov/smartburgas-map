@@ -136,7 +136,6 @@ export class TaxiRankStrategy implements IDetailsStrategy {
         if (sensor.description) {
             const desc = document.createElement('div') as HTMLDivElement;
             desc.className = 'sensor-description';
-            desc.style.fontSize = '13px';
             desc.style.fontWeight = 'bold';
             desc.innerHTML = sensor.description;
             container.appendChild(desc);
@@ -144,7 +143,7 @@ export class TaxiRankStrategy implements IDetailsStrategy {
 
         if (sensor.name) {
             const loc = document.createElement('div') as HTMLDivElement;
-            loc.style.fontSize = '12px';
+            loc.style.fontSize = '1em';
             loc.style.color = '#666';
             loc.style.marginTop = '4px';
             loc.innerHTML = sensor.name;
