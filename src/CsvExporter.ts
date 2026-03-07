@@ -1,6 +1,7 @@
 import {SensorProperties, SupportedLanguage} from './Types.js';
 import {t} from "./Translations.js";
 import {Utils} from "./Utils.js";
+import {ChartRenderer} from "./components/ChartRenderer.js";
 
 export class CsvExporter {
 
@@ -13,6 +14,10 @@ export class CsvExporter {
             console.warn("No sensors to export.");
             return;
         }
+
+        const range = ChartRenderer.getCurrentExportRange();
+        const rangeStartMs = range ? range.start.getTime() : null;
+        const rangeEndMs = range ? range.end.getTime() : null;
 
         const headers = [
             t('feature_id_or_name', lang),
@@ -37,6 +42,13 @@ export class CsvExporter {
             sensor.data.forEach(item => {
                 const timeRaw = item['time'];
                 const timestamp = this.parseDate(timeRaw);
+
+                if (rangeStartMs !== null && rangeEndMs !== null && timestamp > 0) {
+                    if (timestamp < rangeStartMs || timestamp > rangeEndMs) {
+                        return; // Skips to the next item in the loop
+                    }
+                }
+
                 let dateStr = timeRaw;
                 if (timestamp > 0) {
                     dateStr = Utils.formatDateTimeToLocal(timestamp);

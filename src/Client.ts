@@ -309,6 +309,8 @@ class SmartMap {
             return;
         }
 
+        ChartRenderer.resetExportRange();
+
         this.previewSensor = sensor;
         this.refreshPanel();
 

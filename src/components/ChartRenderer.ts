@@ -16,6 +16,16 @@ export class ChartRenderer {
         '#34495e'  // Pickled Bluewood
     ];
 
+    private static currentExportRange: { start: Date; end: Date } | null = null;
+
+    public static getCurrentExportRange() {
+        return ChartRenderer.currentExportRange;
+    }
+
+    public static resetExportRange() {
+        ChartRenderer.currentExportRange = null;
+    }
+
     /**
      * Renders chart. Now supports individual time arrays per dataset.
      * @param containerId DOM ID
@@ -63,7 +73,36 @@ export class ChartRenderer {
 
         const config = { responsive: true, displayModeBar: true };
 
-        Plotly.newPlot(containerId, traces, layout, config);
+        Plotly.newPlot(containerId, traces, layout, config).then((chartDiv: any) => {
+            chartDiv.removeAllListeners('plotly_relayout');
+
+            chartDiv.on('plotly_relayout', (eventData: any) => {
+                if (!eventData) {
+                    return;
+                }
+
+                let startStr = null;
+                let endStr = null;
+
+                if (eventData['xaxis.range[0]'] !== undefined && eventData['xaxis.range[1]'] !== undefined) {
+                    startStr = eventData['xaxis.range[0]'];
+                    endStr = eventData['xaxis.range[1]'];
+                } else if (Array.isArray(eventData['xaxis.range']) && eventData['xaxis.range'].length === 2) {
+                    startStr = eventData['xaxis.range'][0];
+                    endStr = eventData['xaxis.range'][1];
+                }
+
+                if (startStr && endStr) {
+                    ChartRenderer.currentExportRange = {
+                        start: new Date(startStr),
+                        end: new Date(endStr)
+                    };
+                } else if (eventData['xaxis.autorange'] === true) {
+                    ChartRenderer.resetExportRange();
+                    console.log('RANGE RESET TO ALL');
+                }
+            });
+        });
     }
 
     /**
@@ -97,13 +136,6 @@ export class ChartRenderer {
             title: { text: title, font: { color: '#eee' } },
             autosize: true,
             font: { family: 'Arial, sans-serif', size: 12, color: '#eee' },
-            // xaxis: {
-            //     type: 'date',
-            //     tickangle: -45,
-            //     automargin: true,
-            //     gridcolor: '#444',
-            //     zerolinecolor: '#666'
-            // },
             xaxis: fullXAxisConfig,
             yaxis: {
                 gridcolor: '#444',
@@ -117,7 +149,36 @@ export class ChartRenderer {
 
         const config = { responsive: true, displayModeBar: true };
 
-        Plotly.newPlot(containerId, traces, layout, config);
+        Plotly.newPlot(containerId, traces, layout, config).then((chartDiv: any) => {
+            chartDiv.removeAllListeners('plotly_relayout');
+
+            chartDiv.on('plotly_relayout', (eventData: any) => {
+                if (!eventData) {
+                    return;
+                }
+
+                let startStr = null;
+                let endStr = null;
+
+                if (eventData['xaxis.range[0]'] !== undefined && eventData['xaxis.range[1]'] !== undefined) {
+                    startStr = eventData['xaxis.range[0]'];
+                    endStr = eventData['xaxis.range[1]'];
+                } else if (Array.isArray(eventData['xaxis.range']) && eventData['xaxis.range'].length === 2) {
+                    startStr = eventData['xaxis.range'][0];
+                    endStr = eventData['xaxis.range'][1];
+                }
+
+                if (startStr && endStr) {
+                    ChartRenderer.currentExportRange = {
+                        start: new Date(startStr),
+                        end: new Date(endStr)
+                    };
+                } else if (eventData['xaxis.autorange'] === true) {
+                    ChartRenderer.resetExportRange();
+                    console.log('RANGE RESET TO ALL');
+                }
+            });
+        });
     }
 
     public static clear(containerId: string) {
