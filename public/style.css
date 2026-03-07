@@ -28,7 +28,7 @@ p {
     position: absolute;
     top: 80px;
     left: 10px;
-    background: #222;
+    background: #023664;
     color: #ccc;
     padding: 15px;
     z-index: 1000;
@@ -141,7 +141,7 @@ input[name="lang"]:checked + label .flag {
 .bulk-controls a.active,
 .bulk-controls a:hover {
     text-decoration: underline;
-    color: rgb(137, 255, 1);
+    color: #FFE702;
 }
 
 .bulk-controls span {
@@ -329,7 +329,7 @@ ul li {
 }
 
 #info-panel .prop-additional div {
-    font-size: 0.75em;
+    font-size: 1em;
     text-align: right;
 }
 
@@ -414,7 +414,7 @@ ul li {
     padding: 6px 12px;
     font-size: 1em;
     font-weight: 500;
-    color: #222;
+    color: #023664;
     background-color: #f1f5f9;
     border: 1px solid #e2e8f0;
     border-radius: 20px;
@@ -430,8 +430,8 @@ ul li {
 }
 
 .region-item input[type="checkbox"]:checked + label {
-    background-color: rgb(119, 191, 34);
-    border-color: rgb(119, 191, 34);
+    background-color: #FFE702;
+    border-color: #FFE702;
     box-shadow: 0 2px 5px rgba(52, 152, 219, 0.3);
 }
 
@@ -455,17 +455,17 @@ ul li {
     width: 0;
 }
 .checkbox input:checked ~ .checkbox__checkmark {
-    background-color: rgb(119, 191, 34);
+    background-color: #FFE702;
 }
 .checkbox input:checked ~ .checkbox__checkmark:after {
     left: 14px;
-    background: #fff;
+    background: #023664;
 }
 .checkbox:hover input ~ .checkbox__checkmark {
     background-color: #eee;
 }
 .checkbox:hover input:checked ~ .checkbox__checkmark {
-    background-color: rgb(119, 191, 34);
+    background-color: #FFE702;
 }
 .checkbox .checkbox__checkmark {
     position: absolute;
@@ -485,12 +485,12 @@ ul li {
     width: 12px;
     height: 12px;
     display: block;
-    background-color: rgb(119, 191, 34);
+    background-color: #023664;
     border-radius: 50%;
     transition: left 0.25s ease;
 }
 .checkbox .checkbox__body {
-    color: #ccc;
+    color: #fff;
     line-height: 1.4;
     font-size: 1.15em;
     transition: color 0.25s ease;
@@ -498,7 +498,7 @@ ul li {
 
 .timestamp {
     font-size: 0.75em;
-    color: #666;
+    color: #999;
     display: block;
 }
 
@@ -869,7 +869,7 @@ ul li {
         top: 15px;
         right: 15px;
         z-index: 1000;
-        background: #222;
+        background: #023664;
         color: #fff;
         border: none;
         padding: 8px 16px;
