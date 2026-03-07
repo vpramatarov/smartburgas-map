@@ -100,6 +100,10 @@ class SmartMap {
         const radioButtons = document.querySelectorAll('input[name="lang"]') as NodeListOf<HTMLInputElement>;
 
         radioButtons?.forEach(radio => {
+            if (radio.value === this.currentLang as string) {
+                radio.checked = true;
+            }
+
             radio.addEventListener('change', (e) => {
                 const $currentInputEl = e.target as HTMLInputElement;
                 const lang = $currentInputEl.value as SupportedLanguage;
