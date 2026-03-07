@@ -1,5 +1,6 @@
 // e2e/app.spec.ts
 import { test, expect } from '@playwright/test';
+import fs from 'fs';
 
 const APP_URL = 'http://localhost:3000';
 
@@ -91,5 +92,37 @@ test.describe('Smart Burgas Map UI', () => {
 
         // Verify the chart is still visible and didn't crash during the re-layout
         await expect(plotlyChart).toBeVisible();
+    });
+
+    test('should export strictly filtered CSV when 1w date range is selected', async ({ page }) => {
+        // Open side panel
+        const firstMarker = page.locator('.custom-pin-wrapper:has(.icon-air)').first();
+        await expect(firstMarker).toBeVisible({ timeout: 10000 });
+        await firstMarker.dispatchEvent('click');
+
+        // Open chart modal
+        const chartToggleBtn = page.locator('.chart-toggle-btn').first();
+        await expect(chartToggleBtn).toBeVisible();
+        await chartToggleBtn.click();
+
+        // Click the 1-week range selector and wait for Plotly to render
+        const oneWeekBtn = page.locator('text="1w"');
+        await expect(oneWeekBtn).toBeVisible();
+        await oneWeekBtn.click({ force: true });
+        await page.waitForTimeout(1000);
+
+        // Download CSV
+        const downloadPromise = page.waitForEvent('download');
+        // Ensure this selector matches your actual CSV download button
+        await page.locator('#btn-download-csv').click();
+        const download = await downloadPromise;
+
+        // Read file and verify row count
+        const fileContent = fs.readFileSync(await download.path(), 'utf8');
+        const rows = fileContent.trim().split('\n');
+
+        // Expect header + roughly 168 hours of data
+        expect(rows.length).toBeGreaterThan(1);
+        expect(rows.length).toBeLessThan(1400); // ~1345 records for 1 week
     });
 });
