@@ -71,6 +71,8 @@ export const en: TranslationKeys = {
     value: 'Value',
     unit: 'Unit',
     no_pinned_sensors_for_export: 'Please pin at least one sensor to export data.',
+    from_date: 'From',
+    to_date: 'To',
 
     // --- Misc ---
     filters: 'Filters',

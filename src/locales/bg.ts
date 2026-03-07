@@ -70,6 +70,8 @@ export const bg = {
     value: 'Стойност',
     unit: 'Единица',
     no_pinned_sensors_for_export: 'Моля, закачете поне един сензор за експортиране на данни.',
+    from_date: 'От',
+    to_date: 'До',
 
     // --- Misc ---
     filters: 'Филтри',
