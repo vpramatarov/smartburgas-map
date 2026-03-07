@@ -36,6 +36,7 @@ p {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
     font-family: sans-serif;
     max-width: 350px;
+    width: 350px;
 }
 
 /* Language Switcher */
@@ -375,7 +376,7 @@ ul li {
 
 /** Chart */
 #chart-container {
-    max-height: 300px;
+    max-height: 400px;
     position: sticky;
     bottom: 0;
     left: 0;
@@ -383,11 +384,49 @@ ul li {
     box-sizing: border-box;
     box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
     width: 100%;
+    background: #000;
 }
 
 #no-chart-data {
     font-size: 1em;
     color: #999;
+}
+
+.chart-datepickers {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+}
+
+.chart-date-controls {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    padding: 10px 0;
+    align-items: center;
+    font-size: 1em;
+}
+
+.chart-date-controls > div {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.chart-date-controls > div label {
+    color: #ccc;
+    margin: 0;
+    font-weight: bold;
+}
+
+.chart-date-controls > div input {
+    padding: 4px;
+    border-radius: 4px;
+    border: 1px solid #555;
+    background: #333;
+    color: #fff;
+    color-scheme: dark;
 }
 
 /** Region controls */
@@ -892,6 +931,7 @@ ul li {
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         overflow-y: auto;
         padding-top: 40px;
+        width: auto;
     }
 
     #controls.open {
