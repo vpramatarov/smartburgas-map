@@ -117,7 +117,7 @@ test.describe('Smart Burgas Map UI', () => {
         const downloadPromise = page.waitForEvent('download');
 
         // Use dispatchEvent instead of .click() to guarantee the DOM node receives it
-        await page.locator('#btn-download-csv').dispatchEvent('click');
+        await page.locator('.btn-download-csv').first().dispatchEvent('click');
 
         const download = await downloadPromise;
 

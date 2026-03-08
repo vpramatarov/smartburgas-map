@@ -305,11 +305,14 @@ export class ChartRenderer {
 
         const bounds = this.getDatasetBounds(datasets);
         const canvasId = `${containerId}-canvas`; // The new sub-container for Plotly
-        let savedLang: SupportedLanguage;
+        let savedLang: SupportedLanguage = 'bg'; // Default to Bulgarian
         try {
-            savedLang = localStorage.getItem('sb_lang') as SupportedLanguage;
+            const stored = localStorage.getItem('sb_lang');
+            if (stored === 'bg' || stored === 'en') {
+                savedLang = stored;
+            }
         } catch (e) {
-            savedLang = 'bg' as SupportedLanguage;
+            console.warn("Could not read language from storage.");
         }
 
         // Inject the custom UI bar and the canvas wrapper using Flexbox

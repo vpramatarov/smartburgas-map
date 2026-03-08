@@ -274,18 +274,21 @@ class SmartMap {
             CCTVStrategy.stopAll();
         });
 
-        document.getElementById('btn-download-csv')?.addEventListener('click', () => {
-            const data = [...this.pinnedSensors];
+        const downloadButtons = Array.from(document.querySelectorAll('.btn-download-csv') as NodeListOf<HTMLButtonElement>);
+        downloadButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const data = [...this.pinnedSensors];
 
-            if (this.previewSensor) {
-                data.push(this.previewSensor);
-            }
+                if (this.previewSensor) {
+                    data.push(this.previewSensor);
+                }
 
-            if (data.length > 0) {
-                CsvExporter.download(data, this.currentLang);
-            } else {
-                alert(t('no_pinned_sensors_for_export', this.currentLang));
-            }
+                if (data.length > 0) {
+                    CsvExporter.download(data, this.currentLang);
+                } else {
+                    alert(t('no_pinned_sensors_for_export', this.currentLang));
+                }
+            });
         });
 
         const mobileFilterBtn = document.getElementById('mobile-filter-btn') as HTMLButtonElement;

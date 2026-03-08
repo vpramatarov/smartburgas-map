@@ -570,12 +570,12 @@ ul li {
     flex-direction: row;
 }
 
-#btn-download-csv {
+.btn-download-csv {
     background-color: #27ae60;
     color: #fff;
 }
 
-#btn-download-csv:hover {
+.btn-download-csv:hover {
     color: #219150;
     background: #fff;
     border-color: #219150;
@@ -671,6 +671,12 @@ ul li {
 
 .modal-header h2 {
     margin: 0;
+}
+
+.modal-header-actions {
+    display: flex;
+    gap: 15px;
+    align-items: center;
 }
 
 #close-modal {

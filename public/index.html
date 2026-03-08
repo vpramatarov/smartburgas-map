@@ -154,7 +154,7 @@
             <p id="no-chart-data" class="hidden" data-i18n="no_chart_data">Няма данни за диаграма.</p>
         </div>
         <div class="actions">
-            <button id="btn-download-csv" class="action-btn">
+            <button class="action-btn btn-download-csv">
                 <span class="icon-download"></span> <span data-i18n="download_csv">Свали като CSV</span>
             </button>
             <button id="btn-full-chart" class="action-btn hidden" >
@@ -168,7 +168,12 @@
     <div class="modal-content">
         <div class="modal-header">
             <h2 id="modal-title" data-i18n="chart">Диаграма</h2>
-            <button id="close-modal">×</button>
+            <div class="modal-header-actions">
+                <button class="action-btn btn-download-csv">
+                    <span class="icon-download"></span> <span data-i18n="download_csv">Свали като CSV</span>
+                </button>
+                <button id="close-modal">×</button>
+            </div>
         </div>
         <div id="full-chart-container"></div>
     </div>

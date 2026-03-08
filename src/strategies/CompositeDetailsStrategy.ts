@@ -50,7 +50,7 @@ export class CompositeDetailsStrategy {
         ChartRenderer.clear(chartContainer.id);
         const panel = document.getElementById('info-panel') as HTMLElement;
         const btnFullChart = document.getElementById('btn-full-chart') as HTMLButtonElement;
-        const btnCsv = document.getElementById('btn-download-csv') as HTMLButtonElement;
+        const btnCsvs = Array.from(document.querySelectorAll('.btn-download-csv') as NodeListOf<HTMLButtonElement>);
         const noChartData = document.getElementById('no-chart-data') as HTMLElement;
 
         if (!panel) {
@@ -62,7 +62,7 @@ export class CompositeDetailsStrategy {
         if (items.length === 0) {
             container.innerHTML = `<p style="text-align:center; color:#666; margin-top:20px;">${t('no_sensors_pinned', lang)}.<br>${t('click_map_marker_to_add', lang)}.</p>`;
             chartContainer.style.display = 'none';
-            btnCsv?.classList.add('hidden');
+            btnCsvs.forEach(btn => btn.classList.add('hidden'));
             btnFullChart?.classList.add('hidden');
             noChartData?.classList.add('hidden');
             return;
@@ -70,9 +70,9 @@ export class CompositeDetailsStrategy {
 
         // Do not show download csv button for strategies that does not have data.
         if (items.filter(s => !s.data).length === items.length) {
-            btnCsv?.classList.add('hidden');
+            btnCsvs.forEach(btn => btn.classList.add('hidden'));
         } else {
-            btnCsv?.classList.remove('hidden');
+            btnCsvs.forEach(btn => btn.classList.remove('hidden'));
         }
 
         items.forEach((sensor, index) => {
