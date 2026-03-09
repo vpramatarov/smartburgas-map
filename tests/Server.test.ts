@@ -182,7 +182,7 @@ describe('Backend API Endpoints', () => {
             const response = await request(app).get('/api/smart-parking');
             // try/catch block in Server.ts should catch the missing features1 array and return 500
             expect(response.status).toBe(500);
-            expect(response.body.error).toBe('Failed to fetch parking data');
+            expect(response.body.error).toBe('Failed to fetch smartParking data');
         });
     });
 
