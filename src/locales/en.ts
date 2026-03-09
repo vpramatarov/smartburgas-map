@@ -84,7 +84,7 @@ export const en: TranslationKeys = {
     click_to_pin: 'Click to Pin',
     no_sensors_pinned: 'No sensors pinned',
     click_map_marker_to_add: 'Click a map marker to add',
-    pin_location: '',
+    pin_location: 'Pin location',
     unpin_location: 'Unpin location',
     no_data: 'No data',
     kg: 'kg',

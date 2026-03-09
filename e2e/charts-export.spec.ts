@@ -1,54 +1,13 @@
-// e2e/app.spec.ts
+// e2e/charts-export.spec.ts
 import { test, expect } from '@playwright/test';
 import fs from 'fs';
 
 const APP_URL = 'http://localhost:3000';
 
-test.describe('Smart Burgas Map UI', () => {
+test.describe('Charts, Export & Side Panel', () => {
 
-    // This runs before every single test
     test.beforeEach(async ({ page }) => {
         await page.goto(APP_URL);
-    });
-
-    test('should load the Leaflet map and main controls', async ({ page }) => {
-        // Check if the map container exists and is visible
-        const mapContainer = page.locator('#map');
-        await expect(mapContainer).toBeVisible();
-
-        // Check if the Leaflet attribution renders (this proves Leaflet initialized successfully)
-        const leafletAttribution = page.locator('.leaflet-control-attribution');
-        await expect(leafletAttribution).toBeVisible();
-    });
-
-    test('should render region filter chips and allow single selection', async ({ page }) => {
-        // Wait for the region filters container to populate via the API call
-        const regionContainer = page.locator('#region-filters');
-        await expect(regionContainer).toBeVisible();
-
-        // Get all the labels (our styled chips) inside the region item wrapper
-        const regionChips = page.locator('.region-item label');
-
-        // Wait until at least 1 region is loaded from the /api/admin-regions endpoint
-        await expect(regionChips.first()).toBeVisible({ timeout: 5000 });
-
-        // Get the specific elements for the first two regions
-        const firstRegion = regionChips.nth(0);
-        const secondRegion = regionChips.nth(1);
-
-        await firstRegion.click();
-
-        // The hidden checkbox belonging to this label should now be checked
-        const firstCheckbox = page.locator('.region-item input[type="checkbox"]').nth(0);
-        await expect(firstCheckbox).toBeChecked();
-
-        await secondRegion.click();
-
-        // The second should be checked, and the FIRST should be automatically UNCHECKED
-        // This verifies our single-selection logic in AdministrativeRegionStrategy.ts
-        const secondCheckbox = page.locator('.region-item input[type="checkbox"]').nth(1);
-        await expect(secondCheckbox).toBeChecked();
-        await expect(firstCheckbox).not.toBeChecked();
     });
 
     test('should display chart and allow filtering via range selector', async ({ page }) => {
@@ -164,5 +123,120 @@ test.describe('Smart Burgas Map UI', () => {
         // Wait a brief moment to ensure Plotly didn't crash during the relayout
         await page.waitForTimeout(500);
         await expect(plotlyChart).toBeVisible();
+    });
+
+    // --- Multiple Pins & Combined Charts ---
+    test('should allow pinning multiple sensors and combining them in the chart', async ({ page }) => {
+        // Click first marker
+        const firstMarker = page.locator('.custom-pin-wrapper:has(.icon-air)').nth(0);
+        await expect(firstMarker).toBeVisible({ timeout: 10000 });
+        await firstMarker.dispatchEvent('click');
+
+        // Pin it by clicking the pin icon in the card header
+        const pinBtn = page.locator('.btn-icon:has(.icon-pin)').first();
+        await expect(pinBtn).toBeVisible();
+        await pinBtn.click();
+
+        // Wait for it to become pinned (card border changes and icon gets active class)
+        await expect(pinBtn).toHaveClass(/active/);
+
+        // Click a second marker of the same type
+        const secondMarker = page.locator('.custom-pin-wrapper:has(.icon-air)').nth(1);
+        await expect(secondMarker).toBeVisible();
+        await secondMarker.dispatchEvent('click');
+
+        // Verify two sensor cards are now in the panel (one pinned, one preview)
+        const sensorCards = page.locator('.sensor-card');
+        await expect(sensorCards).toHaveCount(2);
+
+        // Toggle the first chart checkbox found in both cards
+        const firstCardBtn = sensorCards.nth(0).locator('.chart-toggle-btn').first();
+        const secondCardBtn = sensorCards.nth(1).locator('.chart-toggle-btn').first();
+
+        await expect(firstCardBtn).toBeVisible();
+        await firstCardBtn.click();
+
+        await expect(secondCardBtn).toBeVisible();
+        await secondCardBtn.click();
+
+        // Verify chart rendered successfully with both datasets
+        const plotlyChart = page.locator('#chart-container-canvas.js-plotly-plot');
+        await expect(plotlyChart).toBeVisible({ timeout: 10000 });
+    });
+
+    // --- Full Screen Modal ---
+    test('should open and close the full screen chart modal', async ({ page }) => {
+        // Open a sensor and render a chart
+        const firstMarker = page.locator('.custom-pin-wrapper:has(.icon-air)').first();
+        await expect(firstMarker).toBeVisible({ timeout: 10000 });
+        await firstMarker.dispatchEvent('click');
+
+        const chartToggleBtn = page.locator('.chart-toggle-btn').first();
+        await expect(chartToggleBtn).toBeVisible();
+        await chartToggleBtn.click();
+
+        // Wait for the full screen button to become visible
+        const fullChartBtn = page.locator('#btn-full-chart');
+        await expect(fullChartBtn).toBeVisible();
+
+        // Click it
+        await fullChartBtn.click();
+
+        // Verify Modal is visible
+        const chartModal = page.locator('#chart-modal');
+        await expect(chartModal).toBeVisible();
+        await expect(chartModal).not.toHaveClass(/hidden/);
+
+        // Verify Plotly rendered inside the modal container
+        const fullPlotlyChart = page.locator('#full-chart-container-canvas.js-plotly-plot');
+        await expect(fullPlotlyChart).toBeVisible({ timeout: 10000 });
+
+        // Close Modal
+        const closeModalBtn = page.locator('#close-modal');
+        await closeModalBtn.click();
+
+        // Verify Modal is hidden
+        await expect(chartModal).toBeHidden();
+    });
+
+    // --- Unpin and Close Flow (Side Panel State) ---
+    test('should allow unpinning and closing sensors, and hide panel when empty', async ({ page }) => {
+        // Open a sensor and pin it
+        const firstMarker = page.locator('.custom-pin-wrapper:has(.icon-air)').first();
+        await expect(firstMarker).toBeVisible({ timeout: 10000 });
+        await firstMarker.dispatchEvent('click');
+
+        const pinBtn = page.locator('.btn-icon:has(.icon-pin)').first();
+        await expect(pinBtn).toBeVisible();
+        await pinBtn.click();
+
+        // Wait for it to become pinned
+        await expect(pinBtn).toHaveClass(/active/);
+
+        // Click the close (X) button
+        const closeBtn = page.locator('.btn-icon:has(.icon-cancel)').first();
+        await closeBtn.click();
+
+        // Verify the side panel completely hides itself when all sensors are closed
+        const infoPanel = page.locator('#info-panel');
+        await expect(infoPanel).toHaveClass(/hidden/);
+    });
+
+    // --- CCTV Video Player Flow ---
+    test('should successfully inject and render the CCTV video player', async ({ page }) => {
+        // Wait for CCTV markers to appear. We use the specific CCTV icon wrapper class.
+        const cctvMarker = page.locator('.cctv-icon-wrapper').first();
+        await expect(cctvMarker).toBeVisible({ timeout: 10000 });
+
+        // Click the CCTV marker
+        await cctvMarker.dispatchEvent('click');
+
+        // Verify the side panel opens
+        const infoPanel = page.locator('#info-panel');
+        await expect(infoPanel).not.toHaveClass(/hidden/);
+
+        // Verify the video wrapper and the actual <video> element are injected
+        const videoElement = page.locator('.cctv-video-wrapper video');
+        await expect(videoElement).toBeVisible({ timeout: 5000 });
     });
 });
