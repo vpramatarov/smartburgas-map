@@ -1,18 +1,18 @@
-// src/strategies/AdministrativeRegionStrategy.ts
+// src/strategies/PaidParkingZonesStrategy.ts
 import { IDetailsStrategy } from './IDetailsStrategy.js';
 import {ChartDataset, FilterGeometry, GeoFeature, SensorProperties, SupportedLanguage} from '../Types.js';
 import {t} from "../Translations.js";
 
 declare const L: any;
 
-export class AdministrativeRegionStrategy implements IDetailsStrategy {
-    public name = 'admin_regions';
-    public checkbox_id = 'toggle-admin-regions';
-    public layerOptions: { color: string } = { color: "#3498db" };
+export class PaidParkingZonesStrategy implements IDetailsStrategy {
+    public name = 'paid_parking_zones';
+    public checkbox_id = 'toggle-paid-parking-zones';
+    public layerOptions: { translate_name_key: string, color: string } = { translate_name_key: 'layer_paid_parking_zones', color: "#3498db" };
     private layer: any;
     private currentLang: SupportedLanguage = 'bg'; // Default fallback
     private onFilterChange: (geometry: FilterGeometry | null) => void;
-    // State to track the currently active region
+    // State to track the currently active paind zone
     private currentSelection: { name: string, layer: any } | null = null;
     // Cache the features to link sidebar buttons to map layers
     private featureMap: Map<string, any> = new Map();
@@ -36,7 +36,7 @@ export class AdministrativeRegionStrategy implements IDetailsStrategy {
         this.currentLang = lang as SupportedLanguage;
 
         try {
-            const res = await fetch('/api/admin-regions');
+            const res = await fetch('/api/paid-parking-zones');
 
             if (!res.ok) {
                 throw new Error(`Server returned ${res.status}`);
@@ -45,41 +45,72 @@ export class AdministrativeRegionStrategy implements IDetailsStrategy {
             const data = await res.json();
 
             const geoJsonLayer = L.geoJSON(data, {
-                style: {
-                    color: this.layerOptions.color,
-                    weight: 1,
-                    opacity: 0.5,
-                    fillColor: this.layerOptions.color,
-                    fillOpacity: 0.05, // Very transparent
-                    dashArray: '4, 4'
+                style: (feature: any) => {
+                    // ZoneType 1 = Green Zone, ZoneType 2 = Blue Zone
+                    const isGreen = feature.properties?.ZoneType === 1;
+                    const color = isGreen ? '#2ecc71' : '#3498db';
+                    return {
+                        color: color,
+                        weight: 2,
+                        opacity: 0.8,
+                        fillColor: color,
+                        fillOpacity: 0.2,
+                        dashArray: '3, 6'
+                    };
                 },
                 onEachFeature: (feature: any, layer: any) => {
-                    const regionName = feature.properties?.CAU || t('status_unknown', this.currentLang);
+                    const props = feature.properties;
+                    if (!props) {
+                        return;
+                    }
 
-                    // Store reference for the sidebar to use later
-                    this.featureMap.set(regionName, layer);
+                    const name = this.currentLang === 'en' && props.NameEn ? props.NameEn : props.Name;
 
-                    // Click to Filter
-                    layer.on('click', () => {
-                        this.selectRegion(regionName, layer, feature.geometry);
-                    });
+                    this.featureMap.set(name, layer);
 
-                    // Hover effects
-                    layer.on('mouseover', () => {
-                        if (this.currentSelection?.name !== regionName) {
-                            layer.setStyle({ fillOpacity: 0.2, weight: 2 });
+                    // Cleanup time format from "2000/01/01 07:00:00.000" to "07:00"
+                    const formatTime = (timeStr: string) => {
+                        if (!timeStr) {
+                            return '';
                         }
+                        const match = timeStr.match(/\s(\d{2}:\d{2})/);
+                        return match ? match[1] : timeStr;
+                    };
+                    const start = formatTime(props.StartTime);
+                    const end = formatTime(props.EndTime);
+                    const hoursStr = start && end ? `${start} - ${end}` : t('status_unknown', this.currentLang);
+
+                    const popupHtml = `
+                        <div class="marker-popup-hover" style="min-width: 160px;">
+                            <h4 style="margin-bottom:8px; border-bottom:1px solid #ccc; padding-bottom:4px;">${name}</h4>
+                            <p style="margin:4px 0;"><strong>${t('price_per_hour', this.currentLang)}:</strong> ${props.PricePerHo} ${t('bgn', this.currentLang)}</p>
+                            <p style="margin:4px 0;"><strong>${t('sms_number', this.currentLang)}:</strong> ${props.SmsNumber}</p>
+                            <p style="margin:4px 0;"><strong>${t('working_hours', this.currentLang)}:</strong> ${hoursStr}</p>
+                            <p style="margin:8px 0 0 0; font-size: 0.85em; color: #666; font-style: italic;">${t('click_to_filter', this.currentLang)}</p>
+                        </div>
+                    `;
+
+                    layer.bindPopup(popupHtml, { closeButton: false });
+
+                    layer.on('click', () => {
+                        this.selectRegion(name, layer, feature.geometry);
                     });
-                    layer.on('mouseout', () => {
-                        if (this.currentSelection?.name !== regionName) {
+
+                    layer.on('mouseover', (e: any) => {
+                        if (this.currentSelection?.name !== name) {
+                            layer.setStyle({ fillOpacity: 0.4, weight: 3 });
+                        }
+
+                        e.target.openPopup();
+                    });
+
+                    layer.on('mouseout', (e: any) => {
+                        if (this.currentSelection?.name !== name) {
                             geoJsonLayer.resetStyle(layer);
                         }
-                    });
 
-                    // Simple tooltip with region name (assuming property exists, e.g., 'Name')
-                    if (feature.properties && feature.properties.Name) {
-                        layer.bindTooltip(feature.properties.Name, { sticky: true });
-                    }
+                        e.target.closePopup();
+                    });
                 }
             });
 
@@ -91,10 +122,10 @@ export class AdministrativeRegionStrategy implements IDetailsStrategy {
     }
 
     /**
-     * Generates the checkboxes in the sidebar based on the unique CAU names.
+     * Generates the checkboxes in the sidebar based on the unique names.
      */
     private renderSidebarControls(features: GeoFeature[]) {
-        const container = document.getElementById('region-filters-wrapper') as HTMLDivElement;
+        const container = document.getElementById('paid-parking-zones-wrapper') as HTMLDivElement;
         if (!container) {
             return;
         }
@@ -102,19 +133,19 @@ export class AdministrativeRegionStrategy implements IDetailsStrategy {
         container.innerHTML = '';
 
         // Extract unique names and sort them
-        const regionNames = Array.from(new Set(features.map(f => f.properties?.CAU))).sort();
+        const zoneNames = Array.from(new Set(features.map(f => this.currentLang === 'en' && f.properties.NameEn ? f.properties.NameEn : f.properties.Name))).sort();
 
-        regionNames.forEach(name => {
+        zoneNames.forEach(name => {
             if (!name) {
                 return;
             }
 
             const div = document.createElement('div') as HTMLDivElement;
-            div.className = 'region-item';
+            div.className = 'paid-zone-item';
 
             const checkbox = document.createElement('input') as HTMLInputElement;
             checkbox.type = 'checkbox';
-            checkbox.id = `region-${name}`;
+            checkbox.id = `paid-zone-${name}`;
             checkbox.value = name;
 
             // Handle Sidebar Click
@@ -134,7 +165,7 @@ export class AdministrativeRegionStrategy implements IDetailsStrategy {
             });
 
             const label = document.createElement('label') as HTMLLabelElement;
-            label.htmlFor = `region-${name}`;
+            label.htmlFor = `paid-zone-${name}`;
             label.innerText = name;
             label.style.cursor = 'pointer';
 
@@ -166,7 +197,7 @@ export class AdministrativeRegionStrategy implements IDetailsStrategy {
             });
 
             // Uncheck previous checkbox
-            const prevCheckbox = document.getElementById(`region-${this.currentSelection.name}`) as HTMLInputElement;
+            const prevCheckbox = document.getElementById(`paid-zone-${this.currentSelection.name}`) as HTMLInputElement;
             if (prevCheckbox) {
                 prevCheckbox.checked = false;
             }
@@ -184,7 +215,7 @@ export class AdministrativeRegionStrategy implements IDetailsStrategy {
         });
 
         // Check New Checkbox
-        const newCheckbox = document.getElementById(`region-${name}`) as HTMLInputElement;
+        const newCheckbox = document.getElementById(`paid-zone-${name}`) as HTMLInputElement;
         if (newCheckbox) {
             newCheckbox.checked = true;
         }

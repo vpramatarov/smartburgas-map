@@ -26,8 +26,8 @@ p {
 
 #controls {
     position: absolute;
-    top: 80px;
-    left: 10px;
+    top: 1%;
+    left: 50px;
     background: #023664;
     color: #ccc;
     padding: 15px;
@@ -37,6 +37,8 @@ p {
     font-family: sans-serif;
     max-width: 350px;
     width: 350px;
+    overflow-y: auto;
+    height: 95vh;
 }
 
 /* Language Switcher */
@@ -430,7 +432,8 @@ ul li {
 }
 
 /** Region controls */
-#region-filters-wrapper {
+#region-filters-wrapper,
+#paid-parking-zones-wrapper {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
@@ -440,15 +443,18 @@ ul li {
     max-height: 300px;
 }
 
-.region-item {
+.region-item,
+.paid-zone-item {
     margin: 0;
 }
 
-.region-item input[type="checkbox"] {
+.region-item input[type="checkbox"],
+.paid-zone-item input[type="checkbox"] {
     display: none;
 }
 
-.region-item label {
+.region-item label,
+.paid-zone-item label {
     display: inline-block;
     padding: 6px 12px;
     font-size: 1em;
@@ -463,12 +469,14 @@ ul li {
 }
 
 /* Hover Effect */
-.region-item label:hover {
+.region-item label:hover,
+.paid-zone-item label:hover {
     background-color: #e2e8f0;
     transform: translateY(-1px);
 }
 
-.region-item input[type="checkbox"]:checked + label {
+.region-item input[type="checkbox"]:checked + label,
+.paid-zone-item input[type="checkbox"]:checked + label {
     background-color: #FFE702;
     border-color: #FFE702;
     box-shadow: 0 2px 5px rgba(52, 152, 219, 0.3);

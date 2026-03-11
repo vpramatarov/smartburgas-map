@@ -74,6 +74,14 @@ export const en: TranslationKeys = {
     from_date: 'From',
     to_date: 'To',
 
+    // --- Paid Parking Zones ---
+    layer_paid_parking_zones: 'Paid Parking Zones',
+    click_to_filter: 'Click to filter',
+    price_per_hour: 'Price per hour',
+    working_hours: 'Working Hours',
+    sms_number: 'SMS Number',
+    bgn: 'BGN',
+
     // --- Misc ---
     filters: 'Filters',
     no_chart_data: 'No data for chart.',

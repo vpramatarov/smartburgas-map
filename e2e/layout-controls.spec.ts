@@ -144,4 +144,18 @@ test.describe('Layout & Controls', () => {
         // Verify it checked itself again
         await expect(targetCheckbox).toBeChecked();
     });
+
+    // --- Paid Parking Zones Layer ---
+    test('should render the Paid Parking Zones toggle and allow state changes', async ({ page }) => {
+        const parkingCheckbox = page.locator('#toggle-paid-parking-zones');
+
+        // Wait for it to be checked by default on load (like the other layers)
+        await expect(parkingCheckbox).toBeChecked();
+
+        // Click the label to uncheck it
+        await page.locator('label[for="toggle-paid-parking-zones"]').click();
+
+        // Verify it becomes unchecked programmatically
+        await expect(parkingCheckbox).not.toBeChecked();
+    });
 });

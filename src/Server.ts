@@ -103,6 +103,23 @@ app.get('/api/admin-regions', (req, res) => {
     });
 });
 
+// --- Paid Parking Zones ---
+app.get('/api/paid-parking-zones', (req, res) => {
+    const filePath = path.join(__dirname, '../paid-parking-zones.json');
+    fs.readFile(filePath, 'utf8', (err, data) => {
+        if (err) {
+            console.error('Error reading paid-parking-zones.json:', err);
+            res.status(500).json({ error: 'Failed to load paid parking zones data' });
+            return;
+        }
+        try {
+            res.json(JSON.parse(data));
+        } catch (parseError) {
+            res.status(500).json({ error: 'Invalid JSON data' });
+        }
+    });
+});
+
 // --- Dynamic API Proxy Router ---
 // This completely replaces the 8 hardcoded app.get() blocks
 const routeConfigs = [

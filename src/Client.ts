@@ -12,8 +12,8 @@ import { WasteCentreStrategy } from './strategies/WasteCentreStrategy.js';
 import { SmartParkingStrategy } from './strategies/SmartParkingStrategy.js';
 import { TaxiRankStrategy } from './strategies/TaxiRankStrategy.js';
 import { AdministrativeRegionStrategy } from './strategies/AdministrativeRegionStrategy.js';
+import {PaidParkingZonesStrategy} from "./strategies/PaidParkingZonesStrategy.js";
 import { ChartRenderer } from './components/ChartRenderer.js';
-
 
 declare const L: any;
 
@@ -36,6 +36,9 @@ class SmartMap {
             new WasteCentreStrategy(),
             new SmartParkingStrategy(),
             new TaxiRankStrategy(),
+            new PaidParkingZonesStrategy((geometry) => {
+                this.onRegionFilterChange(geometry);
+            }),
             new AdministrativeRegionStrategy((geometry) => {
                 this.onRegionFilterChange(geometry);
             })

@@ -95,6 +95,19 @@ describe('Backend API Endpoints', () => {
             expect(feature.geometry).toBeDefined();
             expect(feature.properties).toHaveProperty('CAU');
         });
+
+        it('GET /api/paid-parking-zones should return valid GeoJSON', async () => {
+            const response = await request(app).get('/api/paid-parking-zones');
+            expect(response.status).toBe(200);
+            expect(response.headers['content-type']).toMatch(/json/);
+            expect(response.body.type).toBe('FeatureCollection');
+            expect(Array.isArray(response.body.features)).toBe(true);
+
+            const feature = response.body.features[0];
+            expect(feature.geometry.type).toBe('Polygon');
+            expect(feature.properties).toHaveProperty('ZoneType');
+            expect(feature.properties).toHaveProperty('Name');
+        });
     });
 
     describe('Proxy Endpoints (Transforming features1 data)', () => {

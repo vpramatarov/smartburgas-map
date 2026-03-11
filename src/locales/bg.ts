@@ -73,6 +73,14 @@ export const bg = {
     from_date: 'От',
     to_date: 'До',
 
+    // --- Paid Parking Zones ---
+    layer_paid_parking_zones: 'Платени зони за паркиране',
+    click_to_filter: 'Кликнете за филтриране',
+    price_per_hour: 'Цена на час',
+    working_hours: 'Работно време',
+    sms_number: 'SMS номер',
+    bgn: 'лв.',
+
     // --- Misc ---
     filters: 'Филтри',
     no_chart_data: 'Няма данни за диаграма.',
