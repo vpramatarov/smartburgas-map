@@ -6,12 +6,32 @@ body, html {
     font-size: 14px;
 }
 
+p {
+    margin-bottom: 1em;
+}
+
+label {
+    cursor: pointer;
+    display: block;
+    margin-bottom: 5px;
+}
+
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+ul li {
+    margin-bottom: 8px;
+}
+
 .leaflet-container {
     font-size: 0.9em;
 }
 
-p {
-    margin-bottom: 1em;
+.leaflet-pane > svg path.leaflet-interactive:focus {
+    outline: none;
 }
 
 .hidden,
@@ -35,8 +55,8 @@ p {
     border-radius: 5px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
     font-family: sans-serif;
-    max-width: 350px;
-    width: 350px;
+    max-width: 360px;
+    width: 360px;
     overflow-y: auto;
     height: 95vh;
 }
@@ -96,7 +116,6 @@ p {
     z-index: 1;
 }
 
-
 input[name="lang"]#bg:checked ~ .selection-pill {
     transform: translateX(0);
 }
@@ -152,22 +171,6 @@ input[name="lang"]:checked + label .flag {
     margin: 0 4px;
 }
 
-label {
-    cursor: pointer;
-    display: block;
-    margin-bottom: 5px;
-}
-
-ul {
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
-}
-
-ul li {
-    margin-bottom: 8px;
-}
-
 /** Marker popup */
 .marker-popup-hover {
     font-family: sans-serif;
@@ -183,7 +186,6 @@ ul li {
     margin: 0;
     font-size: 1em;
 }
-
 
 /* --- Custom Map Pins --- */
 .custom-pin-wrapper {
@@ -233,11 +235,8 @@ ul li {
     transition: transform 0.3s ease-in-out;
     background: rgba(255,255,255, 0.5);
     z-index: 1001;
-
-    display: flex;       /* Use flexbox to handle internal scrolling better */
+    display: flex; /* Use flexbox to handle internal scrolling better */
     flex-direction: column;
-    /*background: rgba(255, 255, 255, 0.95); !* Make it slightly more opaque *!*/
-    /*z-index: 2000;       !* Ensure it's on top of map *!*/
 }
 
 #info-panel.hidden {
@@ -250,11 +249,10 @@ ul li {
     margin: 1%;
     border-radius: 8px;
     position: relative;
-
-    flex: 1;             /* Take remaining height */
-    overflow-y: auto;    /* scroll INSIDE the panel, not the body */
+    flex: 1;  /* Take remaining height */
+    overflow-y: auto; /* scroll INSIDE the panel, not the body */
     overflow-x: hidden;
-    height: auto;        /* Let it grow/shrink */
+    height: auto; /* Let it grow/shrink */
     max-height: 100%;
 }
 
@@ -432,8 +430,7 @@ ul li {
 }
 
 /** Region controls */
-#region-filters-wrapper,
-#paid-parking-zones-wrapper {
+.region-controls .wrapper {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
@@ -448,13 +445,11 @@ ul li {
     margin: 0;
 }
 
-.region-item input[type="checkbox"],
-.paid-zone-item input[type="checkbox"] {
+.region-controls .wrapper input[type="checkbox"] {
     display: none;
 }
 
-.region-item label,
-.paid-zone-item label {
+.region-controls .wrapper label {
     display: inline-block;
     padding: 6px 12px;
     font-size: 1em;
@@ -463,20 +458,18 @@ ul li {
     background-color: #f1f5f9;
     border: 1px solid #e2e8f0;
     border-radius: 20px;
-    cursor: pointer;
     transition: all 0.2s ease-in-out;
     user-select: none;
 }
 
 /* Hover Effect */
-.region-item label:hover,
-.paid-zone-item label:hover {
+.region-controls .wrapper label:hover {
     background-color: #e2e8f0;
     transform: translateY(-1px);
 }
 
-.region-item input[type="checkbox"]:checked + label,
-.paid-zone-item input[type="checkbox"]:checked + label {
+.region-controls .wrapper input[type="checkbox"]:checked + label,
+.region-controls .wrapper input[type="checkbox"].active + label{
     background-color: #FFE702;
     border-color: #FFE702;
     box-shadow: 0 2px 5px rgba(52, 152, 219, 0.3);

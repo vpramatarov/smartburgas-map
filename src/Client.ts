@@ -1,4 +1,4 @@
-import {FilterGeometry, SensorProperties, SupportedLanguage} from './Types.js'
+import {FilterGeometry, Position, SensorProperties, SupportedLanguage} from './Types.js'
 import { t } from './Translations.js';
 import { TranslationKeys } from './locales/bg.js';
 import { CsvExporter } from './CsvExporter.js';
@@ -25,6 +25,8 @@ class SmartMap {
     private pinnedSensors: SensorProperties[] = [];
     private previewSensor: SensorProperties | null = null;
     private currentLang: SupportedLanguage = 'bg';
+    private activeAdminRegion: FilterGeometry | null = null;
+    private activePaidZone: FilterGeometry | null = null;
 
     constructor() {
         const strategies = [
@@ -484,13 +486,55 @@ class SmartMap {
         }
     }
 
-    private onRegionFilterChange(geometry: FilterGeometry | null) {
-        console.log("Applying Spatial Filter:", geometry ? "Active" : "Cleared");
-        this.currentFilterGeometry = geometry;
+    private onRegionFilterChange(geometry: FilterGeometry | null, source: string = 'admin_regions', feature?: any) {
+        console.log(`Applying Spatial Filter: ${geometry ? "Active" : "Cleared"} from ${source}`);
+
+        if (source === 'admin_regions') {
+            this.activeAdminRegion = geometry;
+            this.activePaidZone = null; // Clear paid zone when admin region changes
+
+            const paidStrategy = this.compositeStrategy.getStrategies().get('paid_parking_zones') as PaidParkingZonesStrategy;
+            if (paidStrategy) {
+                paidStrategy.clearSelection(false);
+                paidStrategy.applyRegionFilter(this.activeAdminRegion);
+            }
+        } else if (source === 'paid_parking_zones') {
+            this.activePaidZone = geometry;
+
+            if (geometry && feature) {
+                // Automatically find and select the parent Admin Region
+                const adminStrategy = this.compositeStrategy.getStrategies().get('admin_regions') as AdministrativeRegionStrategy;
+                if (adminStrategy) {
+                    let pt: Position = [0, 0];
+                    if (feature.geometry.type === 'Polygon') {
+                        const coords = feature.geometry.coordinates as Position[][];
+                        pt = coords[0][0];
+                    } else if (feature.geometry.type === 'MultiPolygon') {
+                        const coords = feature.geometry.coordinates as Position[][][];
+                        pt = coords[0][0][0];
+                    }
+
+                    // Select region visually without causing an infinite event loop
+                    adminStrategy.selectRegionByPoint(pt, false);
+                    this.activeAdminRegion = adminStrategy.getCurrentGeometry();
+
+                    // Filter out un-related paid zones
+                    const paidStrategy = this.compositeStrategy.getStrategies().get('paid_parking_zones') as PaidParkingZonesStrategy;
+                    if (paidStrategy) {
+                        paidStrategy.applyRegionFilter(this.activeAdminRegion);
+                    }
+                }
+            }
+        }
+
+        // The effective map filter is the narrowest active boundary
+        const effectiveGeometry = this.activePaidZone || this.activeAdminRegion;
 
         // Iterate ALL strategies and tell them to filter
         this.compositeStrategy.getStrategies().forEach(strategy => {
-            strategy.applyRegionFilter(geometry);
+            if (strategy.name !== 'admin_regions' && strategy.name !== 'paid_parking_zones') {
+                strategy.applyRegionFilter(effectiveGeometry);
+            }
         });
 
         // Clear the side panel if the selected item is now filtered out

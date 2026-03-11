@@ -63,8 +63,10 @@ export class Utils {
      * Standard Ray-Casting algorithm to check if a point is inside a polygon.
      * Supports GeoJSON Polygon and MultiPolygon.
      */
-    public static isPointInPolygon(point: [number, number], geometry: FilterGeometry|null): boolean {
-        if (!geometry) return true; // No filter = inside
+    public static isPointInPolygon(point: Position, geometry: FilterGeometry|null): boolean {
+        if (!geometry) {
+            return true;  // No filter = inside
+        }
 
         const x = point[0], y = point[1];
 

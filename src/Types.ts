@@ -58,7 +58,7 @@ export interface SensorProperties {
 export interface GeoFeature {
     type: "Feature";
     properties: SensorProperties;
-    geometry: Geometry;
+    geometry: Geometry|FilterGeometry;
 }
 
 export interface GeoFeatureCollection {
