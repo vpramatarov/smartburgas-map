@@ -204,7 +204,7 @@ export class PaidParkingZonesStrategy implements IDetailsStrategy {
 
             const checkbox = document.createElement('input') as HTMLInputElement;
             checkbox.type = 'checkbox';
-            checkbox.id = `paid-zone-${name}`;
+            checkbox.id = this.getSafeId(name);
             checkbox.value = name;
 
             if (this.currentSelection?.name === name) {
@@ -216,7 +216,7 @@ export class PaidParkingZonesStrategy implements IDetailsStrategy {
                 const layer = this.featureMap.get(name);
                 const feature = features.find(f => (this.currentLang === 'en' && f.properties.NameEn ? f.properties.NameEn : f.properties.Name) === name);
 
-                const checkboxes = document.querySelectorAll('#paid-parking-zones-wrapper input[type="checkbox"]') as NodeListOf<HTMLInputElement>;
+                const checkboxes = document.querySelectorAll(`#${container.id} input[type="checkbox"]`) as NodeListOf<HTMLInputElement>;
 
                 checkboxes.forEach(cb => {
                     cb.classList.remove('active');
@@ -231,7 +231,7 @@ export class PaidParkingZonesStrategy implements IDetailsStrategy {
             });
 
             const label = document.createElement('label') as HTMLLabelElement;
-            label.htmlFor = `paid-zone-${name}`;
+            label.htmlFor = this.getSafeId(name);
             label.innerText = name;
 
             div.appendChild(checkbox);
@@ -249,7 +249,7 @@ export class PaidParkingZonesStrategy implements IDetailsStrategy {
                     this.geoJsonLayer.resetStyle(this.currentSelection.layer);
                 }
 
-                const prevCb = document.getElementById(`paid-zone-${this.currentSelection.name}`) as HTMLInputElement;
+                const prevCb = document.getElementById(this.getSafeId(this.currentSelection.name)) as HTMLInputElement;
                 if(prevCb) {
                     prevCb.checked = false;
                 }
@@ -261,7 +261,7 @@ export class PaidParkingZonesStrategy implements IDetailsStrategy {
                 layer.setStyle({ color: '#e74c3c', weight: 3, fillOpacity: 0.4, dashArray: '' });
             }
 
-            const newCb = document.getElementById(`paid-zone-${name}`) as HTMLInputElement;
+            const newCb = document.getElementById(this.getSafeId(name)) as HTMLInputElement;
 
             if(newCb) {
                 newCb.checked = true;
@@ -271,13 +271,17 @@ export class PaidParkingZonesStrategy implements IDetailsStrategy {
         }
     }
 
+    private getSafeId(name: string): string {
+        return `paid-zone-${name.replace(/\s+/g, '-')}`;
+    }
+
     public clearSelection(triggerFilter: boolean = true) {
         if (this.currentSelection) {
             if (this.currentSelection.layer && this.geoJsonLayer) {
                 this.geoJsonLayer.resetStyle(this.currentSelection.layer);
             }
 
-            const prevCb = document.getElementById(`paid-zone-${this.currentSelection.name}`) as HTMLInputElement;
+            const prevCb = document.getElementById(this.getSafeId(this.currentSelection.name)) as HTMLInputElement;
 
             if(prevCb) {
                 prevCb.checked = false;
