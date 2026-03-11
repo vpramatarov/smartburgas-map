@@ -93,15 +93,15 @@ export class PaidParkingZonesStrategy implements IDetailsStrategy {
         }
 
         // Ensure we handle if the currently selected zone was filtered out by an Admin Region change
-        if (this.currentSelection) {
-            const stillExists = filteredFeatures.some(f => {
-                const fName = this.currentLang === 'en' && f.properties.NameEn ? f.properties.NameEn : f.properties.Name;
-                return fName === this.currentSelection?.name;
-            });
-            if (!stillExists) {
-                this.currentSelection = null;
-            }
-        }
+        // if (this.currentSelection) {
+        //     const stillExists = filteredFeatures.some(f => {
+        //         const fName = this.currentLang === 'en' && f.properties.NameEn ? f.properties.NameEn : f.properties.Name;
+        //         return fName === this.currentSelection?.name;
+        //     });
+        //     if (!stillExists) {
+        //         this.currentSelection = null;
+        //     }
+        // }
 
         this.addGeoJsonToLayer(filteredFeatures);
     }
@@ -134,6 +134,7 @@ export class PaidParkingZonesStrategy implements IDetailsStrategy {
                 this.featureMap.set(name, layer);
 
                 if (this.currentSelection && this.currentSelection.name === name) {
+                    layer.setStyle({ color: '#e74c3c', weight: 3, opacity: 0.8, fillColor: '#e74c3c', fillOpacity: 0.4, dashArray: '' });
                     this.currentSelection.layer = layer;
                 }
 
@@ -216,14 +217,7 @@ export class PaidParkingZonesStrategy implements IDetailsStrategy {
                 const layer = this.featureMap.get(name);
                 const feature = features.find(f => (this.currentLang === 'en' && f.properties.NameEn ? f.properties.NameEn : f.properties.Name) === name);
 
-                const checkboxes = document.querySelectorAll(`#${container.id} input[type="checkbox"]`) as NodeListOf<HTMLInputElement>;
-
-                checkboxes.forEach(cb => {
-                    cb.classList.remove('active');
-                });
-
                 if (target.checked && feature) {
-                    target.classList.add('active');
                     this.toggleSelection(name, layer, feature, true);
                 } else {
                     this.clearSelection();
@@ -245,11 +239,16 @@ export class PaidParkingZonesStrategy implements IDetailsStrategy {
             this.clearSelection();
         } else {
             if (this.currentSelection) {
-                if (this.currentSelection.layer && this.geoJsonLayer) {
-                    this.geoJsonLayer.resetStyle(this.currentSelection.layer);
-                }
+                const prevLayer = this.currentSelection.layer;
+                const prevName = this.currentSelection.name;
 
-                const prevCb = document.getElementById(this.getSafeId(this.currentSelection.name)) as HTMLInputElement;
+                // clear the state BEFORE calling resetStyle.
+                this.currentSelection = null;
+
+                if (prevLayer && this.geoJsonLayer) {
+                    this.geoJsonLayer.resetStyle(prevLayer);
+                }
+                const prevCb = document.getElementById(this.getSafeId(prevName)) as HTMLInputElement;
                 if(prevCb) {
                     prevCb.checked = false;
                 }
@@ -277,11 +276,17 @@ export class PaidParkingZonesStrategy implements IDetailsStrategy {
 
     public clearSelection(triggerFilter: boolean = true) {
         if (this.currentSelection) {
-            if (this.currentSelection.layer && this.geoJsonLayer) {
-                this.geoJsonLayer.resetStyle(this.currentSelection.layer);
+            const prevLayer = this.currentSelection.layer;
+            const prevName = this.currentSelection.name;
+
+            // Clear state before resetting styles
+            this.currentSelection = null;
+
+            if (prevLayer && this.geoJsonLayer) {
+                this.geoJsonLayer.resetStyle(prevLayer);
             }
 
-            const prevCb = document.getElementById(this.getSafeId(this.currentSelection.name)) as HTMLInputElement;
+            const prevCb = document.getElementById(this.getSafeId(prevName)) as HTMLInputElement;
 
             if(prevCb) {
                 prevCb.checked = false;

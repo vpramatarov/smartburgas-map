@@ -468,8 +468,7 @@ input[name="lang"]:checked + label .flag {
     transform: translateY(-1px);
 }
 
-.region-controls .wrapper input[type="checkbox"]:checked + label,
-.region-controls .wrapper input[type="checkbox"].active + label{
+.region-controls .wrapper input[type="checkbox"]:checked + label {
     background-color: #FFE702;
     border-color: #FFE702;
     box-shadow: 0 2px 5px rgba(52, 152, 219, 0.3);

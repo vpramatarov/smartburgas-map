@@ -20,7 +20,6 @@ declare const L: any;
 class SmartMap {
     private allowedOrigin: string = '*'; // Default to allow all until config loads
     private compositeStrategy: CompositeDetailsStrategy;
-    private currentFilterGeometry: FilterGeometry | null = null;
     private map: any;
     private pinnedSensors: SensorProperties[] = [];
     private previewSensor: SensorProperties | null = null;
@@ -38,11 +37,11 @@ class SmartMap {
             new WasteCentreStrategy(),
             new SmartParkingStrategy(),
             new TaxiRankStrategy(),
-            new PaidParkingZonesStrategy((geometry) => {
-                this.onRegionFilterChange(geometry);
+            new PaidParkingZonesStrategy((geometry, feature) => {
+                this.onRegionFilterChange(geometry, 'paid_parking_zones', feature);
             }),
             new AdministrativeRegionStrategy((geometry) => {
-                this.onRegionFilterChange(geometry);
+                this.onRegionFilterChange(geometry, 'admin_regions');
             })
         ];
         this.compositeStrategy = new CompositeDetailsStrategy(strategies);
