@@ -71,54 +71,6 @@ export class SmartParkingStrategy implements IDetailsStrategy {
         this.addGeoJsonToLayer(filteredFeatures, this.layerOptions);
     }
 
-    private addGeoJsonToLayer(inputData: GeoJSONInput, options: { color: string }) {
-        let features: GeoFeature[] = Array.isArray(inputData) ? inputData : inputData.features || [];
-
-        L.geoJSON(features, {
-            pointToLayer: (_feature: GeoFeature, latlng: any) => {
-                const iconClass = "icon-car-parking";
-
-                const iconHtml = `
-                    <div class="custom-pin-marker" style="background-color: ${options.color};">
-                        <i class="${iconClass}"></i>
-                    </div>
-                `;
-
-                return L.marker(latlng, {
-                    icon: L.divIcon({
-                        className: 'custom-pin-wrapper',
-                        html: iconHtml,
-                        iconSize: [30, 30],
-                        iconAnchor: [15, 30], // Anchors the bottom tip of the pin to the coordinate
-                        popupAnchor: [0, -32] // Opens the popup right above the pin
-                    })
-                });
-            },
-            onEachFeature: (feature: GeoFeature, layer: any) => {
-                const props = feature.properties;
-                const popupContent = `
-                    <div class="marker-popup-hover">
-                        <h4>${props.name}</h4>
-                        <p><span>${t('free', this.currentLang)}</span>: <strong>${props.additional_info.total_free_lots}</strong> / ${props.additional_info.total_lots}</p>
-                    </div>`;
-
-                layer.bindPopup(popupContent, {
-                    closeButton: false,
-                    offset: L.point(0, 0)
-                });
-
-                layer.on('mouseover', (e: any) => { e.target.openPopup(); });
-                layer.on('mouseout', (e: any) => { e.target.closePopup(); });
-
-                layer.on('click', () => {
-                    if (this.onPin) {
-                        this.onPin(props);
-                    }
-                });
-            }
-        }).addTo(this.layer);
-    }
-
     renderCardContent(
         container: HTMLElement,
         sensor: SensorProperties,
@@ -196,18 +148,6 @@ export class SmartParkingStrategy implements IDetailsStrategy {
         }
     }
 
-    private getUsageColor(percentage: number): string {
-        if (percentage < 50) {
-            return '#27ae60'; // Green (Plenty of space)
-        }
-
-        if (percentage < 85) {
-            return '#f39c12'; // Orange (Getting full)
-        }
-
-        return '#c0392b'; // Red (Full)
-    }
-
     getChartData(sensor: SensorProperties, property: string): ChartDataset | null {
         if (property !== 'free_lots') {
             return null;
@@ -222,5 +162,65 @@ export class SmartParkingStrategy implements IDetailsStrategy {
         const times = points.map(d => d.time);
 
         return {label: t('free_spots', this.currentLang), values: values, times: times, unit: t('spots', this.currentLang)};
+    }
+
+    private addGeoJsonToLayer(inputData: GeoJSONInput, options: { color: string }) {
+        let features: GeoFeature[] = Array.isArray(inputData) ? inputData : inputData.features || [];
+
+        L.geoJSON(features, {
+            pointToLayer: (_feature: GeoFeature, latlng: any) => {
+                const iconClass = "icon-car-parking";
+
+                const iconHtml = `
+                    <div class="custom-pin-marker" style="background-color: ${options.color};">
+                        <i class="${iconClass}"></i>
+                    </div>
+                `;
+
+                return L.marker(latlng, {
+                    icon: L.divIcon({
+                        className: 'custom-pin-wrapper',
+                        html: iconHtml,
+                        iconSize: [30, 30],
+                        iconAnchor: [15, 30], // Anchors the bottom tip of the pin to the coordinate
+                        popupAnchor: [0, -32] // Opens the popup right above the pin
+                    })
+                });
+            },
+            onEachFeature: (feature: GeoFeature, layer: any) => {
+                const props = feature.properties;
+                const popupContent = `
+                    <div class="marker-popup-hover">
+                        <h4>${props.name}</h4>
+                        <p><span>${t('free', this.currentLang)}</span>: <strong>${props.additional_info.total_free_lots}</strong> / ${props.additional_info.total_lots}</p>
+                    </div>`;
+
+                layer.bindPopup(popupContent, {
+                    closeButton: false,
+                    offset: L.point(0, 0)
+                });
+
+                layer.on('mouseover', (e: any) => { e.target.openPopup(); });
+                layer.on('mouseout', (e: any) => { e.target.closePopup(); });
+
+                layer.on('click', () => {
+                    if (this.onPin) {
+                        this.onPin(props);
+                    }
+                });
+            }
+        }).addTo(this.layer);
+    }
+
+    private getUsageColor(percentage: number): string {
+        if (percentage < 50) {
+            return '#27ae60'; // Green (Plenty of space)
+        }
+
+        if (percentage < 85) {
+            return '#f39c12'; // Orange (Getting full)
+        }
+
+        return '#c0392b'; // Red (Full)
     }
 }

@@ -92,19 +92,36 @@ export class PaidParkingZonesStrategy implements IDetailsStrategy {
             });
         }
 
-        // Ensure we handle if the currently selected zone was filtered out by an Admin Region change
-        // if (this.currentSelection) {
-        //     const stillExists = filteredFeatures.some(f => {
-        //         const fName = this.currentLang === 'en' && f.properties.NameEn ? f.properties.NameEn : f.properties.Name;
-        //         return fName === this.currentSelection?.name;
-        //     });
-        //     if (!stillExists) {
-        //         this.currentSelection = null;
-        //     }
-        // }
-
         this.addGeoJsonToLayer(filteredFeatures);
     }
+
+    public clearSelection(triggerFilter: boolean = true) {
+        if (this.currentSelection) {
+            const prevLayer = this.currentSelection.layer;
+            const prevName = this.currentSelection.name;
+
+            // Clear state before resetting styles
+            this.currentSelection = null;
+
+            if (prevLayer && this.geoJsonLayer) {
+                this.geoJsonLayer.resetStyle(prevLayer);
+            }
+
+            const prevCb = document.getElementById(this.getSafeId(prevName)) as HTMLInputElement;
+
+            if(prevCb) {
+                prevCb.checked = false;
+            }
+
+            this.currentSelection = null;
+        }
+        if (triggerFilter) {
+            this.onFilterChange(null);
+        }
+    }
+
+    renderCardContent(container: HTMLElement, sensor: SensorProperties): void {}
+    getChartData(sensor: SensorProperties): ChartDataset | null { return null; }
 
     private addGeoJsonToLayer(features: GeoFeature[]) {
         if (this.geoJsonLayer) {
@@ -273,32 +290,4 @@ export class PaidParkingZonesStrategy implements IDetailsStrategy {
     private getSafeId(name: string): string {
         return `paid-zone-${name.replace(/\s+/g, '-')}`;
     }
-
-    public clearSelection(triggerFilter: boolean = true) {
-        if (this.currentSelection) {
-            const prevLayer = this.currentSelection.layer;
-            const prevName = this.currentSelection.name;
-
-            // Clear state before resetting styles
-            this.currentSelection = null;
-
-            if (prevLayer && this.geoJsonLayer) {
-                this.geoJsonLayer.resetStyle(prevLayer);
-            }
-
-            const prevCb = document.getElementById(this.getSafeId(prevName)) as HTMLInputElement;
-
-            if(prevCb) {
-                prevCb.checked = false;
-            }
-
-            this.currentSelection = null;
-        }
-        if (triggerFilter) {
-            this.onFilterChange(null);
-        }
-    }
-
-    renderCardContent(container: HTMLElement, sensor: SensorProperties): void {}
-    getChartData(sensor: SensorProperties): ChartDataset | null { return null; }
 }

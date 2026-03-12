@@ -105,61 +105,6 @@ export class CCTVStrategy implements IDetailsStrategy {
         this.addGeoJsonToLayer(filteredFeatures, this.layerOptions);
     }
 
-    private addGeoJsonToLayer(inputData: GeoJSONInput, options: { color: string }) {
-        let features: GeoFeature[] = Array.isArray(inputData) ? inputData : inputData.features || [];
-
-        L.geoJSON(features, {
-            pointToLayer: (_feature: GeoFeature, latlng: any) => {
-                const position = _feature.properties.position || 0;
-
-                // .cctv-zoom-wrapper wrapper reads the --cctv-zoom-scale variable.
-                // The inner .cctv-container handles the rotation.
-                const html = `
-                    <div class="cctv-root custom-pin-wrapper">
-                        <div class="cctv-cone-scaler">
-                            <div class="cctv-rotator" style="transform: rotate(${position}deg)">
-                                <svg class="cctv-cone-svg" viewBox="0 0 100 100">
-                                     <path d="M 50 50 L 30 15 A 40 40 0 0 1 70 15 Z" />
-                                </svg>
-                            </div>
-                        </div>
-                        
-                        <div class="custom-pin-marker cctv-dot" style="background-color: ${options.color}">
-                            <i class="icon-videocam"></i>
-                        </div>
-                    </div>
-                `;
-
-                return L.marker(latlng, {
-                    icon: L.divIcon({
-                        className: 'cctv-icon-wrapper',
-                        html: html,
-                        iconSize: [20, 20],
-                        iconAnchor: [10, 10] // Center it ([width/2, height/2])
-                    })
-                });
-            },
-            onEachFeature: (feature: GeoFeature, layer: any) => {
-                const props = feature.properties;
-                const title = props.publicname || t('layer_camera', this.currentLang);
-
-                layer.bindPopup(`<div class="marker-popup-hover"><h4>${title}</h4><p>${t('click_to_pin', this.currentLang)}</p></div>`, {
-                    closeButton: false,
-                    offset: L.point(0, 0)
-                });
-
-                layer.on('mouseover', (e: any) => { e.target.openPopup(); });
-                layer.on('mouseout', (e: any) => { e.target.closePopup(); });
-
-                layer.on('click', () => {
-                    if (this.onPin) {
-                        this.onPin(props);
-                    }
-                });
-            }
-        }).addTo(this.layer);
-    }
-
     renderCardContent(
         container: HTMLElement,
         sensor: SensorProperties,
@@ -222,6 +167,61 @@ export class CCTVStrategy implements IDetailsStrategy {
             player.hls.destroy();
         });
         CCTVStrategy.activePlayers.clear();
+    }
+
+    private addGeoJsonToLayer(inputData: GeoJSONInput, options: { color: string }) {
+        let features: GeoFeature[] = Array.isArray(inputData) ? inputData : inputData.features || [];
+
+        L.geoJSON(features, {
+            pointToLayer: (_feature: GeoFeature, latlng: any) => {
+                const position = _feature.properties.position || 0;
+
+                // .cctv-zoom-wrapper wrapper reads the --cctv-zoom-scale variable.
+                // The inner .cctv-container handles the rotation.
+                const html = `
+                    <div class="cctv-root custom-pin-wrapper">
+                        <div class="cctv-cone-scaler">
+                            <div class="cctv-rotator" style="transform: rotate(${position}deg)">
+                                <svg class="cctv-cone-svg" viewBox="0 0 100 100">
+                                     <path d="M 50 50 L 30 15 A 40 40 0 0 1 70 15 Z" />
+                                </svg>
+                            </div>
+                        </div>
+                        
+                        <div class="custom-pin-marker cctv-dot" style="background-color: ${options.color}">
+                            <i class="icon-videocam"></i>
+                        </div>
+                    </div>
+                `;
+
+                return L.marker(latlng, {
+                    icon: L.divIcon({
+                        className: 'cctv-icon-wrapper',
+                        html: html,
+                        iconSize: [20, 20],
+                        iconAnchor: [10, 10] // Center it ([width/2, height/2])
+                    })
+                });
+            },
+            onEachFeature: (feature: GeoFeature, layer: any) => {
+                const props = feature.properties;
+                const title = props.publicname || t('layer_camera', this.currentLang);
+
+                layer.bindPopup(`<div class="marker-popup-hover"><h4>${title}</h4><p>${t('click_to_pin', this.currentLang)}</p></div>`, {
+                    closeButton: false,
+                    offset: L.point(0, 0)
+                });
+
+                layer.on('mouseover', (e: any) => { e.target.openPopup(); });
+                layer.on('mouseout', (e: any) => { e.target.closePopup(); });
+
+                layer.on('click', () => {
+                    if (this.onPin) {
+                        this.onPin(props);
+                    }
+                });
+            }
+        }).addTo(this.layer);
     }
 
     private createVideo(sensorId: string, posterUrl: string|null) {

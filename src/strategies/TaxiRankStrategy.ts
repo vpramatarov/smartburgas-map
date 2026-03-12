@@ -71,48 +71,6 @@ export class TaxiRankStrategy implements IDetailsStrategy {
         this.addGeoJsonToLayer(filteredFeatures, this.layerOptions);
     }
 
-    private addGeoJsonToLayer(inputData: GeoJSONInput, options: { color: string }) {
-        let features: GeoFeature[] = Array.isArray(inputData) ? inputData : inputData.features || [];
-
-        L.geoJSON(features, {
-            pointToLayer: (_feature: GeoFeature, latlng: any) => {
-                const iconClass = "icon-taxi-sign_76588";
-
-                const iconHtml = `
-                    <div class="custom-pin-marker" style="background-color: ${options.color};">
-                        <i class="${iconClass}" style="color: #000;"></i>
-                    </div>
-                `;
-
-                return L.marker(latlng, {
-                    icon: L.divIcon({
-                        className: 'custom-pin-wrapper',
-                        html: iconHtml,
-                        iconSize: [30, 30],
-                        iconAnchor: [15, 30], // Anchors the bottom tip of the pin to the coordinate
-                        popupAnchor: [0, -32] // Opens the popup right above the pin
-                    })
-                });
-            },
-            onEachFeature: (feature: GeoFeature, layer: any) => {
-                const props = feature.properties;
-                layer.bindPopup(`<div class="marker-popup-hover"><h4>${props.name}</h4><p>${t('click_for_details', this.currentLang)}</p></div>`, {
-                    closeButton: false,
-                    offset: L.point(0, 0)
-                });
-
-                layer.on('mouseover', (e: any) => { e.target.openPopup(); });
-                layer.on('mouseout', (e: any) => { e.target.closePopup(); });
-
-                layer.on('click', () => {
-                    if (this.onPin) {
-                        this.onPin(props);
-                    }
-                });
-            }
-        }).addTo(this.layer);
-    }
-
     renderCardContent(
         container: HTMLElement,
         sensor: SensorProperties,
@@ -153,5 +111,47 @@ export class TaxiRankStrategy implements IDetailsStrategy {
 
     getChartData(sensor: SensorProperties, property: string): ChartDataset | null {
         return null;
+    }
+
+    private addGeoJsonToLayer(inputData: GeoJSONInput, options: { color: string }) {
+        let features: GeoFeature[] = Array.isArray(inputData) ? inputData : inputData.features || [];
+
+        L.geoJSON(features, {
+            pointToLayer: (_feature: GeoFeature, latlng: any) => {
+                const iconClass = "icon-taxi-sign_76588";
+
+                const iconHtml = `
+                    <div class="custom-pin-marker" style="background-color: ${options.color};">
+                        <i class="${iconClass}" style="color: #000;"></i>
+                    </div>
+                `;
+
+                return L.marker(latlng, {
+                    icon: L.divIcon({
+                        className: 'custom-pin-wrapper',
+                        html: iconHtml,
+                        iconSize: [30, 30],
+                        iconAnchor: [15, 30], // Anchors the bottom tip of the pin to the coordinate
+                        popupAnchor: [0, -32] // Opens the popup right above the pin
+                    })
+                });
+            },
+            onEachFeature: (feature: GeoFeature, layer: any) => {
+                const props = feature.properties;
+                layer.bindPopup(`<div class="marker-popup-hover"><h4>${props.name}</h4><p>${t('click_for_details', this.currentLang)}</p></div>`, {
+                    closeButton: false,
+                    offset: L.point(0, 0)
+                });
+
+                layer.on('mouseover', (e: any) => { e.target.openPopup(); });
+                layer.on('mouseout', (e: any) => { e.target.closePopup(); });
+
+                layer.on('click', () => {
+                    if (this.onPin) {
+                        this.onPin(props);
+                    }
+                });
+            }
+        }).addTo(this.layer);
     }
 }

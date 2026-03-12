@@ -85,6 +85,47 @@ export class AdministrativeRegionStrategy implements IDetailsStrategy {
         }
     }
 
+
+
+    public selectRegionByPoint(point: Position, triggerFilter: boolean = true) {
+        const feature = this.cachedData.find(f => Utils.isPointInPolygon(point, f.geometry as FilterGeometry));
+        if (feature) {
+            const name = feature.properties?.CAU;
+            const layer = this.featureMap.get(name);
+            if (name && layer) {
+                this.selectRegion(name, layer, feature.geometry as FilterGeometry, triggerFilter);
+            }
+        } else {
+            this.clearSelection(triggerFilter);
+        }
+    }
+
+    public getCurrentGeometry(): FilterGeometry | null {
+        if (this.currentSelection) {
+            return this.currentSelection.layer.feature.geometry;
+        }
+        return null;
+    }
+
+    public clearSelection(triggerFilter: boolean = true) {
+        if (this.currentSelection) {
+            const prevLayer = this.currentSelection.layer;
+            prevLayer.setStyle({ color: this.layerOptions.color, weight: 1, fillOpacity: 0.05, dashArray: '4, 4' });
+            const prevCheckbox = document.getElementById(`region-${this.currentSelection.name}`) as HTMLInputElement;
+            if (prevCheckbox) {
+                prevCheckbox.checked = false;
+            }
+            this.currentSelection = null;
+        }
+        if (triggerFilter) {
+            this.onFilterChange(null);
+        }
+    }
+
+    applyRegionFilter(geometry: FilterGeometry | null): void {}
+    renderCardContent(container: HTMLElement, sensor: SensorProperties): void {}
+    getChartData(sensor: SensorProperties): ChartDataset | null { return null; }
+
     private renderSidebarControls(features: GeoFeature[]) {
         const container = document.getElementById('region-filters-wrapper') as HTMLDivElement;
         if (!container) {
@@ -129,26 +170,6 @@ export class AdministrativeRegionStrategy implements IDetailsStrategy {
         });
     }
 
-    public selectRegionByPoint(point: Position, triggerFilter: boolean = true) {
-        const feature = this.cachedData.find(f => Utils.isPointInPolygon(point, f.geometry as FilterGeometry));
-        if (feature) {
-            const name = feature.properties?.CAU;
-            const layer = this.featureMap.get(name);
-            if (name && layer) {
-                this.selectRegion(name, layer, feature.geometry as FilterGeometry, triggerFilter);
-            }
-        } else {
-            this.clearSelection(triggerFilter);
-        }
-    }
-
-    public getCurrentGeometry(): FilterGeometry | null {
-        if (this.currentSelection) {
-            return this.currentSelection.layer.feature.geometry;
-        }
-        return null;
-    }
-
     private selectRegion(name: string, layer: any, geometry: FilterGeometry, triggerFilter: boolean = true) {
         if (this.currentSelection?.name === name) {
             return;
@@ -175,23 +196,4 @@ export class AdministrativeRegionStrategy implements IDetailsStrategy {
             this.onFilterChange(geometry);
         }
     }
-
-    public clearSelection(triggerFilter: boolean = true) {
-        if (this.currentSelection) {
-            const prevLayer = this.currentSelection.layer;
-            prevLayer.setStyle({ color: this.layerOptions.color, weight: 1, fillOpacity: 0.05, dashArray: '4, 4' });
-            const prevCheckbox = document.getElementById(`region-${this.currentSelection.name}`) as HTMLInputElement;
-            if (prevCheckbox) {
-                prevCheckbox.checked = false;
-            }
-            this.currentSelection = null;
-        }
-        if (triggerFilter) {
-            this.onFilterChange(null);
-        }
-    }
-
-    applyRegionFilter(geometry: FilterGeometry | null): void {}
-    renderCardContent(container: HTMLElement, sensor: SensorProperties): void {}
-    getChartData(sensor: SensorProperties): ChartDataset | null { return null; }
 }

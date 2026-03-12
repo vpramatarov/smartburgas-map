@@ -71,6 +71,40 @@ export class EVChargingStrategy implements IDetailsStrategy {
         this.addGeoJsonToLayer(filteredFeatures, this.layerOptions);
     }
 
+    renderCardContent(
+        container: HTMLElement,
+        sensor: SensorProperties,
+        uniqueIdPrefix: string,
+        onChartRequest: () => void
+    ): void {
+
+        if (sensor.pic_url) {
+            const img = document.createElement('img') as HTMLImageElement;
+            img.src = sensor.pic_url;
+            img.style.width = '100%';
+            img.style.borderRadius = '4px';
+            img.style.marginBottom = '10px';
+            if (sensor.name != null) {
+                img.alt = sensor.name;
+            }
+            // Hide broken images
+            img.onerror = () => { img.style.display = 'none'; };
+            container.appendChild(img);
+        }
+
+        if (sensor.description) {
+            const desc = document.createElement('div') as HTMLDivElement;
+            desc.className = 'sensor-description';
+            desc.style.color = '#555';
+            desc.innerHTML = sensor.description;
+            container.appendChild(desc);
+        }
+    }
+
+    getChartData(sensor: SensorProperties, property: string): ChartDataset | null {
+        return null;
+    }
+
     private addGeoJsonToLayer(inputData: GeoJSONInput, options: { color: string }) {
         let features: GeoFeature[] = Array.isArray(inputData) ? inputData : inputData.features || [];
 
@@ -111,39 +145,5 @@ export class EVChargingStrategy implements IDetailsStrategy {
                 });
             }
         }).addTo(this.layer);
-    }
-
-    renderCardContent(
-        container: HTMLElement,
-        sensor: SensorProperties,
-        uniqueIdPrefix: string,
-        onChartRequest: () => void
-    ): void {
-
-        if (sensor.pic_url) {
-            const img = document.createElement('img') as HTMLImageElement;
-            img.src = sensor.pic_url;
-            img.style.width = '100%';
-            img.style.borderRadius = '4px';
-            img.style.marginBottom = '10px';
-            if (sensor.name != null) {
-                img.alt = sensor.name;
-            }
-            // Hide broken images
-            img.onerror = () => { img.style.display = 'none'; };
-            container.appendChild(img);
-        }
-
-        if (sensor.description) {
-            const desc = document.createElement('div') as HTMLDivElement;
-            desc.className = 'sensor-description';
-            desc.style.color = '#555';
-            desc.innerHTML = sensor.description;
-            container.appendChild(desc);
-        }
-    }
-
-    getChartData(sensor: SensorProperties, property: string): ChartDataset | null {
-        return null;
     }
 }

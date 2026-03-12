@@ -146,6 +146,41 @@ export class CompositeDetailsStrategy {
         this.updateChart(chartContainer, items, btnFullChart, noChartData);
     }
 
+    /**
+     * Handles Full Screen rendering for mixed strategies
+     */
+    renderFull(chartConfig: any[], sensors: SensorProperties[], lang: SupportedLanguage) {
+        const containerId = 'full-chart-container';
+        const container = document.getElementById(containerId) as HTMLElement;
+
+        if (!container) {
+            return;
+        }
+
+        container.innerHTML = '';
+        const datasets: ChartDataset[] = [];
+
+        chartConfig.forEach(cfg => {
+            const sensor = sensors.find(s => (s.id || s.name) === cfg.sensorId);
+            if(sensor && sensor.strategy) {
+                const strategy = this.strategies.get(sensor.strategy);
+                if(strategy) {
+                    const ds = strategy.getChartData(sensor, cfg.property);
+                    if(ds) {
+                        ds.label = `${sensor.name} - ${ds.label}`;
+                        datasets.push(ds);
+                    }
+                }
+            }
+        });
+
+        if (datasets.length > 0) {
+            ChartRenderer.renderFull(containerId, t('combined_analysis', lang), [], datasets);
+        } else {
+            container.innerHTML = `<p>${t('no_data', lang)}</p>`;
+        }
+    }
+
     private updateChart(
         chartContainer: HTMLElement,
         sensors: SensorProperties[],
@@ -210,41 +245,6 @@ export class CompositeDetailsStrategy {
             chartContainer.style.display = 'none';
             noChartText?.classList.remove('hidden');
             btnFullChart?.classList.add('hidden');
-        }
-    }
-
-    /**
-     * Handles Full Screen rendering for mixed strategies
-     */
-    renderFull(chartConfig: any[], sensors: SensorProperties[], lang: SupportedLanguage) {
-        const containerId = 'full-chart-container';
-        const container = document.getElementById(containerId) as HTMLElement;
-
-        if (!container) {
-            return;
-        }
-
-        container.innerHTML = '';
-        const datasets: ChartDataset[] = [];
-
-        chartConfig.forEach(cfg => {
-            const sensor = sensors.find(s => (s.id || s.name) === cfg.sensorId);
-            if(sensor && sensor.strategy) {
-                const strategy = this.strategies.get(sensor.strategy);
-                if(strategy) {
-                    const ds = strategy.getChartData(sensor, cfg.property);
-                    if(ds) {
-                        ds.label = `${sensor.name} - ${ds.label}`;
-                        datasets.push(ds);
-                    }
-                }
-            }
-        });
-
-        if (datasets.length > 0) {
-            ChartRenderer.renderFull(containerId, t('combined_analysis', lang), [], datasets);
-        } else {
-            container.innerHTML = `<p>${t('no_data', lang)}</p>`;
         }
     }
 
