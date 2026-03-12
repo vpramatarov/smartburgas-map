@@ -146,16 +146,98 @@ test.describe('Layout & Controls', () => {
     });
 
     // --- Paid Parking Zones Layer ---
-    test('should render the Paid Parking Zones toggle and allow state changes', async ({ page }) => {
-        const parkingCheckbox = page.locator('#toggle-paid-parking-zones');
+    test('should cross-filter Paid Parking Zones when an Administrative Region is selected', async ({ page }) => {
+        // Wait for the visible parent containers to render and count them
+        const paidZoneItems = page.locator('.paid-zone-item');
+        await expect(paidZoneItems.first()).toBeVisible({ timeout: 10000 });
 
-        // Wait for it to be checked by default on load (like the other layers)
-        await expect(parkingCheckbox).toBeChecked();
+        const initialCount = await paidZoneItems.count();
+        expect(initialCount).toBeGreaterThan(5); // Ensure data actually loaded
 
-        // Click the label to uncheck it
-        await page.locator('label[for="toggle-paid-parking-zones"]').click();
+        // Click the first Administrative Region in the sidebar
+        // Get all the labels (our styled chips) inside the region item wrapper
+        const regionChips = page.locator('.region-item label');
 
-        // Verify it becomes unchecked programmatically
-        await expect(parkingCheckbox).not.toBeChecked();
+        // Wait until at least 1 region is loaded from the /api/admin-regions endpoint
+        await expect(regionChips.first()).toBeVisible({ timeout: 5000 });
+
+        // Get the specific elements for the first region
+        const firstRegion = regionChips.nth(0);
+
+        await firstRegion.click();
+
+        // The hidden checkbox belonging to this label should now be checked
+        const firstCheckbox = page.locator('.region-item input[type="checkbox"]').nth(0);
+        await expect(firstCheckbox).toBeChecked();
+
+        //Wait for the map to re-render the filtered features
+        await page.waitForTimeout(500);
+
+        // Verify the paid zones list shrank because it filtered out zones outside the region
+        const filteredCount = await paidZoneItems.count();
+        expect(filteredCount).toBeLessThan(initialCount);
+    });
+
+    test('should automatically select the parent Administrative Region when a Paid Zone is clicked', async ({ page }) => {
+        // Wait for the visible parent containers to render
+        const paidZoneItems = page.locator('.paid-zone-item');
+        const regionItems = page.locator('.region-item');
+
+        await expect(paidZoneItems.first()).toBeVisible({ timeout: 10000 });
+        await expect(regionItems.first()).toBeVisible({ timeout: 10000 });
+
+        // Ensure NO regions are checked initially
+        await expect(page.locator('.region-item input[type="checkbox"]:checked')).toHaveCount(0);
+
+        // Select a specific Paid Zone
+        const paidZoneChips = page.locator('.paid-zone-item label');
+
+        // Wait until at least 1 paid zone is loaded from the endpoint
+        await expect(paidZoneChips.first()).toBeVisible({ timeout: 5000 });
+
+        // Get the specific elements for the first paid zone
+        const firstPaidZone = paidZoneChips.nth(0);
+
+        await firstPaidZone.click();
+
+        // The hidden checkbox belonging to this label should now be checked
+        const firstCheckbox = page.locator('.paid-zone-item input[type="checkbox"]').nth(0);
+        await expect(firstCheckbox).toBeChecked();
+
+        // Verify that Client.ts intercepted the filter, ran the math, and automatically checked EXACTLY 1 Admin Region
+        await page.waitForTimeout(500);
+        await expect(page.locator('.region-item input[type="checkbox"]:checked')).toHaveCount(1);
+    });
+
+    test('should cross-filter Paid Parking Zones to show only zones in the selected Administrative Region', async ({ page }) => {
+        // Wait for the visible parent containers to render and count them
+        const paidZoneItems = page.locator('.paid-zone-item');
+        await expect(paidZoneItems.first()).toBeVisible({ timeout: 10000 });
+
+        const initialCount = await paidZoneItems.count();
+        expect(initialCount).toBeGreaterThan(5); // Ensure all data actually loaded
+
+        // Get all the labels (our styled chips) inside the region item wrapper
+        const regionChips = page.locator('.region-item label');
+
+        // Wait until at least 1 region is loaded from the /api/admin-regions endpoint
+        await expect(regionChips.first()).toBeVisible({ timeout: 5000 });
+
+        // Select the LAST administrative region (which we know contains paid zones)
+        const lastRegion = regionChips.last();
+        await lastRegion.click();
+
+        // The hidden checkbox belonging to this label should now be checked
+        const lastCheckbox = page.locator('.region-item input[type="checkbox"]').last();
+        await expect(lastCheckbox).toBeChecked();
+
+        // Wait for the map and sidebar to re-render the filtered features
+        await page.waitForTimeout(500);
+
+        // Verify the paid zones list shrank because it filtered out zones outside the region,
+        // BUT verify it is still strictly greater than 0 to prove the region's zones were kept!
+        const filteredCount = await paidZoneItems.count();
+        expect(filteredCount).toBeGreaterThan(0);
+        expect(filteredCount).toBeLessThan(initialCount);
     });
 });
