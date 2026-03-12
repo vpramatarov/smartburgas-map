@@ -1,24 +1,24 @@
 // src/strategies/PaidParkingZonesStrategy.ts
-import { IDetailsStrategy } from './IDetailsStrategy.js';
+import { ISpatialFilterStrategy } from './ISpatialFilterStrategy.js';
 import {ChartDataset, FilterGeometry, GeoFeature, Position, SensorProperties, SupportedLanguage} from '../Types.js';
 import {t} from "../Translations.js";
 import {Utils} from "../Utils.js";
 
 declare const L: any;
 
-export class PaidParkingZonesStrategy implements IDetailsStrategy {
+export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
     public name = 'paid_parking_zones';
     public checkbox_id = 'toggle-paid-parking-zones';
     public layerOptions: { translate_name_key: string, color: string } = { translate_name_key: 'layer_paid_parking_zones', color: "#3498db" };
     private layer: any;
     private currentLang: SupportedLanguage = 'bg';
-    private onFilterChange: (geometry: FilterGeometry | null, feature?: any) => void;
+    private onFilterChange: (geometry: FilterGeometry | null, sourceStrategy: ISpatialFilterStrategy, feature?: any) => void;
     private currentSelection: { name: string, layer: any } | null = null;
     private featureMap: Map<string, any> = new Map();
     private cachedData: GeoFeature[] = [];
     private geoJsonLayer: any;
 
-    constructor(onFilterChange: (geometry: FilterGeometry | null, feature?: any) => void) {
+    constructor(onFilterChange: (geometry: FilterGeometry | null, sourceStrategy: ISpatialFilterStrategy, feature?: any) => void) {
         this.onFilterChange = onFilterChange;
     }
 
@@ -116,12 +116,32 @@ export class PaidParkingZonesStrategy implements IDetailsStrategy {
             this.currentSelection = null;
         }
         if (triggerFilter) {
-            this.onFilterChange(null);
+            this.onFilterChange(null, this);
         }
     }
 
     renderCardContent(container: HTMLElement, sensor: SensorProperties): void {}
     getChartData(sensor: SensorProperties): ChartDataset | null { return null; }
+
+    public selectRegionByPoint(point: Position, triggerFilter: boolean = true) {
+        const feature = this.cachedData.find(f => Utils.isPointInPolygon(point, f.geometry as FilterGeometry));
+        if (feature) {
+            const name = this.currentLang === 'en' && feature.properties?.NameEn ? feature.properties.NameEn : feature.properties?.Name;
+            const layer = this.featureMap.get(name);
+            if (name && layer) {
+                this.toggleSelection(name, layer, feature, false, triggerFilter);
+            }
+        } else {
+            this.clearSelection(triggerFilter);
+        }
+    }
+
+    public getCurrentGeometry(): FilterGeometry | null {
+        if (this.currentSelection) {
+            return this.currentSelection.layer.feature.geometry;
+        }
+        return null;
+    }
 
     private addGeoJsonToLayer(features: GeoFeature[]) {
         if (this.geoJsonLayer) {
@@ -251,7 +271,7 @@ export class PaidParkingZonesStrategy implements IDetailsStrategy {
         });
     }
 
-    private toggleSelection(name: string, layer: any, feature: any, forceCheck: boolean = false) {
+    private toggleSelection(name: string, layer: any, feature: any, forceCheck: boolean = false, triggerFilter: boolean = true) {
         if (this.currentSelection?.name === name && !forceCheck) {
             this.clearSelection();
         } else {
@@ -283,7 +303,10 @@ export class PaidParkingZonesStrategy implements IDetailsStrategy {
                 newCb.checked = true;
             }
 
-            this.onFilterChange(feature.geometry, feature);
+            // Only notify Client.ts if we want to trigger a map update
+            if (triggerFilter) {
+                this.onFilterChange(feature.geometry, this, feature);
+            }
         }
     }
 

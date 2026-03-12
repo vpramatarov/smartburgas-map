@@ -1,23 +1,23 @@
 // src/strategies/AdministrativeRegionStrategy.ts
-import { IDetailsStrategy } from './IDetailsStrategy.js';
 import {ChartDataset, FilterGeometry, GeoFeature, Position, SensorProperties, SupportedLanguage} from '../Types.js';
 import {t} from "../Translations.js";
 import {Utils} from "../Utils.js";
+import {ISpatialFilterStrategy} from "./ISpatialFilterStrategy.js";
 
 declare const L: any;
 
-export class AdministrativeRegionStrategy implements IDetailsStrategy {
+export class AdministrativeRegionStrategy implements ISpatialFilterStrategy {
     public name = 'admin_regions';
     public checkbox_id = 'toggle-admin-regions';
     public layerOptions: { color: string } = { color: "#3498db" };
     private layer: any;
     private currentLang: SupportedLanguage = 'bg';
-    private onFilterChange: (geometry: FilterGeometry | null) => void;
+    private onFilterChange: (geometry: FilterGeometry | null, sourceStrategy: ISpatialFilterStrategy) => void;
     private currentSelection: { name: string, layer: any } | null = null;
     private featureMap: Map<string, any> = new Map();
     private cachedData: GeoFeature[] = [];
 
-    constructor(onFilterChange: (geometry: FilterGeometry | null) => void) {
+    constructor(onFilterChange: (geometry: FilterGeometry | null, sourceStrategy: ISpatialFilterStrategy) => void) {
         this.onFilterChange = onFilterChange;
     }
 
@@ -85,8 +85,6 @@ export class AdministrativeRegionStrategy implements IDetailsStrategy {
         }
     }
 
-
-
     public selectRegionByPoint(point: Position, triggerFilter: boolean = true) {
         const feature = this.cachedData.find(f => Utils.isPointInPolygon(point, f.geometry as FilterGeometry));
         if (feature) {
@@ -118,7 +116,7 @@ export class AdministrativeRegionStrategy implements IDetailsStrategy {
             this.currentSelection = null;
         }
         if (triggerFilter) {
-            this.onFilterChange(null);
+            this.onFilterChange(null, this);
         }
     }
 
@@ -193,7 +191,7 @@ export class AdministrativeRegionStrategy implements IDetailsStrategy {
         }
 
         if (triggerFilter) {
-            this.onFilterChange(geometry);
+            this.onFilterChange(geometry, this);
         }
     }
 }
