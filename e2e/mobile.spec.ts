@@ -15,7 +15,6 @@ test.describe('Mobile Viewport Layout', () => {
     test('should hide controls by default and toggle them via mobile buttons', async ({ page }) => {
         const controlsPanel = page.locator('#controls');
         const mobileFilterBtn = page.locator('#mobile-filter-btn');
-        const closeControlsBtn = page.locator('#close-controls');
 
         // Ensure the mobile filter button is visible (it is hidden on desktop)
         await expect(mobileFilterBtn).toBeVisible();
@@ -23,7 +22,7 @@ test.describe('Mobile Viewport Layout', () => {
         // Ensure controls panel does NOT have the 'open' class by default
         await expect(controlsPanel).not.toHaveClass(/open/);
 
-        // Click the floating filter button to open the menu
+        // Click the floating filter button to OPEN the menu
         await mobileFilterBtn.click();
 
         // Verify the panel slides in by checking for the 'open' class
@@ -32,9 +31,8 @@ test.describe('Mobile Viewport Layout', () => {
         // Wait a brief moment for the CSS slide transition to complete
         await page.waitForTimeout(300);
 
-        // Verify the close button is visible and click it
-        await expect(closeControlsBtn).toBeVisible();
-        await closeControlsBtn.click();
+        // Click the floating filter button again to CLOSE the menu (Toggle behavior)
+        await mobileFilterBtn.click();
 
         // Verify the panel slides out
         await expect(controlsPanel).not.toHaveClass(/open/);
