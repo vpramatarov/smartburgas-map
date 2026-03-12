@@ -10,6 +10,7 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
     public name = 'paid_parking_zones';
     public checkbox_id = 'toggle-paid-parking-zones';
     public layerOptions: { translate_name_key: string, color: string } = { translate_name_key: 'layer_paid_parking_zones', color: "#3498db" };
+    private map: any;
     private layer: any;
     private currentLang: SupportedLanguage = 'bg';
     private onFilterChange: (geometry: FilterGeometry | null, sourceStrategy: ISpatialFilterStrategy, feature?: any) => void;
@@ -23,6 +24,7 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
     }
 
     initialize(map: any, onPin: (sensor: SensorProperties) => void): void {
+        this.map = map;
         this.layer = L.layerGroup();
         this.layer.addTo(map);
     }
@@ -113,6 +115,11 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
                 prevCb.checked = false;
             }
 
+            // Close the mobile popup if the selection is cleared
+            if (window.innerWidth <= 991 && this.map) {
+                this.map.closePopup();
+            }
+
             this.currentSelection = null;
         }
         if (triggerFilter) {
@@ -198,8 +205,25 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
 
                 layer.bindTooltip(popupHtml, { sticky: true });
 
-                layer.on('click', () => {
+                layer.on('click', (e: any) => {
+                    // Prevent the hover tooltip from sticking around on touch screens
+                    if (window.innerWidth <= 991) {
+                        layer.closeTooltip();
+                    }
+
                     this.toggleSelection(name, layer, feature);
+
+                    // On Mobile: Explicitly open a native popup where the user tapped
+                    if (window.innerWidth <= 991) {
+                        if (this.currentSelection?.name === name) {
+                            L.popup()
+                                .setLatLng(e.latlng)
+                                .setContent(popupHtml)
+                                .openOn(this.map);
+                        } else {
+                            this.map.closePopup();
+                        }
+                    }
                 });
 
                 layer.on('mouseover', () => {
