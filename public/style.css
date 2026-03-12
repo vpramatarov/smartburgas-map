@@ -927,6 +927,19 @@ input[name="lang"]:checked + label .flag {
         cursor: pointer;
     }
 
+    #mobile-filter-btn [class^="btn-state-"] {
+        align-items: center;
+        gap: 6px;
+    }
+
+    #mobile-filter-btn.open .btn-state-default {
+        display: none !important;
+    }
+
+    #mobile-filter-btn.open .btn-state-active {
+        display: flex !important;
+    }
+
     #controls {
         top: 0;
         left: 0;
@@ -936,7 +949,6 @@ input[name="lang"]:checked + label .flag {
         transform: translateX(-100%);
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         overflow-y: auto;
-        padding-top: 40px;
         width: auto;
     }
 
@@ -947,7 +959,7 @@ input[name="lang"]:checked + label .flag {
 
     #close-controls {
         position: absolute;
-        top: 5%;
+        top: 20px;
         right: 15px;
         background: transparent;
         border: none;
@@ -958,6 +970,10 @@ input[name="lang"]:checked + label .flag {
 
     .region-controls .wrapper {
         max-height: fit-content;
+    }
+
+    .checkbox .checkbox__body {
+        font-size: 1em;
     }
 
     .modal-content {
@@ -1011,7 +1027,11 @@ input[name="lang"]:checked + label .flag {
     }
 
     #controls {
-        padding: 40px 5px 15px 5px;
+        padding: 10px 5px;
+    }
+
+    #close-controls {
+        display: none;
     }
 
     .region-controls .wrapper label {
@@ -1043,11 +1063,6 @@ input[name="lang"]:checked + label .flag {
 }
 
 @media (max-width: 360px) {
-    #close-controls {
-        top: 0;
-        left: 25%;
-    }
-
     .region-controls .wrapper label {
         padding: 3px;
     }

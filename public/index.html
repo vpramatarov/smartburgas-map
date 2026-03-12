@@ -12,7 +12,13 @@
 <body>
 
 <button id="mobile-filter-btn" class="mobile-only">
-    <span class="icon-cog"></span> <span data-i18n="filters">Филтри</span>
+    <span class="btn-state-default" style="display: flex;">
+        <span class="icon-cog"></span> <span data-i18n="filters">Филтри</span>
+    </span>
+
+    <span class="btn-state-active" style="display: none;">
+        <span>×</span> <span data-i18n="close">Затвори</span>
+    </span>
 </button>
 
 <div id="controls">

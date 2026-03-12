@@ -307,11 +307,13 @@ class SmartMap {
         const controlsPanel = document.getElementById('controls') as HTMLDivElement;
 
         mobileFilterBtn?.addEventListener('click', () => {
-            controlsPanel?.classList.add('open');
+            controlsPanel?.classList.toggle('open');
+            mobileFilterBtn.classList.toggle('open');
         });
 
         closeControlsBtn?.addEventListener('click', () => {
             controlsPanel?.classList.remove('open');
+            mobileFilterBtn?.classList.remove('open');
         });
     }
 
