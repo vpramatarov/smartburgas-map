@@ -96,5 +96,6 @@ export const en: TranslationKeys = {
     unpin_location: 'Unpin location',
     no_data: 'No data',
     kg: 'kg',
-    updated: 'Updated'
+    updated: 'Updated',
+    close: 'Close'
 };

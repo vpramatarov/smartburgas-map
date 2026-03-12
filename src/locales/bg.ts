@@ -95,7 +95,8 @@ export const bg = {
     unpin_location: 'Откачи локацията',
     no_data: 'Няма данни',
     kg: 'кг',
-    updated: 'Актуализирано'
+    updated: 'Актуализирано',
+    close: 'Затвори'
 };
 
 // use type inference
