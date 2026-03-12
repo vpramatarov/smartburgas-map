@@ -4,6 +4,7 @@ body, html {
     height: 100%;
     overflow: hidden;
     font-size: 14px;
+    font-family: "Roboto", Arial, sans-serif;
 }
 
 p {
@@ -54,7 +55,6 @@ ul li {
     z-index: 1000;
     border-radius: 5px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-    font-family: sans-serif;
     max-width: 360px;
     width: 360px;
     overflow-y: auto;
@@ -173,7 +173,6 @@ input[name="lang"]:checked + label .flag {
 
 /** Marker popup */
 .marker-popup-hover {
-    font-family: sans-serif;
     min-width: 150px;
     pointer-events: none;
 }
@@ -438,6 +437,7 @@ input[name="lang"]:checked + label .flag {
     padding-bottom: 15px;
     border-bottom: 1px solid #eee;
     max-height: 300px;
+    justify-content: center;
 }
 
 .region-item,
@@ -451,8 +451,8 @@ input[name="lang"]:checked + label .flag {
 
 .region-controls .wrapper label {
     display: inline-block;
-    padding: 6px 12px;
-    font-size: 1em;
+    padding: 5px;
+    font-size: 0.95em;
     font-weight: 500;
     color: #023664;
     background-color: #f1f5f9;
@@ -913,7 +913,7 @@ input[name="lang"]:checked + label .flag {
         position: absolute;
         top: 15px;
         right: 15px;
-        z-index: 1000;
+        z-index: 10000;
         background: #023664;
         color: #fff;
         border: none;
@@ -947,13 +947,17 @@ input[name="lang"]:checked + label .flag {
 
     #close-controls {
         position: absolute;
-        top: 10px;
+        top: 5%;
         right: 15px;
         background: transparent;
         border: none;
         color: #aaa;
         font-size: 2em;
         cursor: pointer;
+    }
+
+    .region-controls .wrapper {
+        max-height: fit-content;
     }
 
     .modal-content {
@@ -966,6 +970,10 @@ input[name="lang"]:checked + label .flag {
         display: flex;
         flex-direction: column;
         border: none;
+    }
+
+    .modal-header {
+        margin-top: 60px;
     }
 
     #modal-chart-container {
@@ -993,5 +1001,53 @@ input[name="lang"]:checked + label .flag {
         text-align: center;
         padding: 12px;
         box-sizing: border-box;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        font-size: 13px;
+    }
+
+    #controls {
+        padding: 40px 5px 15px 5px;
+    }
+
+    .region-controls .wrapper label {
+        font-size: 0.9em;
+        padding: 5px;
+    }
+
+    .checkbox .checkbox__body {
+        font-size: 1em;
+    }
+
+    .data-row.flex > div {
+        flex-direction: column;
+        gap: 5px;
+        align-items: flex-start;
+    }
+
+    #info-panel .prop-label {
+        display: block;
+    }
+
+    #info-panel .prop-additional {
+        padding: 0;
+    }
+}
+
+@media (max-width: 360px) {
+    #close-controls {
+        top: 0;
+        left: 25%;
+    }
+
+    .region-controls .wrapper label {
+        padding: 3px;
+    }
+
+    .chart-date-controls {
+        flex-direction: column;
     }
 }
