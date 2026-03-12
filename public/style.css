@@ -4,7 +4,7 @@ body, html {
     height: 100%;
     overflow: hidden;
     font-size: 14px;
-    font-family: "Roboto", Arial, sans-serif;
+    font-family: "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
 }
 
 p {
@@ -967,6 +967,7 @@ input[name="lang"]:checked + label .flag {
         max-height: none;
         border-radius: 0;
         margin: 0;
+        padding: 20px 10px;
         display: flex;
         flex-direction: column;
         border: none;
@@ -1035,6 +1036,10 @@ input[name="lang"]:checked + label .flag {
     #info-panel .prop-additional {
         padding: 0;
     }
+
+    .chart-date-controls {
+        flex-direction: column;
+    }
 }
 
 @media (max-width: 360px) {
@@ -1045,9 +1050,5 @@ input[name="lang"]:checked + label .flag {
 
     .region-controls .wrapper label {
         padding: 3px;
-    }
-
-    .chart-date-controls {
-        flex-direction: column;
     }
 }
