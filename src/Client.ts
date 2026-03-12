@@ -14,6 +14,7 @@ import { TaxiRankStrategy } from './strategies/TaxiRankStrategy.js';
 import { AdministrativeRegionStrategy } from './strategies/AdministrativeRegionStrategy.js';
 import {PaidParkingZonesStrategy} from "./strategies/PaidParkingZonesStrategy.js";
 import { ChartRenderer } from './components/ChartRenderer.js';
+import {ISpatialFilterStrategy} from "./strategies/ISpatialFilterStrategy.js";
 
 declare const L: any;
 
@@ -24,10 +25,20 @@ class SmartMap {
     private pinnedSensors: SensorProperties[] = [];
     private previewSensor: SensorProperties | null = null;
     private currentLang: SupportedLanguage = 'bg';
-    private activeAdminRegion: FilterGeometry | null = null;
-    private activePaidZone: FilterGeometry | null = null;
+    private readonly spatialHierarchy: ISpatialFilterStrategy[] = [];
 
     constructor() {
+        const adminStrategy = new AdministrativeRegionStrategy((geometry, sourceStrategy) => {
+            this.onRegionFilterChange(geometry, sourceStrategy);
+        });
+
+        const paidStrategy = new PaidParkingZonesStrategy((geometry, sourceStrategy, feature) => {
+            this.onRegionFilterChange(geometry, sourceStrategy, feature);
+        });
+
+        // Define the exact hierarchy (Largest -> Smallest)
+        this.spatialHierarchy = [adminStrategy, paidStrategy];
+
         const strategies = [
             new AirQualityTimeSensorStrategy(),
             new TrafficSensorStrategy(),
@@ -37,12 +48,8 @@ class SmartMap {
             new WasteCentreStrategy(),
             new SmartParkingStrategy(),
             new TaxiRankStrategy(),
-            new PaidParkingZonesStrategy((geometry, feature) => {
-                this.onRegionFilterChange(geometry, 'paid_parking_zones', feature);
-            }),
-            new AdministrativeRegionStrategy((geometry) => {
-                this.onRegionFilterChange(geometry, 'admin_regions');
-            })
+            adminStrategy,
+            paidStrategy
         ];
         this.compositeStrategy = new CompositeDetailsStrategy(strategies);
 
@@ -485,59 +492,74 @@ class SmartMap {
         }
     }
 
-    private onRegionFilterChange(geometry: FilterGeometry | null, source: string = 'admin_regions', feature?: any) {
-        console.log(`Applying Spatial Filter: ${geometry ? "Active" : "Cleared"} from ${source}`);
+    private onRegionFilterChange(geometry: FilterGeometry | null, sourceStrategy: ISpatialFilterStrategy, feature?: any) {
+        // Find the index by exact object reference
+        const sourceIndex = this.spatialHierarchy.indexOf(sourceStrategy);
+        if (sourceIndex === -1) {
+            return;
+        }
 
-        if (source === 'admin_regions') {
-            this.activeAdminRegion = geometry;
-            this.activePaidZone = null; // Clear paid zone when admin region changes
-
-            const paidStrategy = this.compositeStrategy.getStrategies().get('paid_parking_zones') as PaidParkingZonesStrategy;
-            if (paidStrategy) {
-                paidStrategy.clearSelection(false);
-                paidStrategy.applyRegionFilter(this.activeAdminRegion);
+        // CASCADE UP
+        if (geometry && feature) {
+            let pt: Position = [0, 0];
+            if (feature.geometry.type === 'Polygon') {
+                const coords = feature.geometry.coordinates as Position[][];
+                pt = coords[0][0];
+            } else if (feature.geometry.type === 'MultiPolygon') {
+                const coords = feature.geometry.coordinates as Position[][][];
+                pt = coords[0][0][0];
             }
-        } else if (source === 'paid_parking_zones') {
-            this.activePaidZone = geometry;
 
-            if (geometry && feature) {
-                // Automatically find and select the parent Admin Region
-                const adminStrategy = this.compositeStrategy.getStrategies().get('admin_regions') as AdministrativeRegionStrategy;
-                if (adminStrategy) {
-                    let pt: Position = [0, 0];
-                    if (feature.geometry.type === 'Polygon') {
-                        const coords = feature.geometry.coordinates as Position[][];
-                        pt = coords[0][0];
-                    } else if (feature.geometry.type === 'MultiPolygon') {
-                        const coords = feature.geometry.coordinates as Position[][][];
-                        pt = coords[0][0][0];
-                    }
-
-                    // Select region visually without causing an infinite event loop
-                    adminStrategy.selectRegionByPoint(pt, false);
-                    this.activeAdminRegion = adminStrategy.getCurrentGeometry();
-
-                    // Filter out un-related paid zones
-                    const paidStrategy = this.compositeStrategy.getStrategies().get('paid_parking_zones') as PaidParkingZonesStrategy;
-                    if (paidStrategy) {
-                        paidStrategy.applyRegionFilter(this.activeAdminRegion);
-                    }
+            for (let i = sourceIndex - 1; i >= 0; i--) {
+                const parentStrategy = this.spatialHierarchy[i];
+                if (parentStrategy.selectRegionByPoint) {
+                    parentStrategy.selectRegionByPoint(pt, false);
                 }
             }
         }
 
-        // The effective map filter is the narrowest active boundary
-        const effectiveGeometry = this.activePaidZone || this.activeAdminRegion;
+        // Determine the "Effective Geometry"
+        let effectiveGeometry = geometry;
+        if (!geometry && sourceIndex > 0) {
+            const parentStrategy = this.spatialHierarchy[sourceIndex - 1];
+            if (parentStrategy.getCurrentGeometry) {
+                effectiveGeometry = parentStrategy.getCurrentGeometry();
+            }
+        }
 
-        // Iterate ALL strategies and tell them to filter
+        // CASCADE DOWN
+        for (let i = sourceIndex + 1; i < this.spatialHierarchy.length; i++) {
+            const childStrategy = this.spatialHierarchy[i];
+            if (childStrategy.clearSelection) {
+                childStrategy.clearSelection(false);
+            }
+            if (childStrategy.applyRegionFilter) {
+                childStrategy.applyRegionFilter(effectiveGeometry);
+            }
+        }
+
+        // Find the deepest active geometry
+        let mapFilterGeometry: FilterGeometry | null = null;
+        for (let i = this.spatialHierarchy.length - 1; i >= 0; i--) {
+            const strat = this.spatialHierarchy[i];
+            if (strat.getCurrentGeometry) {
+                const geom = strat.getCurrentGeometry();
+                if (geom) {
+                    mapFilterGeometry = geom;
+                    break;
+                }
+            }
+        }
+
+        // Apply geometry to all non-hierarchical strategies
         this.compositeStrategy.getStrategies().forEach(strategy => {
-            if (strategy.name !== 'admin_regions' && strategy.name !== 'paid_parking_zones') {
-                strategy.applyRegionFilter(effectiveGeometry);
+            // Check if strategy is NOT one of our spatial hierarchy instances
+            if (!this.spatialHierarchy.includes(strategy as ISpatialFilterStrategy)) {
+                strategy.applyRegionFilter(mapFilterGeometry);
             }
         });
 
-        // Clear the side panel if the selected item is now filtered out
-        this.clearSidePanel()
+        this.clearSidePanel();
     }
 }
 
