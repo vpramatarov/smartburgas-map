@@ -1,4 +1,4 @@
-import {FilterGeometry, GeoJSONInput, Position} from "./Types.js";
+import {FilterGeometry, GeoJSONInput, Position, SensorProperties} from "./Types.js";
 
 export class Utils {
 
@@ -33,7 +33,10 @@ export class Utils {
         }
     }
 
-    // Helper: Format to YYYY-MM-DD using LOCAL time, not UTC
+    /**
+     * Helper: Format to YYYY-MM-DD using LOCAL time, not UTC
+     * @param d
+     */
     public static formatDateToLocal(d: Date): string {
         const year = d.getFullYear();
         const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -102,5 +105,12 @@ export class Utils {
         }
 
         return false;
+    }
+
+    /**
+     * Helper to get a unique ID regardless of data source quirks
+     */
+    public static getSensorId(s: SensorProperties): string {
+        return s.id || s.name || s.publicname || 'unknown';
     }
 }
