@@ -3,6 +3,7 @@ import { ChartRenderer } from '../components/ChartRenderer.js';
 import {ChartDataset, SensorProperties, SupportedLanguage} from '../Types.js';
 import { t } from '../Translations.js';
 import {TranslationKeys} from "../locales/bg.js";
+import {Utils} from "../Utils.js";
 
 /**
  * Manages the Side Panel.
@@ -202,11 +203,11 @@ export class CompositeDetailsStrategy {
         const selectedPropsGlobal: any[] = [];
 
         checkedBoxes.forEach((box: any) => {
-            // We stored the sensor index in the DOM when we rendered the card
-            const sensorIndex = parseInt(box.dataset.sensorIndex);
+            // We stored the sensor id in the DOM when we rendered the card
+            const sensorId = box.dataset.sensorId;
             const property = box.dataset.property;
 
-            const sensor = sensors[sensorIndex];
+            const sensor = sensors.find(s => Utils.getSensorId(s) === sensorId);
             if (!sensor || !sensor.strategy) {
                 return;
             }
@@ -249,8 +250,6 @@ export class CompositeDetailsStrategy {
     }
 
     private idsMatch(a: SensorProperties, b: SensorProperties): boolean {
-        const idA = a.id || a.name || a.publicname;
-        const idB = b.id || b.name || b.publicname;
-        return idA === idB;
+        return Utils.getSensorId(a) === Utils.getSensorId(b);
     }
 }

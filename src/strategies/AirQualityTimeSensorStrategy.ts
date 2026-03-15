@@ -100,6 +100,7 @@ export class AirQualityTimeSensorStrategy implements IDetailsStrategy {
 
             const unit = latestData[p + '_unit'] || '';
             const uniqueId = `${uniqueIdPrefix}-${p}`;
+            const sensorId = Utils.getSensorId(sensor);
             const rowDiv = document.createElement('div') as HTMLDivElement;
             rowDiv.classList.add('data-row', 'toggle-row', 'flex');
             const textDiv = document.createElement('div') as HTMLDivElement;
@@ -115,7 +116,7 @@ export class AirQualityTimeSensorStrategy implements IDetailsStrategy {
             checkbox.id = uniqueId;
             checkbox.dataset.property = p;
             checkbox.dataset.unit = unit;
-            checkbox.dataset.sensorIndex = uniqueIdPrefix.split('-')[1];
+            checkbox.dataset.sensorId = sensorId;
             checkbox.className = 'chart-toggle-checkbox';
 
             const labelBtn = document.createElement('label') as HTMLLabelElement;

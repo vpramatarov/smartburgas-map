@@ -120,7 +120,7 @@ export class CCTVStrategy implements IDetailsStrategy {
             return;
         }
 
-        const sensorId = (sensor.publicname || 'cam').replace(/[^a-zA-Z0-9]/g, "_");
+        const sensorId = (sensor.id || sensor.publicname || `cam_${uniqueIdPrefix}`).toString().replace(/[^a-zA-Z0-9]/g, "_");
         const posterUrl = sensor.pic_url || null;
 
         CCTVStrategy.destroyPlayer(sensorId);

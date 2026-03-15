@@ -128,6 +128,7 @@ export class WasteCentreStrategy implements IDetailsStrategy {
             });
 
             if (uniqueTypes.size > 0) {
+                const sensorId = Utils.getSensorId(sensor);
                 const toggleDiv = document.createElement('div') as HTMLDivElement;
                 toggleDiv.className = 'property-toggles';
 
@@ -149,7 +150,7 @@ export class WasteCentreStrategy implements IDetailsStrategy {
                        
                         <input type="checkbox" id="${uniqueId}" 
                                data-property="${id}" 
-                               data-sensor-index="${uniqueIdPrefix.split('-')[1]}" 
+                               data-sensor-id="${sensorId}" 
                                class="chart-toggle-checkbox" />
                         <label for="${uniqueId}" class="chart-toggle-btn"><span class="icon-chart-bar"></span></label>
                     `;
