@@ -34,9 +34,17 @@ const mockPlotly = {
 };
 vi.stubGlobal('Plotly', mockPlotly);
 
+vi.stubGlobal('localStorage', {
+    getItem: vi.fn(),
+    setItem: vi.fn(),
+    removeItem: vi.fn(),
+    clear: vi.fn()
+});
+
 describe('ChartRenderer', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        localStorage.getItem.mockReturnValue('bg');
     });
 
     it('should include a rangeslider and rangeselector in standard render layout', () => {
