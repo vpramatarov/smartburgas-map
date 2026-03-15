@@ -15,6 +15,7 @@ import { AdministrativeRegionStrategy } from './strategies/AdministrativeRegionS
 import {PaidParkingZonesStrategy} from "./strategies/PaidParkingZonesStrategy.js";
 import { ChartRenderer } from './components/ChartRenderer.js';
 import {ISpatialFilterStrategy} from "./strategies/ISpatialFilterStrategy.js";
+import {Utils} from "./Utils.js";
 
 declare const L: any;
 
@@ -25,7 +26,7 @@ class SmartMap {
     private pinnedSensors: SensorProperties[] = [];
     private previewSensor: SensorProperties | null = null;
     private currentLang: SupportedLanguage = 'bg';
-    private readonly spatialHierarchy: ISpatialFilterStrategy[] = [];
+    private readonly spatialStrategies: ISpatialFilterStrategy[] = [];
 
     constructor() {
         const adminStrategy = new AdministrativeRegionStrategy((geometry, sourceStrategy) => {
@@ -36,8 +37,11 @@ class SmartMap {
             this.onRegionFilterChange(geometry, sourceStrategy, feature);
         });
 
-        // Define the exact hierarchy (Largest -> Smallest)
-        this.spatialHierarchy = [adminStrategy, paidStrategy];
+        // --- define the Tree Hierarchy ---
+        adminStrategy.childStrategies = [paidStrategy];
+        paidStrategy.parentStrategy = adminStrategy;
+
+        this.spatialStrategies = [adminStrategy, paidStrategy];
 
         const strategies = [
             new AirQualityTimeSensorStrategy(),
@@ -322,7 +326,7 @@ class SmartMap {
      * Sets the sensor as 'Preview' unless it is already pinned.
      */
     private onSensorSelect(sensor: SensorProperties) {
-        const isAlreadyPinned = this.pinnedSensors.some(s => this.getSensorId(s) === this.getSensorId(sensor));
+        const isAlreadyPinned = this.pinnedSensors.some(s => Utils.getSensorId(s) === Utils.getSensorId(sensor));
 
         if (isAlreadyPinned) {
             console.log('Sensor already pinned');
@@ -337,7 +341,7 @@ class SmartMap {
         this.postToParent({
             event: 'SENSOR_SELECTED',
             payload: {
-                id: this.getSensorId(sensor),
+                id: Utils.getSensorId(sensor),
                 name: sensor.name,
                 strategy: sensor.strategy
             }
@@ -348,8 +352,8 @@ class SmartMap {
      * Called when user clicks the "Pin" icon in the panel.
      */
     private togglePin(sensor: SensorProperties) {
-        const id = this.getSensorId(sensor);
-        const existingIndex = this.pinnedSensors.findIndex(s => this.getSensorId(s) === id);
+        const id = Utils.getSensorId(sensor);
+        const existingIndex = this.pinnedSensors.findIndex(s => Utils.getSensorId(s) === id);
 
         if (existingIndex >= 0) {
             // UNPIN: Remove from list
@@ -358,7 +362,7 @@ class SmartMap {
         } else {
             // PIN: Move from Preview to Pinned
             this.pinnedSensors.push(sensor);
-            if (this.previewSensor && this.getSensorId(this.previewSensor) === id) {
+            if (this.previewSensor && Utils.getSensorId(this.previewSensor) === id) {
                 this.previewSensor = null; // Clear preview slot
             }
         }
@@ -376,13 +380,13 @@ class SmartMap {
      * Called when user clicks "X" (Close).
      */
     private closeSensor(sensor: SensorProperties) {
-        const id = this.getSensorId(sensor);
+        const id = Utils.getSensorId(sensor);
 
         // Remove from Pinned
-        this.pinnedSensors = this.pinnedSensors.filter(s => this.getSensorId(s) !== id);
+        this.pinnedSensors = this.pinnedSensors.filter(s => Utils.getSensorId(s) !== id);
 
         // Remove from Preview
-        if (this.previewSensor && this.getSensorId(this.previewSensor) === id) {
+        if (this.previewSensor && Utils.getSensorId(this.previewSensor) === id) {
             this.previewSensor = null;
         }
 
@@ -425,11 +429,6 @@ class SmartMap {
 
             ChartRenderer.clear('chart-container');
         }
-    }
-
-    // Helper to get a unique ID regardless of data source quirks
-    private getSensorId(s: SensorProperties): string {
-        return s.id || s.name || s.publicname || 'unknown';
     }
 
     // --- Iframe Communication Bridge ---
@@ -496,8 +495,7 @@ class SmartMap {
 
     private onRegionFilterChange(geometry: FilterGeometry | null, sourceStrategy: ISpatialFilterStrategy, feature?: any) {
         // Find the index by exact object reference
-        const sourceIndex = this.spatialHierarchy.indexOf(sourceStrategy);
-        if (sourceIndex === -1) {
+        if (!this.spatialStrategies.includes(sourceStrategy)) {
             return;
         }
 
@@ -512,52 +510,45 @@ class SmartMap {
                 pt = coords[0][0][0];
             }
 
-            for (let i = sourceIndex - 1; i >= 0; i--) {
-                const parentStrategy = this.spatialHierarchy[i];
-                if (parentStrategy.selectRegionByPoint) {
-                    parentStrategy.selectRegionByPoint(pt, false);
+            let currentParent = sourceStrategy.parentStrategy;
+            while (currentParent) {
+                if (currentParent.selectRegionByPoint) {
+                    currentParent.selectRegionByPoint(pt, false);
                 }
+                currentParent = currentParent.parentStrategy;
             }
         }
 
         // Determine the "Effective Geometry"
         let effectiveGeometry = geometry;
-        if (!geometry && sourceIndex > 0) {
-            const parentStrategy = this.spatialHierarchy[sourceIndex - 1];
-            if (parentStrategy.getCurrentGeometry) {
-                effectiveGeometry = parentStrategy.getCurrentGeometry();
+        if (!geometry && sourceStrategy.parentStrategy) {
+            if (sourceStrategy.parentStrategy.getCurrentGeometry) {
+                effectiveGeometry = sourceStrategy.parentStrategy.getCurrentGeometry();
             }
         }
 
         // CASCADE DOWN
-        for (let i = sourceIndex + 1; i < this.spatialHierarchy.length; i++) {
-            const childStrategy = this.spatialHierarchy[i];
-            if (childStrategy.clearSelection) {
-                childStrategy.clearSelection(false);
+        const clearAndFilterChildren = (strategy: ISpatialFilterStrategy, geom: FilterGeometry | null) => {
+            if (strategy.childStrategies) {
+                strategy.childStrategies.forEach(child => {
+                    if (child.clearSelection) {
+                        child.clearSelection(false);
+                    }
+                    if (child.applyRegionFilter) {
+                        child.applyRegionFilter(geom);
+                    }
+                    // Traverse deeper if we ever add 3+ layer depths
+                    clearAndFilterChildren(child, geom);
+                });
             }
-            if (childStrategy.applyRegionFilter) {
-                childStrategy.applyRegionFilter(effectiveGeometry);
-            }
-        }
+        };
 
-        // Find the deepest active geometry
-        let mapFilterGeometry: FilterGeometry | null = null;
-        for (let i = this.spatialHierarchy.length - 1; i >= 0; i--) {
-            const strat = this.spatialHierarchy[i];
-            if (strat.getCurrentGeometry) {
-                const geom = strat.getCurrentGeometry();
-                if (geom) {
-                    mapFilterGeometry = geom;
-                    break;
-                }
-            }
-        }
+        clearAndFilterChildren(sourceStrategy, effectiveGeometry);
 
-        // Apply geometry to all non-hierarchical strategies
+        // Apply geometry directly to all non-spatial strategies
         this.compositeStrategy.getStrategies().forEach(strategy => {
-            // Check if strategy is NOT one of our spatial hierarchy instances
-            if (!this.spatialHierarchy.includes(strategy as ISpatialFilterStrategy)) {
-                strategy.applyRegionFilter(mapFilterGeometry);
+            if (!this.spatialStrategies.includes(strategy as ISpatialFilterStrategy)) {
+                strategy.applyRegionFilter(effectiveGeometry);
             }
         });
 

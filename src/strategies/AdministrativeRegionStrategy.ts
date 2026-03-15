@@ -7,6 +7,8 @@ import {ISpatialFilterStrategy} from "./ISpatialFilterStrategy.js";
 declare const L: any;
 
 export class AdministrativeRegionStrategy implements ISpatialFilterStrategy {
+    public parentStrategy?: ISpatialFilterStrategy;
+    public childStrategies?: ISpatialFilterStrategy[];
     public name = 'admin_regions';
     public checkbox_id = 'toggle-admin-regions';
     public layerOptions: { color: string } = { color: "#3498db" };

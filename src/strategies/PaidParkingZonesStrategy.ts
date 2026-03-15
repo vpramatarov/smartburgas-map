@@ -7,6 +7,8 @@ import {Utils} from "../Utils.js";
 declare const L: any;
 
 export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
+    public parentStrategy?: ISpatialFilterStrategy;
+    public childStrategies?: ISpatialFilterStrategy[];
     public name = 'paid_parking_zones';
     public checkbox_id = 'toggle-paid-parking-zones';
     public layerOptions: { translate_name_key: string, color: string } = { translate_name_key: 'layer_paid_parking_zones', color: "#3498db" };
