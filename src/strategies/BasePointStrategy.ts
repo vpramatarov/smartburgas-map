@@ -14,6 +14,7 @@ import { t } from '../Translations.js';
 
 declare const L: typeof import('leaflet');
 import type * as GeoJSON from 'geojson';
+import * as Sentry from "@sentry/browser";
 
 /**
  * Abstract base class for all standard point-marker map strategies.
@@ -111,6 +112,9 @@ export abstract class BasePointStrategy implements IDetailsStrategy {
             this.applyRegionFilter(null);
         } catch (err) {
             console.error(`${this.name} load error:`, err);
+            if (typeof Sentry !== 'undefined') {
+                Sentry.captureException(err);
+            }
         }
     }
 

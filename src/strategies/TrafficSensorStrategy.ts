@@ -3,6 +3,7 @@ import { BasePointStrategy } from './BasePointStrategy.js';
 import { ChartDataset, SensorProperties, SupportedLanguage } from '../Types.js';
 import { Utils } from '../Utils.js';
 import { t } from '../Translations.js';
+import * as Sentry from "@sentry/browser";
 
 export class TrafficSensorStrategy extends BasePointStrategy {
     public name = 'traffic_sensor';
@@ -62,6 +63,9 @@ export class TrafficSensorStrategy extends BasePointStrategy {
             this.applyRegionFilter(null);
         } catch (err) {
             console.error('Traffic load error:', err);
+            if (typeof Sentry !== 'undefined') {
+                Sentry.captureException(err);
+            }
         }
     }
 
