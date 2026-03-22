@@ -124,13 +124,17 @@ export abstract class BasePointStrategy implements IDetailsStrategy {
             if (!feature.geometry || !feature.geometry.coordinates) {
                 return false;
             }
-            let pt: Position = [0, 0];
-            if (feature.geometry.type === 'Polygon') {
+            let pt: Position;
+            if (feature.geometry.type === 'Point') {
+                pt = feature.geometry.coordinates as Position;
+            } else if (feature.geometry.type === 'Polygon') {
                 const coords = feature.geometry.coordinates as Position[][];
                 pt = coords[0][0];
             } else if (feature.geometry.type === 'MultiPolygon') {
                 const coords = feature.geometry.coordinates as Position[][][];
                 pt = coords[0][0][0];
+            } else {
+                return false;
             }
 
             return Utils.isPointInPolygon(pt, filterGeometry);
@@ -176,3 +180,4 @@ export abstract class BasePointStrategy implements IDetailsStrategy {
         }).addTo(this.layer);
     }
 }
+

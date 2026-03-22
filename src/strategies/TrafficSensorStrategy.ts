@@ -132,7 +132,7 @@ export class TrafficSensorStrategy extends BasePointStrategy {
     }
 
     getChartData(sensor: SensorProperties, property: string): ChartDataset | null {
-        if (!sensor.data || (property !== 'car_count' && property !== 'car_speed')) {
+        if (!sensor.data || sensor.data.length === 0 || (property !== 'car_count' && property !== 'car_speed')) {
             return null;
         }
 
@@ -195,7 +195,9 @@ export class TrafficSensorStrategy extends BasePointStrategy {
     }
 
     private parseTrafficDate(raw: string): number {
-        if (!raw) return 0;
+        if (!raw) {
+            return 0;
+        }
         const clean = raw.replace(/_/g, ' ').trim();
         const match = clean.match(
             /^(\d{1,2})[\s.\-](\d{1,2})[\s.\-](\d{4})\s+(\d{1,2})[:\s](\d{1,2})(?:[:\s](\d{1,2}))?/
@@ -208,3 +210,4 @@ export class TrafficSensorStrategy extends BasePointStrategy {
         return isNaN(fallback) ? 0 : fallback;
     }
 }
+
