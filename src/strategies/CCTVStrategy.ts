@@ -28,7 +28,7 @@ export class CCTVStrategy extends BasePointStrategy {
         return 'icon-videocam';
     }
 
-    // ── Custom zoom-scale setup ────────────────────────────────────────────────
+    // ── Custom zoom-scale setup 
 
     override initialize(map: any, onPin: (sensor: SensorProperties) => void): void {
         super.initialize(map, onPin);
@@ -52,7 +52,7 @@ export class CCTVStrategy extends BasePointStrategy {
         updateZoomScale();
     }
 
-    // ── Custom marker: camera dot + directional cone ───────────────────────────
+    // ── Custom marker: camera dot + directional cone 
 
     protected override buildMarkerHtml(feature: GeoFeature): string {
         const position = feature.properties.position || 0;
@@ -106,7 +106,7 @@ export class CCTVStrategy extends BasePointStrategy {
         }).addTo(this.layer);
     }
 
-    // ── Card rendering: HLS video player ──────────────────────────────────────
+    // ── Card rendering: HLS video player 
 
     renderCardContent(
         container: HTMLElement,
@@ -147,7 +147,7 @@ export class CCTVStrategy extends BasePointStrategy {
         return null;
     }
 
-    // ── Static player lifecycle management ────────────────────────────────────
+    // ── Static player lifecycle management 
 
     public static garbageCollect(): void {
         CCTVStrategy.activePlayers.forEach((player, id) => {
@@ -176,7 +176,7 @@ export class CCTVStrategy extends BasePointStrategy {
         CCTVStrategy.activePlayers.clear();
     }
 
-    // ── Private video helpers ─────────────────────────────────────────────────
+    // ── Private video helpers ─
 
     private createVideo(sensorId: string, posterUrl: string | null) {
         const videoWrapper = document.createElement('div') as HTMLDivElement;
