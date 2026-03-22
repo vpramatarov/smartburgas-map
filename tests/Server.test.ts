@@ -14,54 +14,16 @@ import mockMobileTrashData from './mocks/Mobiletrash.json';
 import mockParkingData from './mocks/SmartCarParks_time.json';
 import mockTaxiRanksData from './mocks/Taxi_ranks.json';
 
-
-
 // Setup MSW Server to Intercept External Axios Calls
 const mswServer = setupServer(
-    // Intercept Smart Parking
-    http.get(process.env.SMART_CAR_PARKS_TIME_URL, () => {
-        return HttpResponse.json(mockParkingData);
-    }),
-
-    // Intercept Air Quality
-    http.get(process.env.AIR_QUALITY_TIME_URL, () => {
-        return HttpResponse.json(mockAirQualityData);
-    }),
-
-    // Intercept Traffic
-    http.get(process.env.TRAFFIC_URL, () => {
-        return HttpResponse.json(mockTrafficData);
-    }),
-
-    // Intercept Mobile trash
-    http.get(process.env.WASTE_URL, () => {
-        return HttpResponse.json(mockMobileTrashData);
-    }),
-
-    // Intercept Mobile trash
-    http.get(process.env.WASTE_URL, () => {
-        return HttpResponse.json(mockMobileTrashData);
-    }),
-
-    // Intercept CCTV
-    http.get(process.env.CCTV_URL, () => {
-        return HttpResponse.json(mockCctvData);
-    }),
-
-    // Intercept Billing Machines
-    http.get(process.env.BILLING_MACHINES_URL, () => {
-        return HttpResponse.json(mockBillingMachinesData);
-    }),
-
-    // Intercept EV Point
-    http.get(process.env.EV_URL, () => {
-        return HttpResponse.json(mockEvPointsData);
-    }),
-
-    // Intercept Taxi ranks
-    http.get(process.env.TAXI_RANKS_URL, () => {
-        return HttpResponse.json(mockTaxiRanksData);
-    }),
+    http.get(process.env.SMART_CAR_PARKS_TIME_URL, () => HttpResponse.json(mockParkingData)),
+    http.get(process.env.AIR_QUALITY_TIME_URL, () => HttpResponse.json(mockAirQualityData)),
+    http.get(process.env.TRAFFIC_URL, () => HttpResponse.json(mockTrafficData)),
+    http.get(process.env.WASTE_URL, () => HttpResponse.json(mockMobileTrashData)),
+    http.get(process.env.CCTV_URL, () => HttpResponse.json(mockCctvData)),
+    http.get(process.env.BILLING_MACHINES_URL, () => HttpResponse.json(mockBillingMachinesData)),
+    http.get(process.env.EV_URL, () => HttpResponse.json(mockEvPointsData)),
+    http.get(process.env.TAXI_RANKS_URL, () => HttpResponse.json(mockTaxiRanksData)),
 );
 
 // Start MSW before tests run
@@ -71,8 +33,8 @@ afterEach(() => mswServer.resetHandlers());
 // Close MSW after all tests
 afterAll(() => mswServer.close());
 
-
 // The Test Suite
+
 describe('Backend API Endpoints', () => {
 
     describe('Local Endpoints', () => {
@@ -110,6 +72,8 @@ describe('Backend API Endpoints', () => {
         });
     });
 
+    // ── Proxy Endpoints (transform: true) ──
+
     describe('Proxy Endpoints (Transforming features1 data)', () => {
         it('GET /api/smart-parking should fetch, transform, and return GeoJSON', async () => {
             const response = await request(app).get('/api/smart-parking');
@@ -124,13 +88,10 @@ describe('Backend API Endpoints', () => {
 
             const feature = response.body.features[0];
             expect(feature.type).toBe('Feature');
-
             expect(Array.isArray(feature.properties.data)).toBe(true);
-
             // Verify coordinate parsing logic worked
             expect(feature.geometry).toBeDefined();
             expect(feature.geometry.coordinates).toHaveLength(2);
-
             // Verify properties were mapped correctly
             expect(feature.properties.name).toBe('Паркинг Опера');
             expect(feature.properties.additional_info.total_lots).toBe('211');
@@ -199,6 +160,8 @@ describe('Backend API Endpoints', () => {
         });
     });
 
+    // ── Proxy Endpoints (transform: false) ──
+
     describe('Proxy Endpoints (No data property in properties)', () => {
         it('GET /api/cctv should return GeoJson data', async () => {
             const response = await request(app).get('/api/cctv');
@@ -206,8 +169,8 @@ describe('Backend API Endpoints', () => {
             expect(response.status).toBe(200);
             expect(response.headers['content-type']).toMatch(/json/);
             expect(response.headers['x-last-updated']).toBeDefined();
-
             expect(response.body.type).toBe('FeatureCollection');
+
             const feature = response.body.features[0];
             expect(feature.properties.publicname).toBe('Zahari Stoyanov Blvd. and Kooperator St');
             expect(feature.properties.position).toBe(280);
@@ -223,8 +186,8 @@ describe('Backend API Endpoints', () => {
             expect(response.status).toBe(200);
             expect(response.headers['content-type']).toMatch(/json/);
             expect(response.headers['x-last-updated']).toBeDefined();
-
             expect(response.body.type).toBe('FeatureCollection');
+
             const feature = response.body.features[0];
             expect(feature.properties.name).toBe('Смарт Бизнес Център');
             expect(feature.properties.description).toBe('20 KW');
@@ -239,8 +202,8 @@ describe('Backend API Endpoints', () => {
             expect(response.status).toBe(200);
             expect(response.headers['content-type']).toMatch(/json/);
             expect(response.headers['x-last-updated']).toBeDefined();
-
             expect(response.body.type).toBe('FeatureCollection');
+
             const feature = response.body.features[0];
             expect(feature.properties.name).toBe('Ивайло/Сливница');
             expect(feature.properties.description).toBe('Подробна информация за правилата за паркиране ще откриете на www.transportburgas.bg/bg/синя-зона');
@@ -255,8 +218,8 @@ describe('Backend API Endpoints', () => {
             expect(response.status).toBe(200);
             expect(response.headers['content-type']).toMatch(/json/);
             expect(response.headers['x-last-updated']).toBeDefined();
-
             expect(response.body.type).toBe('FeatureCollection');
+
             const feature = response.body.features[0];
             expect(feature.properties.name).toBe('бул."Демокрация", пред ІІІ-та поликлиника, в паркинга');
             expect(feature.properties.description).toBe('5 броя таксиметрови автомобила');
@@ -266,4 +229,176 @@ describe('Backend API Endpoints', () => {
         });
     });
 
+    // ── Language validation ──
+
+    describe('Language parameter validation', () => {
+        it('accepts ?lang=bg and returns 200', async () => {
+            const response = await request(app).get('/api/cctv?lang=bg');
+            expect(response.status).toBe(200);
+        });
+
+        it('accepts ?lang=en and returns 200', async () => {
+            const response = await request(app).get('/api/cctv?lang=en');
+            expect(response.status).toBe(200);
+        });
+
+        it('defaults to Bulgarian when no lang param is provided', async () => {
+            // No lang param — getValidatedLang returns 'bg' silently
+            const response = await request(app).get('/api/cctv');
+            expect(response.status).toBe(200);
+        });
+
+        it('returns 500 for an unsupported lang value', async () => {
+            // getValidatedLang throws for anything other than 'bg' or 'en', which is caught by the proxy try/catch and returned as 500
+            const response = await request(app).get('/api/cctv?lang=fr');
+            expect(response.status).toBe(500);
+        });
+
+        it('returns 500 for a lang injection attempt', async () => {
+            const response = await request(app).get('/api/cctv?lang=bg;DROP TABLE sensors');
+            expect(response.status).toBe(500);
+        });
+
+        // Local static endpoints ignore lang entirely
+        it('static endpoints return 200 regardless of lang param', async () => {
+            const regions = await request(app).get('/api/admin-regions?lang=xx');
+            expect(regions.status).toBe(200);
+
+            const zones = await request(app).get('/api/paid-parking-zones?lang=xx');
+            expect(zones.status).toBe(200);
+        });
+    });
+
+    // ── Date parameter forwarding ──
+
+    describe('Date parameter forwarding', () => {
+        it('forwards start_date and end_date to the upstream API', async () => {
+            let capturedUrl = '';
+
+            mswServer.use(
+                http.get(process.env.AIR_QUALITY_TIME_URL, ({ request }) => {
+                    capturedUrl = request.url;
+                    return HttpResponse.json(mockAirQualityData);
+                })
+            );
+
+            await request(app).get('/api/air-quality-time?lang=bg&start_date=2025-01-01&end_date=2025-03-01');
+
+            expect(capturedUrl).toContain('start_date=2025-01-01');
+            expect(capturedUrl).toContain('end_date=2025-03-01');
+        });
+
+        it('forwards lang to the upstream API as a query param', async () => {
+            let capturedUrl = '';
+
+            mswServer.use(
+                http.get(process.env.CCTV_URL, ({ request }) => {
+                    capturedUrl = request.url;
+                    return HttpResponse.json(mockCctvData);
+                })
+            );
+
+            await request(app).get('/api/cctv?lang=en');
+
+            expect(capturedUrl).toContain('lang=en');
+        });
+
+        it('does not forward start_date when not provided', async () => {
+            let capturedUrl = '';
+
+            mswServer.use(
+                http.get(process.env.AIR_QUALITY_TIME_URL, ({ request }) => {
+                    capturedUrl = request.url;
+                    return HttpResponse.json(mockAirQualityData);
+                })
+            );
+
+            await request(app).get('/api/air-quality-time?lang=bg');
+
+            expect(capturedUrl).not.toContain('start_date');
+            expect(capturedUrl).not.toContain('end_date');
+        });
+    });
+
+    // ── Content-Security-Policy header ──
+
+    describe('Content-Security-Policy header', () => {
+        it('sets the CSP frame-ancestors header on proxy endpoint responses', async () => {
+            const response = await request(app).get('/api/cctv');
+            expect(response.headers['content-security-policy']).toBeDefined();
+            expect(response.headers['content-security-policy']).toContain('frame-ancestors');
+        });
+
+        it('sets the CSP frame-ancestors header on static GeoJSON endpoint responses', async () => {
+            const response = await request(app).get('/api/admin-regions');
+            expect(response.headers['content-security-policy']).toContain('frame-ancestors');
+        });
+
+        it('sets the CSP frame-ancestors header on the config endpoint', async () => {
+            const response = await request(app).get('/api/config');
+            expect(response.headers['content-security-policy']).toContain('frame-ancestors');
+        });
+
+        it('uses the ALLOW_FRAME_URL env value in the header', async () => {
+            // vitest.config.ts sets ALLOW_FRAME_URL = '*' for the test environment
+            const response = await request(app).get('/api/config');
+            const csp = response.headers['content-security-policy'];
+            expect(csp).toContain(process.env.ALLOW_FRAME_URL);
+        });
+    });
+
+    // ── Upstream network failures ─────────────────────────────────────────────
+
+    describe('Upstream network failure handling', () => {
+        it('returns 500 when the upstream API is unreachable (network error)', async () => {
+            mswServer.use(
+                http.get(process.env.CCTV_URL, () => {
+                    // HttpResponse.error() simulates a network-level failure
+                    // (connection refused, DNS failure, etc.) — axios throws
+                    return HttpResponse.error();
+                })
+            );
+
+            const response = await request(app).get('/api/cctv');
+            expect(response.status).toBe(500);
+            expect(response.body).toHaveProperty('error');
+        });
+
+        it('returns 500 when the upstream returns a non-2xx status', async () => {
+            mswServer.use(
+                http.get(process.env.EV_URL, () => {
+                    return new HttpResponse(null, { status: 503 });
+                })
+            );
+
+            const response = await request(app).get('/api/ev-stations');
+            expect(response.status).toBe(500);
+            expect(response.body).toHaveProperty('error');
+        });
+
+        it('returns 500 when the upstream returns malformed JSON', async () => {
+            mswServer.use(
+                http.get(process.env.TAXI_RANKS_URL, () => {
+                    return new HttpResponse('this is not json {{{', {
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                })
+            );
+
+            const response = await request(app).get('/api/taxi-ranks');
+            expect(response.status).toBe(500);
+            expect(response.body).toHaveProperty('error');
+        });
+
+        it('error response body includes a human-readable error key', async () => {
+            mswServer.use(
+                http.get(process.env.BILLING_MACHINES_URL, () => HttpResponse.error())
+            );
+
+            const response = await request(app).get('/api/billing-machines');
+            expect(response.status).toBe(500);
+            // The error message should name the data source, not expose internals
+            expect(response.body.error).toContain('billingMachines');
+        });
+    });
 });
