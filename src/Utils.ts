@@ -113,4 +113,9 @@ export class Utils {
     public static getSensorId(s: SensorProperties): string {
         return s.id || s.name || s.publicname || 'unknown';
     }
+
+    public static getSafeId(prefix: string, name: string): string {
+        // Strips spaces, quotes, and special characters to ensure a valid HTML5 ID
+        return `${prefix}-${name.replace(/[^a-zA-Z0-9А-Яа-я]/g, '-')}`;
+    }
 }

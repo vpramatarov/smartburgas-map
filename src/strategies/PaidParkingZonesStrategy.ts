@@ -108,7 +108,7 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
                 this.geoJsonLayer.resetStyle(prevLayer);
             }
 
-            const prevCb = document.getElementById(this.getSafeId(prevName)) as HTMLInputElement | null;
+            const prevCb = document.getElementById(Utils.getSafeId('paid-zone', prevName)) as HTMLInputElement | null;
             if (prevCb) {
                 prevCb.checked = false;
             }
@@ -261,7 +261,7 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
 
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
-            checkbox.id = this.getSafeId(name);
+            checkbox.id = Utils.getSafeId('paid-zone', name);
             checkbox.value = name;
 
             if (this.currentSelection?.name === name) {
@@ -285,7 +285,7 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
             });
 
             const label = document.createElement('label');
-            label.htmlFor = this.getSafeId(name);
+            label.htmlFor = Utils.getSafeId('paid-zone', name);
             label.innerText = name;
 
             div.appendChild(checkbox);
@@ -308,24 +308,20 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
                     this.geoJsonLayer.resetStyle(prevLayer);
                 }
 
-                const prevCb = document.getElementById(this.getSafeId(prevName)) as HTMLInputElement | null;
+                const prevCb = document.getElementById(Utils.getSafeId('paid-zone', prevName)) as HTMLInputElement | null;
                 if (prevCb) prevCb.checked = false;
             }
 
             this.currentSelection = { name, layer };
             layer.setStyle({ color: '#e74c3c', weight: 3, fillOpacity: 0.4, dashArray: '' });
 
-            const newCb = document.getElementById(this.getSafeId(name)) as HTMLInputElement | null;
+            const newCb = document.getElementById(Utils.getSafeId('paid-zone', name)) as HTMLInputElement | null;
             if (newCb) newCb.checked = true;
 
             if (triggerFilter) {
                 this.onFilterChange(feature.geometry as FilterGeometry, this, feature);
             }
         }
-    }
-
-    private getSafeId(name: string): string {
-        return `paid-zone-${name.replace(/\s+/g, '-')}`;
     }
 }
 
