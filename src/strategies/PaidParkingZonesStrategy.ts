@@ -1,37 +1,41 @@
 // src/strategies/PaidParkingZonesStrategy.ts
 import { ISpatialFilterStrategy } from './ISpatialFilterStrategy.js';
-import {ChartDataset, FilterGeometry, GeoFeature, Position, SensorProperties, SupportedLanguage} from '../Types.js';
-import {t} from "../Translations.js";
-import {Utils} from "../Utils.js";
+import { ChartDataset, FilterGeometry, GeoFeature, Position, SensorProperties, SupportedLanguage } from '../Types.js';
+import { t } from '../Translations.js';
+import { Utils } from '../Utils.js';
 
-declare const L: any;
+declare const L: typeof import('leaflet');
 
 export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
     public parentStrategy?: ISpatialFilterStrategy;
     public childStrategies?: ISpatialFilterStrategy[];
     public name = 'paid_parking_zones';
     public checkbox_id = 'toggle-paid-parking-zones';
-    public layerOptions: { translate_name_key: string, color: string } = { translate_name_key: 'layer_paid_parking_zones', color: "#3498db" };
-    private map: any;
-    private layer: any;
-    private currentLang: SupportedLanguage = 'bg';
-    private onFilterChange: (geometry: FilterGeometry | null, sourceStrategy: ISpatialFilterStrategy, feature?: any) => void;
-    private currentSelection: { name: string, layer: any } | null = null;
-    private featureMap: Map<string, any> = new Map();
-    private cachedData: GeoFeature[] = [];
-    private geoJsonLayer: any;
+    public layerOptions: { translate_name_key: string; color: string } = {
+        translate_name_key: 'layer_paid_parking_zones',
+        color: '#3498db'
+    };
 
-    constructor(onFilterChange: (geometry: FilterGeometry | null, sourceStrategy: ISpatialFilterStrategy, feature?: any) => void) {
+    private map!: L.Map;
+    private layer!: L.LayerGroup;
+    private currentLang: SupportedLanguage = 'bg';
+    private onFilterChange: (geometry: FilterGeometry | null, sourceStrategy: ISpatialFilterStrategy, feature?: GeoFeature) => void;
+    private currentSelection: { name: string; layer: L.Path } | null = null;
+    private featureMap: Map<string, L.Path> = new Map();
+    private cachedData: GeoFeature[] = [];
+    private geoJsonLayer!: L.GeoJSON;
+
+    constructor(onFilterChange: (geometry: FilterGeometry | null, sourceStrategy: ISpatialFilterStrategy, feature?: GeoFeature) => void) {
         this.onFilterChange = onFilterChange;
     }
 
-    initialize(map: any, onPin: (sensor: SensorProperties) => void): void {
+    initialize(map: L.Map, _onPin: (sensor: SensorProperties) => void): void {
         this.map = map;
         this.layer = L.layerGroup();
         this.layer.addTo(map);
     }
 
-    getLayer(): any {
+    getLayer(): L.LayerGroup {
         return this.layer;
     }
 
@@ -47,7 +51,6 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
 
             const data = await res.json();
             this.cachedData = data.features || [];
-
             this.applyRegionFilter(null);
         } catch (err) {
             console.error('Error loading paid parking zones:', err);
@@ -59,10 +62,8 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
             return;
         }
 
-        /**
-         * @note: If the geometry being passed in is actually a Paid Parking Zone itself, we DO NOT want to filter out the other parking zones!
-         *  We want them to remain on the map and in the sidebar so the user can switch between them.
-         */
+        // If the geometry being passed is a Paid Parking Zone itself, don't filter —
+        // keep all zones visible so the user can switch between them.
         if (geometry && this.cachedData.some(f => f.geometry === geometry)) {
             return;
         }
@@ -70,24 +71,20 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
         this.layer.clearLayers();
         this.featureMap.clear();
 
-        // Default to all features if no admin region is selected
         let filteredFeatures = this.cachedData;
 
-        // If an Admin Region is selected, filter the zones to only those inside the region
         if (geometry) {
             filteredFeatures = this.cachedData.filter(feature => {
-                if (!feature.geometry || !feature.geometry.coordinates) {
+                if (!feature.geometry?.coordinates) {
                     return false;
                 }
 
                 let point: Position;
 
                 if (feature.geometry.type === 'Polygon') {
-                    const coords = feature.geometry.coordinates as Position[][];
-                    point = coords[0][0];
+                    point = (feature.geometry.coordinates as Position[][])[0][0];
                 } else if (feature.geometry.type === 'MultiPolygon') {
-                    const coords = feature.geometry.coordinates as Position[][][];
-                    point = coords[0][0][0];
+                    point = (feature.geometry.coordinates as Position[][][])[0][0][0];
                 } else {
                     return false;
                 }
@@ -99,43 +96,41 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
         this.addGeoJsonToLayer(filteredFeatures);
     }
 
-    public clearSelection(triggerFilter: boolean = true) {
+    public clearSelection(triggerFilter: boolean = true): void {
         if (this.currentSelection) {
             const prevLayer = this.currentSelection.layer;
             const prevName = this.currentSelection.name;
 
-            // Clear state before resetting styles
             this.currentSelection = null;
 
             if (prevLayer && this.geoJsonLayer) {
                 this.geoJsonLayer.resetStyle(prevLayer);
             }
 
-            const prevCb = document.getElementById(this.getSafeId(prevName)) as HTMLInputElement;
-
-            if(prevCb) {
+            const prevCb = document.getElementById(this.getSafeId(prevName)) as HTMLInputElement | null;
+            if (prevCb) {
                 prevCb.checked = false;
             }
 
-            // Close the mobile popup if the selection is cleared
             if (window.innerWidth <= 991 && this.map) {
                 this.map.closePopup();
             }
-
-            this.currentSelection = null;
         }
+
         if (triggerFilter) {
             this.onFilterChange(null, this);
         }
     }
 
-    renderCardContent(container: HTMLElement, sensor: SensorProperties): void {}
-    getChartData(sensor: SensorProperties): ChartDataset | null { return null; }
+    renderCardContent(_container: HTMLElement, _sensor: SensorProperties): void {}
+    getChartData(_sensor: SensorProperties, _property: string): ChartDataset | null { return null; }
 
-    public selectRegionByPoint(point: Position, triggerFilter: boolean = true) {
+    public selectRegionByPoint(point: Position, triggerFilter: boolean = true): void {
         const feature = this.cachedData.find(f => Utils.isPointInPolygon(point, f.geometry as FilterGeometry));
         if (feature) {
-            const name = this.currentLang === 'en' && feature.properties?.NameEn ? feature.properties.NameEn : feature.properties?.Name;
+            const name: string = this.currentLang === 'en' && feature.properties?.NameEn
+                ? feature.properties.NameEn
+                : feature.properties?.Name;
             const layer = this.featureMap.get(name);
             if (name && layer) {
                 this.toggleSelection(name, layer, feature, false, triggerFilter);
@@ -147,50 +142,50 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
 
     public getCurrentGeometry(): FilterGeometry | null {
         if (this.currentSelection) {
-            return this.currentSelection.layer.feature.geometry;
+            return (this.currentSelection.layer as any).feature?.geometry ?? null;
         }
         return null;
     }
 
-    private addGeoJsonToLayer(features: GeoFeature[]) {
+    private addGeoJsonToLayer(features: GeoFeature[]): void {
         if (this.geoJsonLayer) {
             this.layer.removeLayer(this.geoJsonLayer);
         }
 
-        this.geoJsonLayer = L.geoJSON(features, {
-            style: (feature: any) => {
-                const isGreen = feature.properties?.ZoneType === 1;
+        this.geoJsonLayer = L.geoJSON(features as any, {
+            style: (feature?: L.Feature): L.PathOptions => {
+                const props = (feature as unknown as GeoFeature)?.properties;
+                const isGreen = props?.ZoneType === 1;
                 const color = isGreen ? '#2ecc71' : '#3498db';
+                const name: string = this.currentLang === 'en' && props?.NameEn ? props.NameEn : props?.Name;
 
-                const name = this.currentLang === 'en' && feature.properties.NameEn ? feature.properties.NameEn : feature.properties.Name;
-
-                if (this.currentSelection && this.currentSelection.name === name) {
+                if (this.currentSelection?.name === name) {
                     return { color: '#e74c3c', weight: 3, opacity: 0.8, fillColor: '#e74c3c', fillOpacity: 0.4, dashArray: '' };
                 }
 
-                return { color: color, weight: 2, opacity: 0.8, fillColor: color, fillOpacity: 0.2, dashArray: '3, 6' };
+                return { color, weight: 2, opacity: 0.8, fillColor: color, fillOpacity: 0.2, dashArray: '3, 6' };
             },
-            onEachFeature: (feature: any, layer: any) => {
-                const props = feature.properties;
-                if (!props) {
-                    return;
+            onEachFeature: (feature: L.Feature, layer: L.Layer): void => {
+                const geoFeature = feature as unknown as GeoFeature;
+                const props = geoFeature.properties;
+                if (!props) return;
+
+                const name: string = this.currentLang === 'en' && props.NameEn ? props.NameEn : props.Name;
+                const path = layer as L.Path;
+
+                this.featureMap.set(name, path);
+
+                if (this.currentSelection?.name === name) {
+                    path.setStyle({ color: '#e74c3c', weight: 3, opacity: 0.8, fillColor: '#e74c3c', fillOpacity: 0.4, dashArray: '' });
+                    this.currentSelection.layer = path;
                 }
 
-                const name = this.currentLang === 'en' && props.NameEn ? props.NameEn : props.Name;
-                this.featureMap.set(name, layer);
-
-                if (this.currentSelection && this.currentSelection.name === name) {
-                    layer.setStyle({ color: '#e74c3c', weight: 3, opacity: 0.8, fillColor: '#e74c3c', fillOpacity: 0.4, dashArray: '' });
-                    this.currentSelection.layer = layer;
-                }
-
-                const formatTime = (timeStr: string) => {
-                    if (!timeStr) {
-                        return '';
-                    }
+                const formatTime = (timeStr: string): string => {
+                    if (!timeStr) return '';
                     const match = timeStr.match(/\s(\d{2}:\d{2})/);
                     return match ? match[1] : timeStr;
                 };
+
                 const start = formatTime(props.StartTime);
                 const end = formatTime(props.EndTime);
                 const hoursStr = start && end ? `${start} - ${end}` : t('status_unknown', this.currentLang);
@@ -205,21 +200,20 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
                     </div>
                 `;
 
-                layer.bindTooltip(popupHtml, { sticky: true });
+                (path as any).bindTooltip(popupHtml, { sticky: true });
 
-                layer.on('click', (e: any) => {
-                    // Prevent the hover tooltip from sticking around on touch screens
+                layer.on('click', (e: L.LeafletEvent): void => {
+                    const mouseEvent = e as L.LeafletMouseEvent;
                     if (window.innerWidth <= 991) {
-                        layer.closeTooltip();
+                        (path as any).closeTooltip();
                     }
 
-                    this.toggleSelection(name, layer, feature);
+                    this.toggleSelection(name, path, geoFeature);
 
-                    // On Mobile: Explicitly open a native popup where the user tapped
                     if (window.innerWidth <= 991) {
                         if (this.currentSelection?.name === name) {
                             L.popup()
-                                .setLatLng(e.latlng)
+                                .setLatLng(mouseEvent.latlng)
                                 .setContent(popupHtml)
                                 .openOn(this.map);
                         } else {
@@ -228,45 +222,43 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
                     }
                 });
 
-                layer.on('mouseover', () => {
+                layer.on('mouseover', (): void => {
                     if (this.currentSelection?.name !== name) {
-                        layer.setStyle({ fillOpacity: 0.4, weight: 3 });
+                        path.setStyle({ fillOpacity: 0.4, weight: 3 });
                     }
                 });
 
-                layer.on('mouseout', () => {
+                layer.on('mouseout', (): void => {
                     if (this.currentSelection?.name !== name) {
-                        this.geoJsonLayer.resetStyle(layer);
+                        this.geoJsonLayer.resetStyle(path);
                     }
                 });
             }
         });
 
         this.layer.addLayer(this.geoJsonLayer);
-
-        // Render the sidebar using ONLY the features that survived the region filter
         this.renderSidebarControls(features);
     }
 
-    private renderSidebarControls(features: GeoFeature[]) {
-        const container = document.getElementById('paid-parking-zones-wrapper') as HTMLDivElement;
-        if (!container) {
-            return;
-        }
+    private renderSidebarControls(features: GeoFeature[]): void {
+        const container = document.getElementById('paid-parking-zones-wrapper') as HTMLDivElement | null;
+        if (!container) return;
 
         container.innerHTML = '';
 
-        const zoneNames = Array.from(new Set(features.map(f => this.currentLang === 'en' && f.properties.NameEn ? f.properties.NameEn : f.properties.Name))).sort();
+        const zoneNames = Array.from(new Set(
+            features.map(f => this.currentLang === 'en' && f.properties.NameEn
+                ? f.properties.NameEn as string
+                : f.properties.Name as string)
+        )).sort();
 
         zoneNames.forEach(name => {
-            if (!name) {
-                return;
-            }
+            if (!name) return;
 
-            const div = document.createElement('div') as HTMLDivElement;
+            const div = document.createElement('div');
             div.className = 'paid-zone-item';
 
-            const checkbox = document.createElement('input') as HTMLInputElement;
+            const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.id = this.getSafeId(name);
             checkbox.value = name;
@@ -278,16 +270,20 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
             checkbox.addEventListener('change', (e) => {
                 const target = e.target as HTMLInputElement;
                 const layer = this.featureMap.get(name);
-                const feature = features.find(f => (this.currentLang === 'en' && f.properties.NameEn ? f.properties.NameEn : f.properties.Name) === name);
+                const feature = features.find(f =>
+                    (this.currentLang === 'en' && f.properties.NameEn
+                        ? f.properties.NameEn
+                        : f.properties.Name) === name
+                );
 
-                if (target.checked && feature) {
+                if (target.checked && feature && layer) {
                     this.toggleSelection(name, layer, feature, true);
                 } else {
                     this.clearSelection();
                 }
             });
 
-            const label = document.createElement('label') as HTMLLabelElement;
+            const label = document.createElement('label');
             label.htmlFor = this.getSafeId(name);
             label.innerText = name;
 
@@ -297,7 +293,7 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
         });
     }
 
-    private toggleSelection(name: string, layer: any, feature: any, forceCheck: boolean = false, triggerFilter: boolean = true) {
+    private toggleSelection(name: string, layer: L.Path, feature: GeoFeature, forceCheck: boolean = false, triggerFilter: boolean = true): void {
         if (this.currentSelection?.name === name && !forceCheck) {
             this.clearSelection();
         } else {
@@ -305,33 +301,24 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
                 const prevLayer = this.currentSelection.layer;
                 const prevName = this.currentSelection.name;
 
-                // clear the state BEFORE calling resetStyle.
                 this.currentSelection = null;
 
                 if (prevLayer && this.geoJsonLayer) {
                     this.geoJsonLayer.resetStyle(prevLayer);
                 }
-                const prevCb = document.getElementById(this.getSafeId(prevName)) as HTMLInputElement;
-                if(prevCb) {
-                    prevCb.checked = false;
-                }
+
+                const prevCb = document.getElementById(this.getSafeId(prevName)) as HTMLInputElement | null;
+                if (prevCb) prevCb.checked = false;
             }
 
             this.currentSelection = { name, layer };
+            layer.setStyle({ color: '#e74c3c', weight: 3, fillOpacity: 0.4, dashArray: '' });
 
-            if (layer) {
-                layer.setStyle({ color: '#e74c3c', weight: 3, fillOpacity: 0.4, dashArray: '' });
-            }
+            const newCb = document.getElementById(this.getSafeId(name)) as HTMLInputElement | null;
+            if (newCb) newCb.checked = true;
 
-            const newCb = document.getElementById(this.getSafeId(name)) as HTMLInputElement;
-
-            if(newCb) {
-                newCb.checked = true;
-            }
-
-            // Only notify Client.ts if we want to trigger a map update
             if (triggerFilter) {
-                this.onFilterChange(feature.geometry, this, feature);
+                this.onFilterChange(feature.geometry as FilterGeometry, this, feature);
             }
         }
     }

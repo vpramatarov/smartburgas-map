@@ -1,4 +1,5 @@
-import {ChartDataset, FilterGeometry, SensorProperties} from '../Types.js'
+import { ChartDataset, FilterGeometry, SensorProperties } from '../Types.js';
+import type * as L from 'leaflet';
 
 export interface IDetailsStrategy {
     /**
@@ -9,9 +10,9 @@ export interface IDetailsStrategy {
     /**
      * Unique name to identify the checkbox
      */
-    checkbox_id: string
+    checkbox_id: string;
 
-    layerOptions: { translate_name_key?: string, color: string }
+    layerOptions: { translate_name_key?: string; color: string };
 
     /**
      * Initializes the strategy with the map instance.
@@ -19,14 +20,14 @@ export interface IDetailsStrategy {
      * @param map The Leaflet map instance
      * @param onPin Callback when a marker is clicked (to pin it to the panel)
      */
-    initialize(map: any, onPin: (sensor: SensorProperties) => void): void;
+    initialize(map: L.Map, onPin: (sensor: SensorProperties) => void): void;
 
     /**
      * Fetches data from the API and populates the layer.
      * @param lang 'bg' or 'en'
      * @param options Optional filter parameters (e.g. { start_date, end_date })
      */
-    loadData(lang: string, options?: Record<string, any>): Promise<void>;
+    loadData(lang: string, options?: Record<string, string>): Promise<void>;
 
     // Filter the currently loaded data by a geographic shape
     applyRegionFilter(geometry: FilterGeometry | null): void;
@@ -35,7 +36,7 @@ export interface IDetailsStrategy {
      * Returns the Leaflet layer group for this strategy.
      * Used by the Client to toggle visibility.
      */
-    getLayer(): any;
+    getLayer(): L.LayerGroup;
 
     /**
      * Renders the specific content (stats, toggles) inside a sensor card.

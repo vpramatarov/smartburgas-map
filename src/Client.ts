@@ -1,3 +1,4 @@
+
 import {FilterGeometry, Position, SensorProperties, SupportedLanguage} from './Types.js'
 import { t } from './Translations.js';
 import { TranslationKeys } from './locales/bg.js';
@@ -17,12 +18,12 @@ import { ChartRenderer } from './components/ChartRenderer.js';
 import {ISpatialFilterStrategy} from "./strategies/ISpatialFilterStrategy.js";
 import {Utils} from "./Utils.js";
 
-declare const L: any;
+declare const L: typeof import('leaflet');
 
 class SmartMap {
     private allowedOrigin: string = '*'; // Default to allow all until config loads
     private compositeStrategy: CompositeDetailsStrategy;
-    private map: any;
+    private map!: L.Map;
     private pinnedSensors: SensorProperties[] = [];
     private previewSensor: SensorProperties | null = null;
     private currentLang: SupportedLanguage = 'bg';
@@ -83,8 +84,7 @@ class SmartMap {
         this.compositeStrategy.getStrategies().forEach(strategy => {
             strategy.initialize(this.map, (sensor) => this.onSensorSelect(sensor));
             strategy.loadData(this.currentLang);
-            // Note: The strategy layers are created but not added to map yet.
-            // Trigger the checkboxes to add them.
+            // Note: The strategy layers are created but not added to map yet. Trigger the checkboxes to add them.
             this.setInitialToggle(strategy.checkbox_id);
         });
     }
@@ -559,3 +559,5 @@ class SmartMap {
 document.addEventListener('DOMContentLoaded', () => {
     new SmartMap();
 });
+
+

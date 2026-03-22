@@ -12,21 +12,17 @@ import {
 import { Utils } from '../Utils.js';
 import { t } from '../Translations.js';
 
-declare const L: any;
+declare const L: typeof import('leaflet');
 
 /**
  * Abstract base class for all standard point-marker map strategies.
  *
- * Eliminates boilerplate shared across EVChargingStrategy, BillingMachineStrategy,
- * TaxiRankStrategy, SmartParkingStrategy, WasteCentreStrategy,
- * AirQualityTimeSensorStrategy, CCTVStrategy, and TrafficSensorStrategy.
- *
  * Subclasses must provide:
- *  - Static identity fields: name, checkbox_id, layerOptions
- *  - getApiUrl(lang): the endpoint to fetch from
- *  - getTimestampElementId(): the sidebar timestamp element to update
- *  - getIconClass(): the fontello icon class for the map pin
- *  - renderCardContent(): the sensor detail card
+ *  - Identity fields: name, checkbox_id, layerOptions
+ *  - getApiUrl(lang): endpoint to fetch from
+ *  - getTimestampElementId(): sidebar timestamp DOM element ID
+ *  - getIconClass(): fontello icon class for the map pin
+ *  - renderCardContent(): sensor detail card rendering
  *  - getChartData(): chart dataset extraction (return null if no chart)
  *
  * Subclasses may override:
@@ -39,20 +35,15 @@ export abstract class BasePointStrategy implements IDetailsStrategy {
     abstract checkbox_id: string;
     abstract layerOptions: { translate_name_key?: string; color: string };
 
-    protected layer: any;
+    protected layer!: L.LayerGroup;
     protected onPin: ((sensor: SensorProperties) => void) | undefined;
     protected currentLang: SupportedLanguage = 'bg';
     protected cachedData: GeoFeature[] = [];
 
     // Abstract hooks
 
-    /** The API path including any query params, e.g. `/api/ev-stations?lang=${lang}` */
     protected abstract getApiUrl(lang: string): string;
-
-    /** DOM element ID for the "last updated" timestamp in the sidebar */
     protected abstract getTimestampElementId(): string;
-
-    /** Fontello icon class for the map pin, e.g. `"icon-battery"` */
     protected abstract getIconClass(): string;
 
     abstract renderCardContent(
@@ -66,10 +57,6 @@ export abstract class BasePointStrategy implements IDetailsStrategy {
 
     // Overridable hooks
 
-    /**
-     * Builds the inner HTML for the map marker div.
-     * Override for non-standard markers (e.g. CCTV with a camera cone).
-     */
     protected buildMarkerHtml(_feature: GeoFeature): string {
         return `
             <div class="custom-pin-marker" style="background-color: ${this.layerOptions.color};">
@@ -78,31 +65,24 @@ export abstract class BasePointStrategy implements IDetailsStrategy {
         `;
     }
 
-    /**
-     * Text displayed in the hover popup body. Override for custom popup content.
-     */
     protected getPopupText(_props: SensorProperties): string {
         return t('click_to_pin', this.currentLang);
     }
 
-    /**
-     * Called after data is fetched, tagged and cached, before applyRegionFilter.
-     * Override to perform strategy-specific post-load setup.
-     */
     protected onLoadSuccess(_data: GeoJSONInput): void {}
 
     // Concrete shared implementation
 
-    initialize(map: any, onPin: (sensor: SensorProperties) => void): void {
+    initialize(map: L.Map, onPin: (sensor: SensorProperties) => void): void {
         this.onPin = onPin;
         this.layer = L.layerGroup();
     }
 
-    getLayer(): any {
+    getLayer(): L.LayerGroup {
         return this.layer;
     }
 
-    async loadData(lang: string, options?: Record<string, any>): Promise<void> {
+    async loadData(lang: string, options?: Record<string, string>): Promise<void> {
         if (!this.layer) {
             return;
         }
@@ -113,7 +93,6 @@ export abstract class BasePointStrategy implements IDetailsStrategy {
 
         try {
             const res = await fetch(this.getApiUrl(lang));
-
             if (!res.ok) {
                 throw new Error(`${res.status}`);
             }
@@ -153,6 +132,7 @@ export abstract class BasePointStrategy implements IDetailsStrategy {
                 const coords = feature.geometry.coordinates as Position[][][];
                 pt = coords[0][0][0];
             }
+
             return Utils.isPointInPolygon(pt, filterGeometry);
         });
 
@@ -160,32 +140,38 @@ export abstract class BasePointStrategy implements IDetailsStrategy {
     }
 
     protected addGeoJsonToLayer(inputData: GeoJSONInput | GeoFeature[]): void {
-        const features: GeoFeature[] = Array.isArray(inputData) ? inputData : (inputData as any).features || [];
+        const features: GeoFeature[] = Array.isArray(inputData) ? (inputData as GeoFeature[]) : (inputData as { features: GeoFeature[] }).features || [];
 
-        L.geoJSON(features, {
-            pointToLayer: (feature: GeoFeature, latlng: any) => {
+        L.geoJSON(features as any, {
+            pointToLayer: (feature: L.Feature, latlng: L.LatLng): L.Layer => {
                 return L.marker(latlng, {
                     icon: L.divIcon({
                         className: 'custom-pin-wrapper',
-                        html: this.buildMarkerHtml(feature),
+                        html: this.buildMarkerHtml(feature as unknown as GeoFeature),
                         iconSize: [30, 30],
                         iconAnchor: [15, 30],
                         popupAnchor: [0, -32]
                     })
                 });
             },
-            onEachFeature: (feature: GeoFeature, layer: any) => {
-                const props = feature.properties;
-                const title = (props.name || props.publicname || this.name) as string;
+            onEachFeature: (feature: L.Feature, layer: L.Layer): void => {
+                const props = (feature as unknown as GeoFeature).properties;
+                const title = String(props.name || props.publicname || this.name);
 
-                layer.bindPopup(
+                (layer as L.Marker).bindPopup(
                     `<div class="marker-popup-hover"><h4>${title}</h4><p>${this.getPopupText(props)}</p></div>`,
                     { closeButton: false, offset: L.point(0, 0) }
                 );
 
-                layer.on('mouseover', (e: any) => { e.target.openPopup(); });
-                layer.on('mouseout', (e: any) => { e.target.closePopup(); });
-                layer.on('click', () => { this.onPin?.(props); });
+                layer.on('mouseover', (e: L.LeafletEvent) => {
+                    (e.target as L.Marker).openPopup();
+                });
+                layer.on('mouseout', (e: L.LeafletEvent) => {
+                    (e.target as L.Marker).closePopup();
+                });
+                layer.on('click', () => {
+                    this.onPin?.(props);
+                });
             }
         }).addTo(this.layer);
     }

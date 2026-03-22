@@ -1,6 +1,6 @@
 // src/strategies/ISpatialFilterStrategy.ts
 import { IDetailsStrategy } from './IDetailsStrategy.js';
-import {FilterGeometry, Position} from '../Types.js';
+import { FilterGeometry, Position } from '../Types.js';
 
 export interface ISpatialFilterStrategy extends IDetailsStrategy {
     /** Explicitly defines the parent strategy in the spatial hierarchy */

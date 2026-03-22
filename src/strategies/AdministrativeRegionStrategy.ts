@@ -1,34 +1,35 @@
 // src/strategies/AdministrativeRegionStrategy.ts
-import {ChartDataset, FilterGeometry, GeoFeature, Position, SensorProperties, SupportedLanguage} from '../Types.js';
-import {t} from "../Translations.js";
-import {Utils} from "../Utils.js";
-import {ISpatialFilterStrategy} from "./ISpatialFilterStrategy.js";
+import { ChartDataset, FilterGeometry, GeoFeature, Position, SensorProperties, SupportedLanguage } from '../Types.js';
+import { t } from '../Translations.js';
+import { Utils } from '../Utils.js';
+import { ISpatialFilterStrategy } from './ISpatialFilterStrategy.js';
 
-declare const L: any;
+declare const L: typeof import('leaflet');
 
 export class AdministrativeRegionStrategy implements ISpatialFilterStrategy {
     public parentStrategy?: ISpatialFilterStrategy;
     public childStrategies?: ISpatialFilterStrategy[];
     public name = 'admin_regions';
     public checkbox_id = 'toggle-admin-regions';
-    public layerOptions: { color: string } = { color: "#3498db" };
-    private layer: any;
+    public layerOptions: { color: string } = { color: '#3498db' };
+
+    private layer!: L.LayerGroup;
     private currentLang: SupportedLanguage = 'bg';
     private onFilterChange: (geometry: FilterGeometry | null, sourceStrategy: ISpatialFilterStrategy) => void;
-    private currentSelection: { name: string, layer: any } | null = null;
-    private featureMap: Map<string, any> = new Map();
+    private currentSelection: { name: string; layer: L.Path } | null = null;
+    private featureMap: Map<string, L.Path> = new Map();
     private cachedData: GeoFeature[] = [];
 
     constructor(onFilterChange: (geometry: FilterGeometry | null, sourceStrategy: ISpatialFilterStrategy) => void) {
         this.onFilterChange = onFilterChange;
     }
 
-    initialize(map: any, onPin: (sensor: SensorProperties) => void): void {
+    initialize(map: L.Map, _onPin: (sensor: SensorProperties) => void): void {
         this.layer = L.layerGroup();
         this.layer.addTo(map);
     }
 
-    getLayer(): any {
+    getLayer(): L.LayerGroup {
         return this.layer;
     }
 
@@ -54,28 +55,32 @@ export class AdministrativeRegionStrategy implements ISpatialFilterStrategy {
                     fillOpacity: 0.05,
                     dashArray: '4, 4'
                 },
-                onEachFeature: (feature: any, layer: any) => {
-                    const regionName = feature.properties?.CAU || t('status_unknown', this.currentLang);
-                    this.featureMap.set(regionName, layer);
+                onEachFeature: (feature: L.Feature, layer: L.Layer): void => {
+                    const props = (feature as GeoFeature).properties;
+                    const regionName: string = props?.CAU || t('status_unknown', this.currentLang);
+                    const path = layer as L.Path;
+
+                    this.featureMap.set(regionName, path);
 
                     layer.on('click', () => {
-                        this.selectRegion(regionName, layer, feature.geometry);
+                        this.selectRegion(regionName, path, props.geometry as FilterGeometry);
                     });
 
                     layer.on('mouseover', () => {
                         if (this.currentSelection?.name !== regionName) {
-                            layer.setStyle({ fillOpacity: 0.2, weight: 2 });
+                            path.setStyle({ fillOpacity: 0.2, weight: 2 });
                         }
                     });
 
                     layer.on('mouseout', () => {
                         if (this.currentSelection?.name !== regionName) {
-                            geoJsonLayer.resetStyle(layer);
+                            geoJsonLayer.resetStyle(path);
                         }
                     });
 
-                    if (feature.properties && feature.properties.Name) {
-                        layer.bindTooltip(feature.properties.Name, { sticky: true });
+                    if (props?.Name) {
+                        (layer as L.Path & { bindTooltip: (s: string, o: object) => void })
+                            .bindTooltip(props.Name, { sticky: true });
                     }
                 }
             });
@@ -87,10 +92,10 @@ export class AdministrativeRegionStrategy implements ISpatialFilterStrategy {
         }
     }
 
-    public selectRegionByPoint(point: Position, triggerFilter: boolean = true) {
+    public selectRegionByPoint(point: Position, triggerFilter: boolean = true): void {
         const feature = this.cachedData.find(f => Utils.isPointInPolygon(point, f.geometry as FilterGeometry));
         if (feature) {
-            const name = feature.properties?.CAU;
+            const name: string = feature.properties?.CAU;
             const layer = this.featureMap.get(name);
             if (name && layer) {
                 this.selectRegion(name, layer, feature.geometry as FilterGeometry, triggerFilter);
@@ -102,16 +107,17 @@ export class AdministrativeRegionStrategy implements ISpatialFilterStrategy {
 
     public getCurrentGeometry(): FilterGeometry | null {
         if (this.currentSelection) {
-            return this.currentSelection.layer.feature.geometry;
+            // The layer retains the original GeoJSON feature via Leaflet internals
+            return (this.currentSelection.layer as any).feature?.geometry ?? null;
         }
         return null;
     }
 
-    public clearSelection(triggerFilter: boolean = true) {
+    public clearSelection(triggerFilter: boolean = true): void {
         if (this.currentSelection) {
             const prevLayer = this.currentSelection.layer;
             prevLayer.setStyle({ color: this.layerOptions.color, weight: 1, fillOpacity: 0.05, dashArray: '4, 4' });
-            const prevCheckbox = document.getElementById(`region-${this.currentSelection.name}`) as HTMLInputElement;
+            const prevCheckbox = document.getElementById(`region-${this.currentSelection.name}`) as HTMLInputElement | null;
             if (prevCheckbox) {
                 prevCheckbox.checked = false;
             }
@@ -122,28 +128,28 @@ export class AdministrativeRegionStrategy implements ISpatialFilterStrategy {
         }
     }
 
-    applyRegionFilter(geometry: FilterGeometry | null): void {}
-    renderCardContent(container: HTMLElement, sensor: SensorProperties): void {}
-    getChartData(sensor: SensorProperties): ChartDataset | null { return null; }
+    applyRegionFilter(_geometry: FilterGeometry | null): void {}
+    renderCardContent(_container: HTMLElement, _sensor: SensorProperties): void {}
+    getChartData(_sensor: SensorProperties, _property: string): ChartDataset | null { return null; }
 
-    private renderSidebarControls(features: GeoFeature[]) {
-        const container = document.getElementById('region-filters-wrapper') as HTMLDivElement;
+    private renderSidebarControls(features: GeoFeature[]): void {
+        const container = document.getElementById('region-filters-wrapper') as HTMLDivElement | null;
         if (!container) {
             return;
         }
 
         container.innerHTML = '';
-        const regionNames = Array.from(new Set(features.map(f => f.properties?.CAU))).sort();
+        const regionNames = Array.from(new Set(features.map(f => f.properties?.CAU as string))).sort();
 
         regionNames.forEach(name => {
             if (!name) {
                 return;
             }
 
-            const div = document.createElement('div') as HTMLDivElement;
+            const div = document.createElement('div');
             div.className = 'region-item';
 
-            const checkbox = document.createElement('input') as HTMLInputElement;
+            const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.id = `region-${name}`;
             checkbox.value = name;
@@ -151,16 +157,17 @@ export class AdministrativeRegionStrategy implements ISpatialFilterStrategy {
             checkbox.addEventListener('change', (e) => {
                 const target = e.target as HTMLInputElement;
                 const layer = this.featureMap.get(name);
+                if (!layer) return;
 
                 if (target.checked) {
-                    const geometry = layer.feature.geometry;
+                    const geometry = (layer as any).feature?.geometry as FilterGeometry;
                     this.selectRegion(name, layer, geometry);
                 } else {
                     this.clearSelection();
                 }
             });
 
-            const label = document.createElement('label') as HTMLLabelElement;
+            const label = document.createElement('label');
             label.htmlFor = `region-${name}`;
             label.innerText = name;
 
@@ -170,7 +177,7 @@ export class AdministrativeRegionStrategy implements ISpatialFilterStrategy {
         });
     }
 
-    private selectRegion(name: string, layer: any, geometry: FilterGeometry, triggerFilter: boolean = true) {
+    private selectRegion(name: string, layer: L.Path, geometry: FilterGeometry, triggerFilter: boolean = true): void {
         if (this.currentSelection?.name === name) {
             return;
         }
@@ -178,7 +185,7 @@ export class AdministrativeRegionStrategy implements ISpatialFilterStrategy {
         if (this.currentSelection) {
             const prevLayer = this.currentSelection.layer;
             prevLayer.setStyle({ color: this.layerOptions.color, weight: 1, fillOpacity: 0.05, dashArray: '4, 4' });
-            const prevCheckbox = document.getElementById(`region-${this.currentSelection.name}`) as HTMLInputElement;
+            const prevCheckbox = document.getElementById(`region-${this.currentSelection.name}`) as HTMLInputElement | null;
             if (prevCheckbox) {
                 prevCheckbox.checked = false;
             }
@@ -187,7 +194,7 @@ export class AdministrativeRegionStrategy implements ISpatialFilterStrategy {
         this.currentSelection = { name, layer };
         layer.setStyle({ color: '#e74c3c', weight: 3, fillOpacity: 0.15, dashArray: '' });
 
-        const newCheckbox = document.getElementById(`region-${name}`) as HTMLInputElement;
+        const newCheckbox = document.getElementById(`region-${name}`) as HTMLInputElement | null;
         if (newCheckbox) {
             newCheckbox.checked = true;
         }
