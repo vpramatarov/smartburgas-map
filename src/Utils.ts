@@ -116,6 +116,6 @@ export class Utils {
 
     public static getSafeId(prefix: string, name: string): string {
         // Strips spaces, quotes, and special characters to ensure a valid HTML5 ID
-        return `${prefix}-${name.replace(/[^a-zA-Z0-9А-Яа-я]/g, '-')}`;
+        return `${prefix}-${name.replace(/[^a-z0-9а-яё]+/gi, '-')}`;
     }
 }
