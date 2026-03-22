@@ -56,6 +56,9 @@ export const en: TranslationKeys = {
     car_speed: 'Car Speed',
     km_h: 'km/h',
 
+    // --- Hidden by filter ---
+    feature_hidden_by_filters: 'Feature currently hidden by filters',
+
     // --- Validation ---
     invalid_date_format: 'Invalid date format provided.',
     min_date_range: 'Date range must be at least 2 days.',

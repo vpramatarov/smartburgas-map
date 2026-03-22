@@ -10,6 +10,7 @@ test.describe('Layer Toggle Visibility', () => {
     });
 
     // Helper: click the visible label to toggle the checkbox
+    // The actual checkbox has opacity:0; height:0; width:0 — clicking the label is the correct interaction
     function layerLabel(page: any, checkboxId: string) {
         return page.locator(`label.checkbox[for="${checkboxId}"]`);
     }
@@ -88,9 +89,9 @@ test.describe('Layer Toggle Visibility', () => {
         await expect(anyMarker.first()).toBeVisible({ timeout: 5000 });
     });
 
-    // --- Side panel closes when its sensor's layer is toggled off ---
+    // --- Warning banner shown when a sensor's layer is toggled off while open ---
 
-    test('should close the side panel when the layer for the open sensor is toggled off', async ({ page }) => {
+    test('should show hidden-by-filters warning in the card when the layer for the open sensor is toggled off', async ({ page }) => {
         const firstAirMarker = page.locator('.custom-pin-wrapper:has(.icon-air)').first();
         await expect(firstAirMarker).toBeVisible({ timeout: 10000 });
         await firstAirMarker.dispatchEvent('click');
@@ -98,8 +99,30 @@ test.describe('Layer Toggle Visibility', () => {
         const infoPanel = page.locator('#info-panel');
         await expect(infoPanel).not.toHaveClass(/hidden/);
 
+        // Toggle the air quality layer off while the sensor card is open
         await layerLabel(page, 'toggle-air-quality-time').click();
 
-        await expect(infoPanel).toHaveClass(/hidden/);
+        // Panel stays open — card now shows a warning instead of disappearing
+        await expect(infoPanel).not.toHaveClass(/hidden/);
+        const warning = page.locator('.sensor-hidden-warning');
+        await expect(warning).toBeVisible();
+        await expect(warning).toContainText('Обектът е скрит от активните филтри');
+    });
+
+    test('should remove the warning when the hidden layer is toggled back on', async ({ page }) => {
+        const firstAirMarker = page.locator('.custom-pin-wrapper:has(.icon-air)').first();
+        await expect(firstAirMarker).toBeVisible({ timeout: 10000 });
+        await firstAirMarker.dispatchEvent('click');
+
+        const label = layerLabel(page, 'toggle-air-quality-time');
+
+        // Hide the layer — warning appears
+        await label.click();
+        await expect(page.locator('.sensor-hidden-warning')).toBeVisible();
+
+        // Re-enable the layer — warning should disappear and card content return
+        await label.click();
+        await expect(page.locator('.sensor-hidden-warning')).toHaveCount(0);
+        await expect(page.locator('#info-panel')).not.toHaveClass(/hidden/);
     });
 });

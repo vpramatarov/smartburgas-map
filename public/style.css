@@ -700,6 +700,17 @@ input[name="lang"]:checked + label .flag {
 }
 
 /*---- Sensor Cards ----*/
+.sensor-hidden-warning {
+    color: #c0392b;
+    font-weight: 500;
+    font-size: 0.9em;
+    padding: 8px 10px;
+    margin: 4px 0;
+    background: #fdf0f0;
+    border-left: 3px solid #c0392b;
+    border-radius: 2px;
+}
+
 .sensor-card {
     background: #f9f9f9;
     border: 1px solid #ddd;
