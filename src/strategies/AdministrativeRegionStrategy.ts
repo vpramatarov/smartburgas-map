@@ -154,7 +154,7 @@ export class AdministrativeRegionStrategy implements ISpatialFilterStrategy {
 
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
-            checkbox.id = `region-${name}`;
+            checkbox.id = this.getSafeId(name);
             checkbox.value = name;
 
             checkbox.addEventListener('change', (e) => {
@@ -171,7 +171,7 @@ export class AdministrativeRegionStrategy implements ISpatialFilterStrategy {
             });
 
             const label = document.createElement('label');
-            label.htmlFor = `region-${name}`;
+            label.htmlFor = this.getSafeId(name);
             label.innerText = name;
 
             div.appendChild(checkbox);
@@ -188,7 +188,7 @@ export class AdministrativeRegionStrategy implements ISpatialFilterStrategy {
         if (this.currentSelection) {
             const prevLayer = this.currentSelection.layer;
             prevLayer.setStyle({ color: this.layerOptions.color, weight: 1, fillOpacity: 0.05, dashArray: '4, 4' });
-            const prevCheckbox = document.getElementById(`region-${this.currentSelection.name}`) as HTMLInputElement | null;
+            const prevCheckbox = document.getElementById(this.getSafeId(this.currentSelection.name)) as HTMLInputElement | null;
             if (prevCheckbox) {
                 prevCheckbox.checked = false;
             }
@@ -197,7 +197,7 @@ export class AdministrativeRegionStrategy implements ISpatialFilterStrategy {
         this.currentSelection = { name, layer };
         layer.setStyle({ color: '#e74c3c', weight: 3, fillOpacity: 0.15, dashArray: '' });
 
-        const newCheckbox = document.getElementById(`region-${name}`) as HTMLInputElement | null;
+        const newCheckbox = document.getElementById(this.getSafeId(name)) as HTMLInputElement | null;
         if (newCheckbox) {
             newCheckbox.checked = true;
         }
@@ -205,6 +205,11 @@ export class AdministrativeRegionStrategy implements ISpatialFilterStrategy {
         if (triggerFilter) {
             this.onFilterChange(geometry, this);
         }
+    }
+
+    private getSafeId(name: string): string {
+        // Strips spaces, quotes, and special characters to ensure a valid HTML5 ID
+        return `region-${name.replace(/[^a-zA-Z0-9А-Яа-я]/g, '-')}`;
     }
 }
 
