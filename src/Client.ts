@@ -565,6 +565,14 @@ class SmartMap {
 
         clearAndFilterChildren(sourceStrategy, effectiveGeometry);
 
+        // Apply the parent's geometry to the source strategy so sibling items in the sidebar are filtered out
+        if (sourceStrategy.parentStrategy && sourceStrategy.parentStrategy.getCurrentGeometry) {
+            const parentGeom = sourceStrategy.parentStrategy.getCurrentGeometry();
+            if (sourceStrategy.applyRegionFilter) {
+                sourceStrategy.applyRegionFilter(parentGeom);
+            }
+        }
+
         // Apply geometry directly to all non-spatial strategies
         this.compositeStrategy.getStrategies().forEach(strategy => {
             if (!this.spatialStrategies.includes(strategy as ISpatialFilterStrategy)) {
