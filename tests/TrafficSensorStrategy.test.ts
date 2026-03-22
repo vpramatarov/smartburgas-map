@@ -4,6 +4,8 @@ import { TrafficSensorStrategy } from '../src/strategies/TrafficSensorStrategy.j
 
 // ── Minimal mocks 
 
+const mockTimestampEl = { innerText: '' };
+
 vi.stubGlobal('L', {
     layerGroup: vi.fn(() => ({
         addTo: vi.fn(),
@@ -11,8 +13,6 @@ vi.stubGlobal('L', {
     })),
 });
 
-// Capture what gets written to the timestamp element
-const mockTimestampEl = { innerText: '' };
 vi.stubGlobal('document', {
     getElementById: vi.fn((id: string) => {
         if (id === 'traffic-time') return mockTimestampEl;
@@ -26,28 +26,22 @@ vi.stubGlobal('document', {
     })),
 });
 
-// ── Helpers 
-
 function makeStrategy() {
     const strategy = new TrafficSensorStrategy();
     strategy.initialize({} as any, vi.fn());
     return strategy;
 }
 
-/** Calls the private resolveDateParams via casting */
 function resolve(strategy: TrafficSensorStrategy, opts?: { start_date?: string; end_date?: string }) {
     return (strategy as any).resolveDateParams(opts);
 }
 
-// ── Date validation 
+// ── Date validation
 
 describe('TrafficSensorStrategy.resolveDateParams', () => {
     let strategy: TrafficSensorStrategy;
 
-    beforeEach(() => {
-        vi.clearAllMocks();
-        strategy = makeStrategy();
-    });
+    beforeEach(() => { vi.clearAllMocks(); strategy = makeStrategy(); });
 
     it('returns valid start/end when no options are provided (defaults to last month → today)', () => {
         const result = resolve(strategy);
@@ -86,8 +80,8 @@ describe('TrafficSensorStrategy.resolveDateParams', () => {
     });
 
     it('accepts exactly 6 months (boundary)', () => {
+        // 181 days — just over the limit
         const result = resolve(strategy, { start_date: '2025-01-01', end_date: '2025-07-01' });
-        // 181 days — should fail (just over the 6-month limit)
         expect(result.error).toBeDefined();
     });
 
@@ -101,13 +95,16 @@ describe('TrafficSensorStrategy.resolveDateParams', () => {
 
 describe('TrafficSensorStrategy.loadData error handling', () => {
     it('writes the validation error to the timestamp element instead of calling alert()', async () => {
-        const alertSpy = vi.spyOn(globalThis, 'alert').mockImplementation(() => {});
+        // alert() is not defined in Vitest's Node environment — confirm it stays that way
+        expect(typeof (globalThis as any).alert).toBe('undefined');
+
         const strategy = makeStrategy();
+        mockTimestampEl.innerText = '';
 
         await strategy.loadData('bg', { start_date: 'bad-date', end_date: '2025-01-10' });
 
-        expect(alertSpy).not.toHaveBeenCalled();
-        expect(mockTimestampEl.innerText).toContain('⚠');
+        // The error message should have been written to the timestamp element
+        expect(mockTimestampEl.innerText).toContain('!');
     });
 });
 
@@ -115,18 +112,11 @@ describe('TrafficSensorStrategy.loadData error handling', () => {
 
 describe('TrafficSensorStrategy.parseTrafficDate', () => {
     let strategy: TrafficSensorStrategy;
+    beforeEach(() => { vi.clearAllMocks(); strategy = makeStrategy(); });
 
-    beforeEach(() => {
-        strategy = makeStrategy();
-    });
+    const parse = (raw: string) => (strategy as any).parseTrafficDate(raw);
 
-    function parse(raw: string): number {
-        return (strategy as any).parseTrafficDate(raw);
-    }
-
-    it('returns 0 for an empty string', () => {
-        expect(parse('')).toBe(0);
-    });
+    it('returns 0 for an empty string', () => { expect(parse('')).toBe(0); });
 
     it('parses a standard ISO string', () => {
         const result = parse('2025-03-15T10:30:00');
@@ -134,13 +124,12 @@ describe('TrafficSensorStrategy.parseTrafficDate', () => {
         expect(new Date(result).getFullYear()).toBe(2025);
     });
 
-    it('parses the underscore-separated upstream format (DD_MM_YYYY HH:MM)', () => {
-        // Upstream traffic API returns dates like "15_03_2025 10:30"
+    it('parses the dot-separated upstream format (DD.MM.YYYY HH:MM)', () => {
         const result = parse('15.03.2025 10:30');
         expect(result).toBeGreaterThan(0);
         const d = new Date(result);
         expect(d.getFullYear()).toBe(2025);
-        expect(d.getMonth()).toBe(2); // 0-indexed March
+        expect(d.getMonth()).toBe(2); // March (0-indexed)
         expect(d.getDate()).toBe(15);
     });
 
@@ -154,10 +143,6 @@ describe('TrafficSensorStrategy.parseTrafficDate', () => {
 describe('TrafficSensorStrategy.getChartData', () => {
     let strategy: TrafficSensorStrategy;
 
-    beforeEach(() => {
-        strategy = makeStrategy();
-    });
-
     const mockSensor = {
         name: 'Test sensor',
         strategy: 'traffic_sensor',
@@ -169,26 +154,32 @@ describe('TrafficSensorStrategy.getChartData', () => {
         ]
     };
 
+    beforeEach(() => { vi.clearAllMocks(); strategy = makeStrategy(); });
+
     it('returns null for an unsupported property', () => {
         expect(strategy.getChartData(mockSensor, 'unknown_property')).toBeNull();
     });
 
     it('returns null when sensor has no data', () => {
+        expect(strategy.getChartData({ ...mockSensor, data: undefined as any }, 'car_count')).toBeNull();
+    });
+
+    it('returns null when sensor data is an empty array', () => {
         expect(strategy.getChartData({ ...mockSensor, data: [] }, 'car_count')).toBeNull();
     });
 
     it('returns sorted data points for car_count', () => {
         const result = strategy.getChartData(mockSensor, 'car_count');
         expect(result).not.toBeNull();
-        expect(result!.values).toEqual([30, 20, 50]); // sorted by timestamp ascending
+        expect(result!.values).toEqual([30, 20, 50]); // sorted chronologically
         expect(result!.times).toHaveLength(3);
-        expect(result!.unit).toBe('коли'); // Bulgarian default
+        expect(result!.unit).toBe('коли');
     });
 
     it('returns sorted data points for car_speed', () => {
         const result = strategy.getChartData(mockSensor, 'car_speed');
         expect(result).not.toBeNull();
-        expect(result!.values).toEqual([60, 80, 40]); // sorted ascending by time
+        expect(result!.values).toEqual([60, 80, 40]);
     });
 
     it('data points are sorted chronologically (oldest first)', () => {

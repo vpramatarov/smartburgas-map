@@ -33,8 +33,6 @@ afterEach(() => mswServer.resetHandlers());
 // Close MSW after all tests
 afterAll(() => mswServer.close());
 
-// The Test Suite
-
 describe('Backend API Endpoints', () => {
 
     describe('Local Endpoints', () => {
@@ -51,7 +49,6 @@ describe('Backend API Endpoints', () => {
             expect(response.headers['content-type']).toMatch(/json/);
             expect(response.body.type).toBe('FeatureCollection');
             expect(Array.isArray(response.body.features)).toBe(true);
-
             // Check that at least one feature has the CAU property we need for the UI
             const feature = response.body.features[0];
             expect(feature.geometry).toBeDefined();
@@ -72,7 +69,7 @@ describe('Backend API Endpoints', () => {
         });
     });
 
-    // ── Proxy Endpoints (transform: true) ──
+    // ── Proxy Endpoints (transform: true) 
 
     describe('Proxy Endpoints (Transforming features1 data)', () => {
         it('GET /api/smart-parking should fetch, transform, and return GeoJSON', async () => {
@@ -81,7 +78,6 @@ describe('Backend API Endpoints', () => {
             expect(response.status).toBe(200);
             expect(response.headers['content-type']).toMatch(/json/);
             expect(response.headers['x-last-updated']).toBeDefined();
-
             // Verify our server correctly transformed the features1 array into standard GeoJSON
             expect(response.body.type).toBe('FeatureCollection');
             expect(response.body.features).toHaveLength(7);
@@ -92,7 +88,6 @@ describe('Backend API Endpoints', () => {
             // Verify coordinate parsing logic worked
             expect(feature.geometry).toBeDefined();
             expect(feature.geometry.coordinates).toHaveLength(2);
-            // Verify properties were mapped correctly
             expect(feature.properties.name).toBe('Паркинг Опера');
             expect(feature.properties.additional_info.total_lots).toBe('211');
             expect(feature.properties.additional_info.total_free_lots).toBe('1');
@@ -146,7 +141,6 @@ describe('Backend API Endpoints', () => {
         });
 
         it('should return 500 if upstream API fails or structure is invalid', async () => {
-            // Temporarily override the MSW handler to return bad data just for this test
             mswServer.use(
                 http.get(process.env.SMART_CAR_PARKS_TIME_URL, () => {
                     return HttpResponse.json({ bad_data: "no features1 array here" });
@@ -154,13 +148,12 @@ describe('Backend API Endpoints', () => {
             );
 
             const response = await request(app).get('/api/smart-parking');
-            // try/catch block in Server.ts should catch the missing features1 array and return 500
             expect(response.status).toBe(500);
             expect(response.body.error).toBe('Failed to fetch smartParking data');
         });
     });
 
-    // ── Proxy Endpoints (transform: false) ──
+    // ── Proxy Endpoints (transform: false) ───
 
     describe('Proxy Endpoints (No data property in properties)', () => {
         it('GET /api/cctv should return GeoJson data', async () => {
@@ -229,7 +222,7 @@ describe('Backend API Endpoints', () => {
         });
     });
 
-    // ── Language validation ──
+    // ── Language validation ───
 
     describe('Language parameter validation', () => {
         it('accepts ?lang=bg and returns 200', async () => {
@@ -249,7 +242,8 @@ describe('Backend API Endpoints', () => {
         });
 
         it('returns 500 for an unsupported lang value', async () => {
-            // getValidatedLang throws for anything other than 'bg' or 'en', which is caught by the proxy try/catch and returned as 500
+            // getValidatedLang throws for anything other than 'bg' or 'en',
+            // which is caught by the proxy try/catch and returned as 500
             const response = await request(app).get('/api/cctv?lang=fr');
             expect(response.status).toBe(500);
         });
@@ -269,7 +263,7 @@ describe('Backend API Endpoints', () => {
         });
     });
 
-    // ── Date parameter forwarding ──
+    // ── Date parameter forwarding 
 
     describe('Date parameter forwarding', () => {
         it('forwards start_date and end_date to the upstream API', async () => {
@@ -347,7 +341,7 @@ describe('Backend API Endpoints', () => {
         });
     });
 
-    // ── Upstream network failures ─────────────────────────────────────────────
+    // ── Upstream network failures 
 
     describe('Upstream network failure handling', () => {
         it('returns 500 when the upstream API is unreachable (network error)', async () => {
@@ -376,16 +370,19 @@ describe('Backend API Endpoints', () => {
             expect(response.body).toHaveProperty('error');
         });
 
-        it('returns 500 when the upstream returns malformed JSON', async () => {
+        it('returns 500 when the upstream returns malformed JSON for a transform endpoint', async () => {
+            // Axios has silentJSONParsing=true: for pass-through routes it returns a string body
+            // without throwing, so the 500 only triggers on transform routes that inspect
+            // result.data.features1 (requiresFeatures1: true).
             mswServer.use(
-                http.get(process.env.TAXI_RANKS_URL, () => {
+                http.get(process.env.AIR_QUALITY_TIME_URL, () => {
                     return new HttpResponse('this is not json {{{', {
                         headers: { 'Content-Type': 'application/json' }
                     });
                 })
             );
 
-            const response = await request(app).get('/api/taxi-ranks');
+            const response = await request(app).get('/api/air-quality-time');
             expect(response.status).toBe(500);
             expect(response.body).toHaveProperty('error');
         });

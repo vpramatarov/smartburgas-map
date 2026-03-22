@@ -56,14 +56,16 @@ export class AdministrativeRegionStrategy implements ISpatialFilterStrategy {
                     dashArray: '4, 4'
                 },
                 onEachFeature: (feature: L.Feature, layer: L.Layer): void => {
-                    const props = (feature as GeoFeature).properties;
+                    const geoFeature = feature as GeoFeature;
+                    const props = geoFeature.properties;
                     const regionName: string = props?.CAU || t('status_unknown', this.currentLang);
                     const path = layer as L.Path;
+                    const geometry = geoFeature.geometry as FilterGeometry;
 
                     this.featureMap.set(regionName, path);
 
                     layer.on('click', () => {
-                        this.selectRegion(regionName, path, props.geometry as FilterGeometry);
+                        this.selectRegion(regionName, path, geometry);
                     });
 
                     layer.on('mouseover', () => {
@@ -204,3 +206,4 @@ export class AdministrativeRegionStrategy implements ISpatialFilterStrategy {
         }
     }
 }
+

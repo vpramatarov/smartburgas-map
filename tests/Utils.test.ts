@@ -42,7 +42,7 @@ describe('Utils.isPointInPolygon', () => {
     });
 });
 
-// ── getSensorId ────────────────
+// ── getSensorId 
 
 describe('Utils.getSensorId', () => {
     it('returns id when present', () => {
@@ -76,7 +76,7 @@ describe('Utils.getSensorId', () => {
     });
 });
 
-// ── formatDateToLocal ──────────
+// ── formatDateToLocal
 
 describe('Utils.formatDateToLocal', () => {
     it('formats a date to YYYY-MM-DD using local time components', () => {
@@ -102,7 +102,7 @@ describe('Utils.formatDateToLocal', () => {
     });
 });
 
-// ── formatDateTimeToLocal ──────
+// ── formatDateTimeToLocal
 
 describe('Utils.formatDateTimeToLocal', () => {
     it('accepts a Date object and formats to DD-MM-YYYY HH:MM:SS', () => {
@@ -123,7 +123,7 @@ describe('Utils.formatDateTimeToLocal', () => {
     });
 });
 
-// ── tagDataWithStrategy ────────
+// ── tagDataWithStrategy 
 
 describe('Utils.tagDataWithStrategy', () => {
     it('tags each feature in a GeoJSON FeatureCollection', () => {
