@@ -178,6 +178,6 @@ describe('Utils.getSafeId', () => {
         expect(safeId).toBe('paid-zone-Синя-зона-10');
 
         const complexId = Utils.getSafeId('paid-zone', '  Green   Zone 2  ');
-        expect(complexId).toBe('paid-zone--Green-Zone-2-');
+        expect(complexId).toBe('paid-zone-Green-Zone-2');
     });
 })
