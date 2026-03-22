@@ -5,6 +5,7 @@ import { Utils } from '../Utils.js';
 import { ISpatialFilterStrategy } from './ISpatialFilterStrategy.js';
 
 declare const L: typeof import('leaflet');
+import type * as GeoJSON from 'geojson';
 
 export class AdministrativeRegionStrategy implements ISpatialFilterStrategy {
     public parentStrategy?: ISpatialFilterStrategy;
@@ -55,17 +56,15 @@ export class AdministrativeRegionStrategy implements ISpatialFilterStrategy {
                     fillOpacity: 0.05,
                     dashArray: '4, 4'
                 },
-                onEachFeature: (feature: L.Feature, layer: L.Layer): void => {
-                    const geoFeature = feature as GeoFeature;
-                    const props = geoFeature.properties;
+                onEachFeature: (feature: GeoJSON.Feature, layer: L.Layer): void => {
+                    const props = (feature as GeoFeature).properties;
                     const regionName: string = props?.CAU || t('status_unknown', this.currentLang);
                     const path = layer as L.Path;
-                    const geometry = geoFeature.geometry as FilterGeometry;
 
                     this.featureMap.set(regionName, path);
 
                     layer.on('click', () => {
-                        this.selectRegion(regionName, path, geometry);
+                        this.selectRegion(regionName, path, props.geometry as FilterGeometry);
                     });
 
                     layer.on('mouseover', () => {
