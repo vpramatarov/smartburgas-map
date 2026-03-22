@@ -6,6 +6,7 @@ import { Utils } from '../Utils.js';
 
 declare const L: typeof import('leaflet');
 import type * as GeoJSON from 'geojson';
+import * as Sentry from "@sentry/browser";
 
 export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
     public parentStrategy?: ISpatialFilterStrategy;
@@ -55,6 +56,9 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
             this.applyRegionFilter(null);
         } catch (err) {
             console.error('Error loading paid parking zones:', err);
+            if (typeof Sentry !== 'undefined') {
+                Sentry.captureException(err);
+            }
         }
     }
 

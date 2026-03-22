@@ -6,6 +6,7 @@ import { ISpatialFilterStrategy } from './ISpatialFilterStrategy.js';
 
 declare const L: typeof import('leaflet');
 import type * as GeoJSON from 'geojson';
+import * as Sentry from "@sentry/browser";
 
 export class AdministrativeRegionStrategy implements ISpatialFilterStrategy {
     public parentStrategy?: ISpatialFilterStrategy;
@@ -92,6 +93,9 @@ export class AdministrativeRegionStrategy implements ISpatialFilterStrategy {
             this.renderSidebarControls(data.features);
         } catch (err) {
             console.error('Error loading regions:', err);
+            if (typeof Sentry !== 'undefined') {
+                Sentry.captureException(err);
+            }
         }
     }
 

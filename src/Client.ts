@@ -17,6 +17,7 @@ import {PaidParkingZonesStrategy} from "./strategies/PaidParkingZonesStrategy.js
 import { ChartRenderer } from './components/ChartRenderer.js';
 import {ISpatialFilterStrategy} from "./strategies/ISpatialFilterStrategy.js";
 import {Utils} from "./Utils.js";
+import * as Sentry from "@sentry/browser";
 
 declare const L: typeof import('leaflet');
 
@@ -30,6 +31,24 @@ class SmartMap {
     private readonly spatialStrategies: ISpatialFilterStrategy[] = [];
 
     constructor() {
+        Sentry.init({
+            dsn: "https://d363964eb58346fe193b483dc9d8eb44@o4511089829740544.ingest.de.sentry.io/4511089856348240",
+            // Setting this option to true will send default PII data to Sentry.
+            // For example, automatic IP address collection on events
+            sendDefaultPii: true,
+            integrations: [
+                Sentry.browserTracingIntegration(),
+                Sentry.replayIntegration()
+            ],
+            // Tracing
+            tracesSampleRate: 1.0, //  Capture 100% of the transactions
+            // Set 'tracePropagationTargets' to control for which URLs distributed tracing should be enabled
+            tracePropagationTargets: ["localhost", /^https:\/\/smartburgas\.eu\/general-map/],
+            // Session Replay
+            replaysSessionSampleRate: 0.1, // This sets the sample rate at 10%. You may want to change it to 100% while in development and then sample at a lower rate in production.
+            replaysOnErrorSampleRate: 1.0 // If you're not already sampling the entire session, change the sample rate to 100% when sampling sessions where errors occur.
+        });
+
         const adminStrategy = new AdministrativeRegionStrategy((geometry, sourceStrategy) => {
             this.onRegionFilterChange(geometry, sourceStrategy);
         });
@@ -139,6 +158,9 @@ class SmartMap {
             localStorage.setItem('sb_lang', lang);
         } catch (e) {
             console.warn("Cannot save language preference in Iframe.");
+            if (typeof Sentry !== 'undefined') {
+                Sentry.captureException(e);
+            }
         }
 
         document.querySelectorAll('[data-i18n]').forEach((element) => {
@@ -204,6 +226,9 @@ class SmartMap {
                     this.compositeStrategy.renderFull(config, data, this.currentLang);
                 } catch (e) {
                     console.error("Failed to parse chart config", e);
+                    if (typeof Sentry !== 'undefined') {
+                        Sentry.captureException(e);
+                    }
                 }
             }
         });
@@ -461,6 +486,9 @@ class SmartMap {
             }
         } catch (error) {
             console.error("Failed to load map configuration:", error);
+            if (typeof Sentry !== 'undefined') {
+                Sentry.captureException(error);
+            }
         }
 
         // Listen for commands FROM the parent website
