@@ -1,90 +1,31 @@
 // src/strategies/WasteCentreStrategy.ts
-import { IDetailsStrategy } from './IDetailsStrategy.js';
-import {
-    ChartDataset,
-    DynamicDataPoint, FilterGeometry,
-    GeoFeature,
-    GeoJSONInput,
-    SensorProperties,
-    SupportedLanguage
-} from '../Types.js';
-import { Utils } from '../Utils.js';
+import { BasePointStrategy } from './BasePointStrategy.js';
+import { ChartDataset, DynamicDataPoint, SensorProperties } from '../Types.js';
 import { t } from '../Translations.js';
 
-declare const L: any;
-
-export class WasteCentreStrategy implements IDetailsStrategy {
+export class WasteCentreStrategy extends BasePointStrategy {
     public name = 'waste_centre';
     public checkbox_id = 'toggle-waste';
-    public layerOptions: { translate_name_key: string, color: string } = { translate_name_key: 'layer_mobile_waste', color: "#9b59b6" };
-    private layer: any;
-    private onPin: ((sensor: SensorProperties) => void) | undefined;
-    private currentLang: SupportedLanguage = 'bg'; // Default fallback
-    private cachedData: any[] = [];
+    public layerOptions = { translate_name_key: 'layer_mobile_waste', color: '#9b59b6' };
 
-    initialize(map: any, onPin: (sensor: SensorProperties) => void): void {
-        this.onPin = onPin;
-        this.layer = L.layerGroup();
+    protected getApiUrl(lang: string): string {
+        return `/api/waste-mobile?lang=${lang}`;
     }
 
-    getLayer(): any {
-        return this.layer;
+    protected getTimestampElementId(): string {
+        return 'waste-time';
     }
 
-    async loadData(lang: string): Promise<void> {
-        if (!this.layer) {
-            return;
-        }
-
-        this.currentLang = lang as SupportedLanguage;
-        this.layer.clearLayers();
-        Utils.updateTimestampUI('waste-time', t('loading', this.currentLang));
-
-        try {
-            const res = await fetch(`/api/waste-mobile?lang=${lang}`);
-            if (!res.ok) {
-                throw new Error(`${res.status}`);
-            }
-
-            Utils.updateTimestampUI('waste-time', new Date(res.headers.get('X-Last-Updated') || new Date()));
-            const data = await res.json();
-            Utils.tagDataWithStrategy(data, this.name);
-            this.cachedData = Array.isArray(data) ? data : data.features || [];
-            this.applyRegionFilter(null); // Initially with no filter
-            this.addGeoJsonToLayer(data, this.layerOptions);
-        } catch (err) {
-            console.error('Waste Centre load error:', err);
-        }
-    }
-
-    applyRegionFilter(filterGeometry: FilterGeometry | null): void {
-        if (!this.layer) {
-            return;
-        }
-
-        this.layer.clearLayers();
-
-        // Filter the cached data
-        const filteredFeatures = this.cachedData.filter(feature => {
-            // Ensure the feature has geometry
-            if (!feature.geometry || !feature.geometry.coordinates) {
-                return false;
-            }
-
-            return Utils.isPointInPolygon(feature.geometry.coordinates, filterGeometry);
-        });
-
-        // Re-use the existing addGeoJsonToLayer logic
-        this.addGeoJsonToLayer(filteredFeatures, this.layerOptions);
+    protected getIconClass(): string {
+        return 'icon-recycle';
     }
 
     renderCardContent(
         container: HTMLElement,
         sensor: SensorProperties,
-        uniqueIdPrefix: string,
-        onChartRequest: () => void
+        _uniqueIdPrefix: string,
+        _onChartRequest: () => void
     ): void {
-
         if (sensor.additional_info.image) {
             const img = document.createElement('img') as HTMLImageElement;
             img.src = sensor.additional_info.image.trim();
@@ -107,133 +48,38 @@ export class WasteCentreStrategy implements IDetailsStrategy {
             desc.className = 'sensor-description';
             desc.style.color = '#666';
             desc.style.marginBottom = '10px';
-            if (sensor.description) {
-                desc.innerHTML = sensor.description;
-            }
+            desc.innerHTML = sensor.description;
             container.appendChild(desc);
         }
 
-        // We scan the data history to find all unique garbage types available for this center
         if (sensor.data && Array.isArray(sensor.data)) {
-            const uniqueTypes = new Map<string, {name: string, color: string, weight: string, weight_unit: string, time: string}>();
+            const uniqueTypes = new Map<string, { name: string; color: string; weight: string; weight_unit: string; time: string }>();
 
             sensor.data.forEach((d: DynamicDataPoint) => {
                 uniqueTypes.set(d.Garbage_id, {
                     name: d.Garbage_name,
                     color: d.Garbage_Colour,
-                    weight: d.Garbage_Weight,
-                    weight_unit: d.Garbage_Weight_type,
+                    weight: d.Weight,
+                    weight_unit: d.Weight_unit,
                     time: d.time
                 });
             });
 
-            if (uniqueTypes.size > 0) {
-                const sensorId = Utils.getSensorId(sensor);
-                const toggleDiv = document.createElement('div') as HTMLDivElement;
-                toggleDiv.className = 'property-toggles';
-
-                uniqueTypes.forEach((meta, id) => {
-                    const uniqueId = `${uniqueIdPrefix}-${id}`;
-                    // We use the Garbage_id as the property key for retrieval later
-
-                    const row = document.createElement('div') as HTMLDivElement;
-                    row.className = 'data-row toggle-row';
-                    row.innerHTML = `
-                        <div class="prop-label" style="border-left: 3px solid ${meta.color}; padding-left:5px; flex: 1;">
-                            ${meta.name}
-                        </div>
-                        
-                        <div class="prop-additional">
-                            <div>${meta.weight} ${meta.weight_unit}</div>
-                            <div><small>${meta.time}</small></div>
-                        </div>
-                       
-                        <input type="checkbox" id="${uniqueId}" 
-                               data-property="${id}" 
-                               data-sensor-id="${sensorId}" 
-                               class="chart-toggle-checkbox" />
-                        <label for="${uniqueId}" class="chart-toggle-btn"><span class="icon-chart-bar"></span></label>
-                    `;
-                    toggleDiv.appendChild(row);
-                });
-
-                container.appendChild(toggleDiv);
-
-                toggleDiv.querySelectorAll('input').forEach(box => {
-                    box.addEventListener('change', onChartRequest);
-                });
-            }
-        }
-    }
-
-    getChartData(sensor: SensorProperties, property: string): ChartDataset | null {
-        const data = sensor.data;
-        if (!data) {
-            return null;
-        }
-
-        // Filter data for the specific garbage type
-        const points = data.filter(d => d.Garbage_id === property);
-
-        if (points.length === 0) {
-            return null;
-        }
-
-        // Sort by time
-        // points.sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
-        const values = points.map(d => parseFloat(d.Garbage_Weight));
-        const times = points.map(d => d.time);
-
-        // Metadata from first point
-        const meta = points[0];
-
-        return {
-            label: meta.Garbage_name,
-            values: values,
-            times: times,
-            unit: meta.Garbage_Weight_type || t('kg', this.currentLang),
-        };
-    }
-
-    private addGeoJsonToLayer(inputData: GeoJSONInput, options: { color: string }) {
-        let features: GeoFeature[] = Array.isArray(inputData) ? inputData : inputData.features || [];
-
-        L.geoJSON(features, {
-            pointToLayer: (_feature: GeoFeature, latlng: any) => {
-                const iconClass = "icon-recycle";
-
-                const iconHtml = `
-                    <div class="custom-pin-marker" style="background-color: ${options.color};">
-                        <i class="${iconClass}"></i>
-                    </div>
+            uniqueTypes.forEach((info) => {
+                const row = document.createElement('div') as HTMLDivElement;
+                row.className = 'data-row';
+                row.innerHTML = `
+                    <span class="waste-dot" style="background:${info.color}"></span>
+                    <span class="prop-label">${info.name}:</span>
+                    <span class="prop-value">${info.weight} ${info.weight_unit}</span>
+                    <span class="prop-additional">${info.time}</span>
                 `;
+                container.appendChild(row);
+            });
+        }
+    }
 
-                return L.marker(latlng, {
-                    icon: L.divIcon({
-                        className: 'custom-pin-wrapper',
-                        html: iconHtml,
-                        iconSize: [30, 30],
-                        iconAnchor: [15, 30], // Anchors the bottom tip of the pin to the coordinate
-                        popupAnchor: [0, -32] // Opens the popup right above the pin
-                    })
-                });
-            },
-            onEachFeature: (feature: GeoFeature, layer: any) => {
-                const props = feature.properties;
-                layer.bindPopup(`<div class="marker-popup-hover"><h4>${props.name}</h4><p>${props.additional_info.address}</p></div>`, {
-                    closeButton: false,
-                    offset: L.point(0, 0)
-                });
-
-                layer.on('mouseover', (e: any) => { e.target.openPopup(); });
-                layer.on('mouseout', (e: any) => { e.target.closePopup(); });
-
-                layer.on('click', () => {
-                    if (this.onPin) {
-                        this.onPin(props);
-                    }
-                });
-            }
-        }).addTo(this.layer);
+    getChartData(_sensor: SensorProperties, _property: string): ChartDataset | null {
+        return null;
     }
 }

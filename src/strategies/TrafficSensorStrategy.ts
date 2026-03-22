@@ -1,31 +1,32 @@
-import { IDetailsStrategy } from './IDetailsStrategy.js';
-import {ChartDataset, FilterGeometry, GeoFeature, GeoJSONInput, SensorProperties, SupportedLanguage} from '../Types.js';
+// src/strategies/TrafficSensorStrategy.ts
+import { BasePointStrategy } from './BasePointStrategy.js';
+import { ChartDataset, SensorProperties } from '../Types.js';
 import { Utils } from '../Utils.js';
-import {t} from "../Translations.js";
+import { t } from '../Translations.js';
 
-declare const L: any;
-
-export class TrafficSensorStrategy implements IDetailsStrategy {
+export class TrafficSensorStrategy extends BasePointStrategy {
     public name = 'traffic_sensor';
     public checkbox_id = 'toggle-traffic';
-    public layerOptions: { translate_name_key: string, color: string } = { translate_name_key: 'layer_traffic', color: "#e74c3c" };
-    private layer: any; // L.LayerGroup
-    private map: any;
-    private onPin: ((sensor: SensorProperties) => void) | undefined;
-    private currentLang: SupportedLanguage = 'bg'; // Default fallback
-    private cachedData: any[] = [];
+    public layerOptions = { translate_name_key: 'layer_traffic', color: '#e74c3c' };
 
-    initialize(map: any, onPin: (sensor: SensorProperties) => void): void {
-        this.map = map;
-        this.onPin = onPin;
-        this.layer = L.layerGroup();
+    protected getApiUrl(lang: string): string {
+        // Fallback — used by BasePointStrategy.loadData only when no options are passed.
+        // For the date-range variant, loadData is overridden below.
+        const { start, end } = this.defaultDateRange();
+        return `/api/traffic?lang=${lang}&start_date=${start}&end_date=${end}`;
     }
 
-    getLayer(): any {
-        return this.layer;
+    protected getTimestampElementId(): string {
+        return 'traffic-time';
     }
 
-    async loadData(lang: string, options?: { start_date?: string, end_date?: string }): Promise<void> {
+    protected getIconClass(): string {
+        return 'icon-car';
+    }
+
+    // ── Custom loadData: validates date params before fetching ─────────────────
+
+    override async loadData(lang: string, options?: { start_date?: string; end_date?: string }): Promise<void> {
         if (!this.layer) {
             return;
         }
@@ -38,49 +39,33 @@ export class TrafficSensorStrategy implements IDetailsStrategy {
             return;
         }
 
-        this.currentLang = lang as SupportedLanguage;
+        this.currentLang = lang as any;
         this.layer.clearLayers();
-        Utils.updateTimestampUI('traffic-time', t('loading', this.currentLang));
+        Utils.updateTimestampUI(this.getTimestampElementId(), t('loading', this.currentLang));
 
         try {
-            const query = `?lang=${lang}&start_date=${dateParams.start}&end_date=${dateParams.end}`;
-            const res = await fetch(`/api/traffic${query}`);
+            const url = `/api/traffic?lang=${lang}&start_date=${dateParams.start}&end_date=${dateParams.end}`;
+            const res = await fetch(url);
 
             if (!res.ok) {
                 throw new Error(`${res.status}`);
             }
 
-            Utils.updateTimestampUI('traffic-time', new Date(res.headers.get('X-Last-Updated') || new Date()));
+            Utils.updateTimestampUI(
+                this.getTimestampElementId(),
+                new Date(res.headers.get('X-Last-Updated') || new Date())
+            );
+
             const data = await res.json();
             Utils.tagDataWithStrategy(data, this.name);
             this.cachedData = Array.isArray(data) ? data : data.features || [];
-            this.applyRegionFilter(null); // Initially with no filter
-            this.addGeoJsonToLayer(data, this.layerOptions);
+            this.applyRegionFilter(null);
         } catch (err) {
             console.error('Traffic load error:', err);
         }
     }
 
-    applyRegionFilter(filterGeometry: FilterGeometry | null): void {
-        if (!this.layer) {
-            return;
-        }
-
-        this.layer.clearLayers();
-
-        // Filter the cached data
-        const filteredFeatures = this.cachedData.filter(feature => {
-            // Ensure the feature has geometry
-            if (!feature.geometry || !feature.geometry.coordinates) {
-                return false;
-            }
-
-            return Utils.isPointInPolygon(feature.geometry.coordinates, filterGeometry);
-        });
-
-        // Re-use the existing addGeoJsonToLayer logic
-        this.addGeoJsonToLayer(filteredFeatures, this.layerOptions);
-    }
+    // ── Card ──────────────────────────────────────────────────────────────────
 
     renderCardContent(
         container: HTMLElement,
@@ -93,22 +78,24 @@ export class TrafficSensorStrategy implements IDetailsStrategy {
             return;
         }
 
-        const sortedForDisplay = [...sensor.data].sort((a, b) => {
-            return this.parseTrafficDate(a.time) - this.parseTrafficDate(b.time);
-        });
-        const lastItem = sortedForDisplay[sortedForDisplay.length - 1];
-
-        // const lastItem = sensor.data[sensor.data.length - 1];
+        const sorted = [...sensor.data].sort((a, b) =>
+            this.parseTrafficDate(a.time) - this.parseTrafficDate(b.time)
+        );
+        const lastItem = sorted[sorted.length - 1];
 
         if (lastItem) {
             container.innerHTML = `
                 <div class="data-row">
-                    <span class="prop-label">${t('car_count', this.currentLang)}:</span> 
+                    <span class="prop-label">${t('car_count', this.currentLang)}:</span>
                     <span class="prop-value">${lastItem.car_count}</span>
                 </div>
                 <div class="data-row">
-                    <span class="prop-label">${t('car_speed', this.currentLang)}:</span> 
-                    <span class="prop-value">${typeof lastItem.car_speed === 'undefined' ? t('no_data', this.currentLang) : lastItem.car_speed + ' ' + t('km_h', this.currentLang)} </span>
+                    <span class="prop-label">${t('car_speed', this.currentLang)}:</span>
+                    <span class="prop-value">${
+                        typeof lastItem.car_speed === 'undefined'
+                            ? t('no_data', this.currentLang)
+                            : lastItem.car_speed + ' ' + t('km_h', this.currentLang)
+                    }</span>
                 </div>
                 <div class="data-row">
                     <span class="timestamp">${lastItem.time}</span>
@@ -123,21 +110,25 @@ export class TrafficSensorStrategy implements IDetailsStrategy {
         const createToggleHtml = (key: string, label: string) => {
             const uniqueId = `${uniqueIdPrefix}-${key}`;
             return `
-            <div class="data-row toggle-row">
-                <span class="prop-label">${label}</span>
-                <input type="checkbox" id="${uniqueId}" 
-                       data-property="${key}" 
-                       data-sensor-id="${sensorId}" 
-                       class="chart-toggle-checkbox" />
-                <label for="${uniqueId}" class="chart-toggle-btn"><span class="icon-chart-bar"></span></label>
-            </div>
+                <div class="data-row toggle-row">
+                    <span class="prop-label">${label}</span>
+                    <input type="checkbox" id="${uniqueId}"
+                           data-property="${key}"
+                           data-sensor-id="${sensorId}"
+                           class="chart-toggle-checkbox" />
+                    <label for="${uniqueId}" class="chart-toggle-btn"><span class="icon-chart-bar"></span></label>
+                </div>
             `;
         };
 
-        toggleDiv.innerHTML = createToggleHtml('car_count', t('car_count', this.currentLang)) + createToggleHtml('car_speed', t('car_speed', this.currentLang));
+        toggleDiv.innerHTML =
+            createToggleHtml('car_count', t('car_count', this.currentLang)) +
+            createToggleHtml('car_speed', t('car_speed', this.currentLang));
+
         container.appendChild(toggleDiv);
-        const boxes = toggleDiv.querySelectorAll('input');
-        boxes.forEach(box => box.addEventListener('change', onChartRequest));
+        toggleDiv.querySelectorAll('input').forEach(box =>
+            box.addEventListener('change', onChartRequest)
+        );
     }
 
     getChartData(sensor: SensorProperties, property: string): ChartDataset | null {
@@ -145,132 +136,71 @@ export class TrafficSensorStrategy implements IDetailsStrategy {
             return null;
         }
 
-        const dataPoints = sensor.data.map(item => {
-            const timestamp = this.parseTrafficDate(item.time);
-            const rawValue = property === 'car_speed' ? item.car_speed : item.car_count;
+        const dataPoints = sensor.data
+            .map(item => {
+                const timestamp = this.parseTrafficDate(item.time);
+                return {
+                    timestamp,
+                    isoTime: new Date(timestamp).toISOString(),
+                    value: parseFloat(
+                        (property === 'car_speed' ? item.car_speed : item.car_count) || '0'
+                    )
+                };
+            })
+            .sort((a, b) => a.timestamp - b.timestamp);
 
-            return {
-                timestamp: timestamp,
-                isoTime: new Date(timestamp).toISOString(),
-                value: parseFloat(rawValue || '0')
-            };
-        });
-
-        dataPoints.sort((a, b) => a.timestamp - b.timestamp);
-        const sortedValues = dataPoints.map(d => d.value);
-        const sortedTimes = dataPoints.map(d => d.isoTime);
-        const label = property === 'car_speed' ? t('speed', this.currentLang) : t('car_count', this.currentLang);
-        const unit = property === 'car_speed' ? t('km_h', this.currentLang) : t('cars', this.currentLang);
-
-        return { label: label, values: sortedValues, times: sortedTimes, unit: unit };
+        return {
+            label: property === 'car_speed' ? t('speed', this.currentLang) : t('car_count', this.currentLang),
+            values: dataPoints.map(d => d.value),
+            times: dataPoints.map(d => d.isoTime),
+            unit: property === 'car_speed' ? t('km_h', this.currentLang) : t('cars', this.currentLang)
+        };
     }
 
-    private addGeoJsonToLayer(inputData: GeoJSONInput, options: { color: string }) {
-        let features: GeoFeature[] = Array.isArray(inputData) ? inputData : inputData.features || [];
+    // ── Date helpers ──────────────────────────────────────────────────────────
 
-        L.geoJSON(features, {
-            pointToLayer: (_feature: GeoFeature, latlng: any) => {
-                const iconClass = "icon-car";
-
-                const iconHtml = `
-                    <div class="custom-pin-marker" style="background-color: ${options.color};">
-                        <i class="${iconClass}"></i>
-                    </div>
-                `;
-
-                return L.marker(latlng, {
-                    icon: L.divIcon({
-                        className: 'custom-pin-wrapper',
-                        html: iconHtml,
-                        iconSize: [30, 30],
-                        iconAnchor: [15, 30], // Anchors the bottom tip of the pin to the coordinate
-                        popupAnchor: [0, -32] // Opens the popup right above the pin
-                    })
-                });
-            },
-            onEachFeature: (feature: GeoFeature, layer: any) => {
-                const props = feature.properties;
-                layer.bindPopup(`<div class="marker-popup-hover"><h4>${props.name}</h4><p>${t('click_to_pin', this.currentLang)}</p></div>`, {
-                    closeButton: false,
-                    offset: L.point(0, 0)
-                });
-
-                layer.on('mouseover', (e: any) => { e.target.openPopup(); });
-                layer.on('mouseout', (e: any) => { e.target.closePopup(); });
-
-                layer.on('click', () => {
-                    if (this.onPin) {
-                        this.onPin(props);
-                    }
-                });
-            }
-        }).addTo(this.layer);
-    }
-
-    /**
-     * Handles default logic and validation constraints
-     */
-    private resolveDateParams(options?: { start_date?: string, end_date?: string }): { start?: string, end?: string, error?: string } {
+    private defaultDateRange(): { start: string; end: string } {
         const now = new Date();
-        let start: Date;
-        let end: Date;
+        const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        return {
+            start: Utils.formatDateToLocal(start),
+            end: Utils.formatDateToLocal(now)
+        };
+    }
 
-        // Default End: Current Date
-        if (options?.end_date) {
-            end = new Date(options.end_date);
-        } else {
-            end = now;
-        }
+    private resolveDateParams(
+        options?: { start_date?: string; end_date?: string }
+    ): { start?: string; end?: string; error?: string } {
+        const now = new Date();
+        const end = options?.end_date ? new Date(options.end_date) : now;
+        const start = options?.start_date
+            ? new Date(options.start_date)
+            : new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
-        // Default Start: First day of previous month
-        if (options?.start_date) {
-            start = new Date(options.start_date);
-        } else {
-            start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        }
-
-        // Validate Valid Dates
         if (isNaN(start.getTime()) || isNaN(end.getTime())) {
             return { error: t('invalid_date_format', this.currentLang) };
         }
 
-        // Validate Logic: Range Check
-        const diffTime = Math.abs(end.getTime() - start.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        const approximateMonths = diffDays / 30;
+        const diffDays = Math.ceil(Math.abs(end.getTime() - start.getTime()) / 86_400_000);
 
-        if (diffDays < 2) {
-            return { error: t('min_date_range', this.currentLang) };
-        }
-        if (approximateMonths > 6) {
-            return { error: t('max_date_range', this.currentLang) };
-        }
-        if (start > end) {
-            return { error: t('start_date_after_end_date', this.currentLang) };
-        }
+        if (diffDays < 2) return { error: t('min_date_range', this.currentLang) };
+        if (diffDays / 30 > 6) return { error: t('max_date_range', this.currentLang) };
+        if (start > end) return { error: t('start_date_after_end_date', this.currentLang) };
 
         return { start: Utils.formatDateToLocal(start), end: Utils.formatDateToLocal(end) };
     }
 
     private parseTrafficDate(raw: string): number {
-        if (!raw) {
-            return 0;
-        }
-
+        if (!raw) return 0;
         const clean = raw.replace(/_/g, ' ').trim();
-        const match = clean.match(/^(\d{1,2})[\s\.\-](\d{1,2})[\s\.\-](\d{4})\s+(\d{1,2})[:\s](\d{1,2})(?:[:\s](\d{1,2}))?/);
-
+        const match = clean.match(
+            /^(\d{1,2})[\s.\-](\d{1,2})[\s.\-](\d{4})\s+(\d{1,2})[:\s](\d{1,2})(?:[:\s](\d{1,2}))?/
+        );
         if (match) {
-            const day = parseInt(match[1]);
-            const month = parseInt(match[2]) - 1;
-            const year = parseInt(match[3]);
-            const hour = parseInt(match[4]);
-            const minute = parseInt(match[5]);
-            const second = match[6] ? parseInt(match[6]) : 0;
-            return new Date(year, month, day, hour, minute, second).getTime();
+            const [, d, m, y, h, min, s] = match;
+            return new Date(+y, +m - 1, +d, +h, +min, s ? +s : 0).getTime();
         }
-
-        const fallbackTime = new Date(clean).getTime();
-        return isNaN(fallbackTime) ? 0 : fallbackTime;
+        const fallback = new Date(clean).getTime();
+        return isNaN(fallback) ? 0 : fallback;
     }
 }
