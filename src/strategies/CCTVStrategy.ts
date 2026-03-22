@@ -1,44 +1,46 @@
-import { IDetailsStrategy } from './IDetailsStrategy.js';
-import {ChartDataset, FilterGeometry, GeoFeature, GeoJSONInput, SensorProperties, SupportedLanguage} from '../Types.js';
-import { Utils } from "../Utils.js";
-import { t } from '../Translations.js';
+// src/strategies/CCTVStrategy.ts
+import { BasePointStrategy } from './BasePointStrategy.js';
+import { ChartDataset, GeoFeature, SensorProperties } from '../Types.js';
 
 declare const Hls: any;
-declare const L: any;
 
 interface ActivePlayer {
     hls: any;
     videoElement: HTMLVideoElement;
 }
 
-export class CCTVStrategy implements IDetailsStrategy {
+export class CCTVStrategy extends BasePointStrategy {
     public name = 'cctv';
     public checkbox_id = 'toggle-cctv';
-    public layerOptions: { translate_name_key: string, color: string } = { translate_name_key: 'layer_camera', color: "#2ecc71" };
-    private layer: any;
-    private onPin: ((sensor: SensorProperties) => void) | undefined;
+    public layerOptions = { translate_name_key: 'layer_camera', color: '#2ecc71' };
+
     private static activePlayers: Map<string, ActivePlayer> = new Map();
-    private currentLang: SupportedLanguage = 'bg'; // Default fallback
-    private cachedData: any[] = [];
 
-    initialize(map: any, onPin: (sensor: SensorProperties) => void): void {
-        this.onPin = onPin;
-        this.layer = L.layerGroup();
+    protected getApiUrl(lang: string): string {
+        return `/api/cctv?lang=${lang}`;
+    }
 
-        // Scaling function
+    protected getTimestampElementId(): string {
+        return 'cctv-time';
+    }
+
+    protected getIconClass(): string {
+        return 'icon-videocam';
+    }
+
+    // ── Custom zoom-scale setup ────────────────────────────────────────────────
+
+    override initialize(map: any, onPin: (sensor: SensorProperties) => void): void {
+        super.initialize(map, onPin);
+
         const updateZoomScale = () => {
             const zoom = map.getZoom();
-
-            // Calculate Scale
-            // At zoom 15 it's 1.0. At zoom 18 it's ~2.7.
             let scale = Math.pow(1.4, zoom - 15);
             scale = Math.max(0.1, Math.min(scale, 3.0));
 
             const container = map.getContainer();
             container.style.setProperty('--cctv-zoom-scale', scale.toString());
 
-            // Level of Detail (LOD) Threshold
-            // If zoom is less than 15, we hide the cones to prevent clutter.
             if (zoom < 15) {
                 container.classList.add('cctv-lod-low');
             } else {
@@ -46,83 +48,86 @@ export class CCTVStrategy implements IDetailsStrategy {
             }
         };
 
-        // Attach listener to map
         map.on('zoomend', updateZoomScale);
-
-        // Initial call to set correct size on load
         updateZoomScale();
     }
 
-    getLayer(): any {
-        return this.layer;
+    // ── Custom marker: camera dot + directional cone ───────────────────────────
+
+    protected override buildMarkerHtml(feature: GeoFeature): string {
+        const position = feature.properties.position || 0;
+        return `
+            <div class="cctv-root custom-pin-wrapper">
+                <div class="cctv-cone-scaler">
+                    <div class="cctv-rotator" style="transform: rotate(${position}deg)">
+                        <svg class="cctv-cone-svg" viewBox="0 0 100 100">
+                             <path d="M 50 50 L 30 15 A 40 40 0 0 1 70 15 Z" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="custom-pin-marker cctv-dot" style="background-color: ${this.layerOptions.color}">
+                    <i class="icon-videocam"></i>
+                </div>
+            </div>
+        `;
     }
 
-    async loadData(lang: string, options?: any): Promise<void> {
-        if (!this.layer) {
-            return;
-        }
+    // The CCTV marker uses a div wrapper class of its own, so override the layer icon too
+    protected override addGeoJsonToLayer(inputData: any): void {
+        const L = (globalThis as any).L;
+        const features: GeoFeature[] = Array.isArray(inputData)
+            ? inputData
+            : inputData.features || [];
 
-        this.currentLang = lang as SupportedLanguage;
-        this.layer.clearLayers();
-        Utils.updateTimestampUI('cctv-time', t('loading', this.currentLang));
+        L.geoJSON(features, {
+            pointToLayer: (feature: GeoFeature, latlng: any) => {
+                return L.marker(latlng, {
+                    icon: L.divIcon({
+                        className: 'cctv-icon-wrapper',
+                        html: this.buildMarkerHtml(feature),
+                        iconSize: [20, 20],
+                        iconAnchor: [10, 10]
+                    })
+                });
+            },
+            onEachFeature: (feature: GeoFeature, layer: any) => {
+                const props = feature.properties;
+                const title = props.publicname || props.name || 'Camera';
 
-        try {
-            const res = await fetch(`/api/cctv?lang=${lang}`);
+                layer.bindPopup(
+                    `<div class="marker-popup-hover"><h4>${title}</h4><p>${this.getPopupText(props)}</p></div>`,
+                    { closeButton: false, offset: L.point(0, 0) }
+                );
 
-            if (!res.ok) {
-                throw new Error(`${res.status}`);
+                layer.on('mouseover', (e: any) => { e.target.openPopup(); });
+                layer.on('mouseout', (e: any) => { e.target.closePopup(); });
+                layer.on('click', () => { this.onPin?.(props); });
             }
-
-            Utils.updateTimestampUI('cctv-time', new Date(res.headers.get('X-Last-Updated') || new Date()));
-            const data = await res.json();
-            Utils.tagDataWithStrategy(data, this.name);
-            this.cachedData = Array.isArray(data) ? data : data.features || [];
-            this.applyRegionFilter(null); // Initially with no filter
-            this.addGeoJsonToLayer(data, this.layerOptions);
-        } catch (err) {
-            console.error('CCTV load error:', err);
-        }
+        }).addTo(this.layer);
     }
 
-    applyRegionFilter(filterGeometry: FilterGeometry | null): void {
-        if (!this.layer) {
-            return;
-        }
-
-        this.layer.clearLayers();
-
-        // Filter the cached data
-        const filteredFeatures = this.cachedData.filter(feature => {
-            // Ensure the feature has geometry
-            if (!feature.geometry || !feature.geometry.coordinates) {
-                return false;
-            }
-
-            return Utils.isPointInPolygon(feature.geometry.coordinates, filterGeometry);
-        });
-
-        // Re-use the existing addGeoJsonToLayer logic
-        this.addGeoJsonToLayer(filteredFeatures, this.layerOptions);
-    }
+    // ── Card rendering: HLS video player ──────────────────────────────────────
 
     renderCardContent(
         container: HTMLElement,
         sensor: SensorProperties,
         uniqueIdPrefix: string,
-        onChartRequest: () => void
+        _onChartRequest: () => void
     ): void {
         CCTVStrategy.garbageCollect();
         container.innerHTML = '';
-        const streamUrl = sensor.video_url2 || '';
 
+        const streamUrl = sensor.video_url2 || '';
         if (!streamUrl) {
             container.innerHTML = '<p>No video feed available.</p>';
             return;
         }
 
-        const sensorId = (sensor.id || sensor.publicname || `cam_${uniqueIdPrefix}`).toString().replace(/[^a-zA-Z0-9]/g, "_");
-        const posterUrl = sensor.pic_url || null;
+        const sensorId = (sensor.id || sensor.publicname || `cam_${uniqueIdPrefix}`)
+            .toString()
+            .replace(/[^a-zA-Z0-9]/g, '_');
 
+        const posterUrl = sensor.pic_url || null;
         CCTVStrategy.destroyPlayer(sensorId);
 
         container.innerHTML = `
@@ -131,16 +136,18 @@ export class CCTVStrategy implements IDetailsStrategy {
             </div>
         `;
 
-        const {videoWrapper, video} = this.createVideo(sensorId, posterUrl);
+        const { videoWrapper, video } = this.createVideo(sensorId, posterUrl);
         videoWrapper.appendChild(video);
         container.appendChild(videoWrapper);
 
         this.initPlayer(video, streamUrl, sensorId);
     }
 
-    getChartData(sensor: SensorProperties, property: string): ChartDataset | null {
+    getChartData(_sensor: SensorProperties, _property: string): ChartDataset | null {
         return null;
     }
+
+    // ── Static player lifecycle management ────────────────────────────────────
 
     public static garbageCollect(): void {
         CCTVStrategy.activePlayers.forEach((player, id) => {
@@ -169,62 +176,9 @@ export class CCTVStrategy implements IDetailsStrategy {
         CCTVStrategy.activePlayers.clear();
     }
 
-    private addGeoJsonToLayer(inputData: GeoJSONInput, options: { color: string }) {
-        let features: GeoFeature[] = Array.isArray(inputData) ? inputData : inputData.features || [];
+    // ── Private video helpers ─────────────────────────────────────────────────
 
-        L.geoJSON(features, {
-            pointToLayer: (_feature: GeoFeature, latlng: any) => {
-                const position = _feature.properties.position || 0;
-
-                // .cctv-zoom-wrapper wrapper reads the --cctv-zoom-scale variable.
-                // The inner .cctv-container handles the rotation.
-                const html = `
-                    <div class="cctv-root custom-pin-wrapper">
-                        <div class="cctv-cone-scaler">
-                            <div class="cctv-rotator" style="transform: rotate(${position}deg)">
-                                <svg class="cctv-cone-svg" viewBox="0 0 100 100">
-                                     <path d="M 50 50 L 30 15 A 40 40 0 0 1 70 15 Z" />
-                                </svg>
-                            </div>
-                        </div>
-                        
-                        <div class="custom-pin-marker cctv-dot" style="background-color: ${options.color}">
-                            <i class="icon-videocam"></i>
-                        </div>
-                    </div>
-                `;
-
-                return L.marker(latlng, {
-                    icon: L.divIcon({
-                        className: 'cctv-icon-wrapper',
-                        html: html,
-                        iconSize: [20, 20],
-                        iconAnchor: [10, 10] // Center it ([width/2, height/2])
-                    })
-                });
-            },
-            onEachFeature: (feature: GeoFeature, layer: any) => {
-                const props = feature.properties;
-                const title = props.publicname || t('layer_camera', this.currentLang);
-
-                layer.bindPopup(`<div class="marker-popup-hover"><h4>${title}</h4><p>${t('click_to_pin', this.currentLang)}</p></div>`, {
-                    closeButton: false,
-                    offset: L.point(0, 0)
-                });
-
-                layer.on('mouseover', (e: any) => { e.target.openPopup(); });
-                layer.on('mouseout', (e: any) => { e.target.closePopup(); });
-
-                layer.on('click', () => {
-                    if (this.onPin) {
-                        this.onPin(props);
-                    }
-                });
-            }
-        }).addTo(this.layer);
-    }
-
-    private createVideo(sensorId: string, posterUrl: string|null) {
+    private createVideo(sensorId: string, posterUrl: string | null) {
         const videoWrapper = document.createElement('div') as HTMLDivElement;
         videoWrapper.className = 'cctv-video-wrapper';
 
@@ -238,7 +192,7 @@ export class CCTVStrategy implements IDetailsStrategy {
             video.poster = posterUrl;
         }
 
-        return {videoWrapper, video};
+        return { videoWrapper, video };
     }
 
     private initPlayer(video: HTMLVideoElement, url: string, sensorId: string): void {
@@ -252,14 +206,10 @@ export class CCTVStrategy implements IDetailsStrategy {
             });
 
             hls.attachMedia(video);
-            hls.on(Hls.Events.MEDIA_ATTACHED, () => {
-                hls.loadSource(url);
-            });
-
+            hls.on(Hls.Events.MEDIA_ATTACHED, () => { hls.loadSource(url); });
             hls.on(Hls.Events.MANIFEST_PARSED, () => {
                 video.play().catch(() => console.log('Autoplay prevented.'));
             });
-
             hls.on(Hls.Events.ERROR, (_event: any, data: any) => {
                 if (data.fatal) {
                     CCTVStrategy.destroyPlayer(sensorId);
