@@ -1,6 +1,8 @@
 // src/strategies/CCTVStrategy.ts
 import { BasePointStrategy } from './BasePointStrategy.js';
-import { ChartDataset, GeoFeature, SensorProperties } from '../Types.js';
+import {ChartDataset, GeoFeature, GeoJSONInput, SensorProperties} from '../Types.js';
+declare const L: typeof import('leaflet');
+import type * as GeoJSON from 'geojson'
 
 declare const Hls: any;
 
@@ -73,35 +75,37 @@ export class CCTVStrategy extends BasePointStrategy {
     }
 
     // The CCTV marker uses a div wrapper class of its own, so override the layer icon too
-    protected override addGeoJsonToLayer(inputData: any): void {
-        const L = (globalThis as any).L;
-        const features: GeoFeature[] = Array.isArray(inputData)
-            ? inputData
-            : inputData.features || [];
+    protected override addGeoJsonToLayer(inputData: GeoJSONInput | GeoFeature[]): void {
+        const features: GeoFeature[] = Array.isArray(inputData) ? (inputData as GeoFeature[]) : (inputData as { features: GeoFeature[] }).features || [];
 
         L.geoJSON(features, {
-            pointToLayer: (feature: GeoFeature, latlng: any) => {
+            pointToLayer: (feature: GeoJSON.Feature, latlng: L.LatLng): L.Layer => {
                 return L.marker(latlng, {
                     icon: L.divIcon({
                         className: 'cctv-icon-wrapper',
-                        html: this.buildMarkerHtml(feature),
+                        html: this.buildMarkerHtml(feature as GeoFeature),
                         iconSize: [20, 20],
                         iconAnchor: [10, 10]
                     })
                 });
             },
-            onEachFeature: (feature: GeoFeature, layer: any) => {
-                const props = feature.properties;
+            onEachFeature: (feature: GeoJSON.Feature, layer: L.Layer): void => {
+                const props = (feature as GeoFeature).properties;
                 const title = props.publicname || props.name || 'Camera';
 
-                layer.bindPopup(
+                (layer as L.Marker).bindPopup(
                     `<div class="marker-popup-hover"><h4>${title}</h4><p>${this.getPopupText(props)}</p></div>`,
                     { closeButton: false, offset: L.point(0, 0) }
                 );
-
-                layer.on('mouseover', (e: any) => { e.target.openPopup(); });
-                layer.on('mouseout', (e: any) => { e.target.closePopup(); });
-                layer.on('click', () => { this.onPin?.(props); });
+                layer.on('mouseover', (e: L.LeafletEvent) => {
+                    (e.target as L.Marker).openPopup();
+                });
+                layer.on('mouseout', (e: L.LeafletEvent) => {
+                    (e.target as L.Marker).closePopup();
+                });
+                layer.on('click', () => {
+                    this.onPin?.(props);
+                });
             }
         }).addTo(this.layer);
     }
@@ -123,10 +127,7 @@ export class CCTVStrategy extends BasePointStrategy {
             return;
         }
 
-        const sensorId = (sensor.id || sensor.publicname || `cam_${uniqueIdPrefix}`)
-            .toString()
-            .replace(/[^a-zA-Z0-9]/g, '_');
-
+        const sensorId = (sensor.id || sensor.publicname || `cam_${uniqueIdPrefix}`).toString().replace(/[^a-zA-Z0-9]/g, '_');
         const posterUrl = sensor.pic_url || null;
         CCTVStrategy.destroyPlayer(sensorId);
 
