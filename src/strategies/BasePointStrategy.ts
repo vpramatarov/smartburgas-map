@@ -125,13 +125,17 @@ export abstract class BasePointStrategy implements IDetailsStrategy {
             if (!feature.geometry || !feature.geometry.coordinates) {
                 return false;
             }
-            let pt: Position = [0, 0];
-            if (feature.geometry.type === 'Polygon') {
+            let pt: Position;
+            if (feature.geometry.type === 'Point') {
+                pt = feature.geometry.coordinates as Position;
+            } else if (feature.geometry.type === 'Polygon') {
                 const coords = feature.geometry.coordinates as Position[][];
                 pt = coords[0][0];
             } else if (feature.geometry.type === 'MultiPolygon') {
                 const coords = feature.geometry.coordinates as Position[][][];
                 pt = coords[0][0][0];
+            } else {
+                return false;
             }
 
             return Utils.isPointInPolygon(pt, filterGeometry);
@@ -148,7 +152,7 @@ export abstract class BasePointStrategy implements IDetailsStrategy {
                 return L.marker(latlng, {
                     icon: L.divIcon({
                         className: 'custom-pin-wrapper',
-                        html: this.buildMarkerHtml(feature as unknown as GeoFeature),
+                        html: this.buildMarkerHtml(feature as GeoFeature),
                         iconSize: [30, 30],
                         iconAnchor: [15, 30],
                         popupAnchor: [0, -32]
@@ -156,7 +160,7 @@ export abstract class BasePointStrategy implements IDetailsStrategy {
                 });
             },
             onEachFeature: (feature: GeoJSON.Feature, layer: L.Layer): void => {
-                const props = (feature as unknown as GeoFeature).properties;
+                const props = (feature as GeoFeature).properties;
                 const title = String(props.name || props.publicname || this.name);
 
                 (layer as L.Marker).bindPopup(
@@ -177,4 +181,5 @@ export abstract class BasePointStrategy implements IDetailsStrategy {
         }).addTo(this.layer);
     }
 }
+
 
