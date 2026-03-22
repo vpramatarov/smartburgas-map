@@ -1,6 +1,6 @@
 // src/strategies/TrafficSensorStrategy.ts
 import { BasePointStrategy } from './BasePointStrategy.js';
-import { ChartDataset, SensorProperties } from '../Types.js';
+import { ChartDataset, SensorProperties, SupportedLanguage } from '../Types.js';
 import { Utils } from '../Utils.js';
 import { t } from '../Translations.js';
 
@@ -24,7 +24,7 @@ export class TrafficSensorStrategy extends BasePointStrategy {
         return 'icon-car';
     }
 
-    // ── Custom loadData: validates date params before fetching ─────────────────
+    // ── Custom loadData: validates date params before fetching
 
     override async loadData(lang: string, options?: { start_date?: string; end_date?: string }): Promise<void> {
         if (!this.layer) {
@@ -34,12 +34,12 @@ export class TrafficSensorStrategy extends BasePointStrategy {
         const dateParams = this.resolveDateParams(options);
 
         if (dateParams.error) {
-            alert(`Traffic Data Error: ${dateParams.error}`);
-            console.error(dateParams.error);
+            console.error('Traffic date validation error:', dateParams.error);
+            Utils.updateTimestampUI(this.getTimestampElementId(), `! ${dateParams.error}`);
             return;
         }
 
-        this.currentLang = lang as any;
+        this.currentLang = lang as SupportedLanguage;
         this.layer.clearLayers();
         Utils.updateTimestampUI(this.getTimestampElementId(), t('loading', this.currentLang));
 
@@ -65,7 +65,7 @@ export class TrafficSensorStrategy extends BasePointStrategy {
         }
     }
 
-    // ── Card ──────────────────────────────────────────────────────────────────
+    // Card
 
     renderCardContent(
         container: HTMLElement,
@@ -157,7 +157,7 @@ export class TrafficSensorStrategy extends BasePointStrategy {
         };
     }
 
-    // ── Date helpers ──────────────────────────────────────────────────────────
+    // ── Date helpers
 
     private defaultDateRange(): { start: string; end: string } {
         const now = new Date();
@@ -173,9 +173,7 @@ export class TrafficSensorStrategy extends BasePointStrategy {
     ): { start?: string; end?: string; error?: string } {
         const now = new Date();
         const end = options?.end_date ? new Date(options.end_date) : now;
-        const start = options?.start_date
-            ? new Date(options.start_date)
-            : new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const start = options?.start_date ? new Date(options.start_date) : new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
         if (isNaN(start.getTime()) || isNaN(end.getTime())) {
             return { error: t('invalid_date_format', this.currentLang) };
@@ -183,9 +181,15 @@ export class TrafficSensorStrategy extends BasePointStrategy {
 
         const diffDays = Math.ceil(Math.abs(end.getTime() - start.getTime()) / 86_400_000);
 
-        if (diffDays < 2) return { error: t('min_date_range', this.currentLang) };
-        if (diffDays / 30 > 6) return { error: t('max_date_range', this.currentLang) };
-        if (start > end) return { error: t('start_date_after_end_date', this.currentLang) };
+        if (diffDays < 2) {
+            return {error: t('min_date_range', this.currentLang)};
+        }
+        if (diffDays / 30 > 6) {
+            return {error: t('max_date_range', this.currentLang)};
+        }
+        if (start > end) {
+            return {error: t('start_date_after_end_date', this.currentLang)};
+        }
 
         return { start: Utils.formatDateToLocal(start), end: Utils.formatDateToLocal(end) };
     }
