@@ -5,6 +5,7 @@ import { t } from '../Translations.js';
 import { Utils } from '../Utils.js';
 
 declare const L: typeof import('leaflet');
+import type * as GeoJSON from 'geojson';
 
 export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
     public parentStrategy?: ISpatialFilterStrategy;
@@ -153,7 +154,7 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
         }
 
         this.geoJsonLayer = L.geoJSON(features as any, {
-            style: (feature?: L.Feature): L.PathOptions => {
+            style: (feature?: GeoJSON.Feature): L.PathOptions => {
                 const props = (feature as unknown as GeoFeature)?.properties;
                 const isGreen = props?.ZoneType === 1;
                 const color = isGreen ? '#2ecc71' : '#3498db';
@@ -165,7 +166,7 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
 
                 return { color, weight: 2, opacity: 0.8, fillColor: color, fillOpacity: 0.2, dashArray: '3, 6' };
             },
-            onEachFeature: (feature: L.Feature, layer: L.Layer): void => {
+            onEachFeature: (feature: GeoJSON.Feature, layer: L.Layer): void => {
                 const geoFeature = feature as unknown as GeoFeature;
                 const props = geoFeature.properties;
                 if (!props) return;
@@ -327,3 +328,4 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
         return `paid-zone-${name.replace(/\s+/g, '-')}`;
     }
 }
+

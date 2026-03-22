@@ -13,6 +13,7 @@ import { Utils } from '../Utils.js';
 import { t } from '../Translations.js';
 
 declare const L: typeof import('leaflet');
+import type * as GeoJSON from 'geojson';
 
 /**
  * Abstract base class for all standard point-marker map strategies.
@@ -124,17 +125,13 @@ export abstract class BasePointStrategy implements IDetailsStrategy {
             if (!feature.geometry || !feature.geometry.coordinates) {
                 return false;
             }
-            let pt: Position;
-            if (feature.geometry.type === 'Point') {
-                pt = feature.geometry.coordinates as Position;
-            } else if (feature.geometry.type === 'Polygon') {
+            let pt: Position = [0, 0];
+            if (feature.geometry.type === 'Polygon') {
                 const coords = feature.geometry.coordinates as Position[][];
                 pt = coords[0][0];
             } else if (feature.geometry.type === 'MultiPolygon') {
                 const coords = feature.geometry.coordinates as Position[][][];
                 pt = coords[0][0][0];
-            } else {
-                return false;
             }
 
             return Utils.isPointInPolygon(pt, filterGeometry);
@@ -147,7 +144,7 @@ export abstract class BasePointStrategy implements IDetailsStrategy {
         const features: GeoFeature[] = Array.isArray(inputData) ? (inputData as GeoFeature[]) : (inputData as { features: GeoFeature[] }).features || [];
 
         L.geoJSON(features as any, {
-            pointToLayer: (feature: L.Feature, latlng: L.LatLng): L.Layer => {
+            pointToLayer: (feature: GeoJSON.Feature, latlng: L.LatLng): L.Layer => {
                 return L.marker(latlng, {
                     icon: L.divIcon({
                         className: 'custom-pin-wrapper',
@@ -158,7 +155,7 @@ export abstract class BasePointStrategy implements IDetailsStrategy {
                     })
                 });
             },
-            onEachFeature: (feature: L.Feature, layer: L.Layer): void => {
+            onEachFeature: (feature: GeoJSON.Feature, layer: L.Layer): void => {
                 const props = (feature as unknown as GeoFeature).properties;
                 const title = String(props.name || props.publicname || this.name);
 
