@@ -270,8 +270,30 @@ class SmartMap {
                         // But we load all on startup for now.
                         strategy.loadData(this.currentLang)
                         layer.addTo(this.map);
+
+                        // Un-mark any sensors from this strategy that were hidden
+                        [this.previewSensor, ...this.pinnedSensors].forEach(s => {
+                            if (s && s.strategy === strategyName) {
+                                s._hidden = false;
+                            }
+                        });
                     } else {
                         this.map.removeLayer(layer);
+
+                        // Mark any pinned/preview sensors from this strategy as hidden
+                        // so the side panel can show a warning banner instead of disappearing
+                        [this.previewSensor, ...this.pinnedSensors].forEach(s => {
+                            if (s && s.strategy === strategyName) {
+                                s._hidden = true;
+                            }
+                        });
+                    }
+
+                    // Refresh the panel to show/hide the warning banner
+                    const hasAffectedSensors = [this.previewSensor, ...this.pinnedSensors]
+                        .some(s => s && s.strategy === strategyName);
+                    if (hasAffectedSensors) {
+                        this.refreshPanel();
                     }
                 }
             });
@@ -557,5 +579,6 @@ class SmartMap {
 document.addEventListener('DOMContentLoaded', () => {
     new SmartMap();
 });
+
 
 

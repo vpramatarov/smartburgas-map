@@ -55,6 +55,9 @@ export const bg = {
     speed: 'Скорост',
     cars: 'коли',
 
+    // --- Hidden by filter ---
+    feature_hidden_by_filters: 'Обектът е скрит от активните филтри',
+
     // --- Validation ---
     invalid_date_format: 'Невалиден формат на датата.',
     min_date_range: 'Диапазонът от дати трябва да бъде поне 2 дни.',

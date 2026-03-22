@@ -134,10 +134,17 @@ export class CompositeDetailsStrategy {
             const body = document.createElement('div') as HTMLDivElement;
             body.className = 'sensor-card-body';
 
-            // Delegate content rendering to the specific strategy
-            strategy.renderCardContent(body, sensor, uniqueIdPrefix, () => {
-                this.updateChart(chartContainer, items, btnFullChart, noChartData);
-            });
+            if (sensor._hidden) {
+                const warning = document.createElement('p') as HTMLParagraphElement;
+                warning.className = 'sensor-hidden-warning';
+                warning.innerText = t('feature_hidden_by_filters', lang);
+                body.appendChild(warning);
+            } else {
+                // Delegate content rendering to the specific strategy
+                strategy.renderCardContent(body, sensor, uniqueIdPrefix, () => {
+                    this.updateChart(chartContainer, items, btnFullChart, noChartData);
+                });
+            }
 
             card.appendChild(body);
             container.appendChild(card);
