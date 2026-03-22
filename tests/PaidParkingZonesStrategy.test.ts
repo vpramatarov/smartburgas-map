@@ -36,15 +36,6 @@ describe('PaidParkingZonesStrategy Core Logic', () => {
         strategy.initialize({}, vi.fn());
     });
 
-    it('should correctly sanitize zone names into valid HTML IDs', () => {
-        // Access the private method for testing
-        const safeId = (strategy as any).getSafeId('Синя зона 10');
-        expect(safeId).toBe('paid-zone-Синя-зона-10');
-
-        const complexId = (strategy as any).getSafeId('  Green   Zone 2  ');
-        expect(complexId).toBe('paid-zone--Green-Zone-2-');
-    });
-
     it('should bypass the region filter if the geometry matches one of its own zones (Self-Filter Guard)', () => {
         const mockSelfGeometry = { type: 'Polygon', coordinates: [[[1, 2], [3, 4]]] };
 

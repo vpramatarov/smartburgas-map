@@ -169,3 +169,15 @@ describe('Utils.tagDataWithStrategy', () => {
         expect(data[0].properties.name).toBe('Keep me');
     });
 });
+
+// ── getSafeId
+describe('Utils.getSafeId', () => {
+    it('should correctly sanitize zone names into valid HTML IDs', () => {
+        // Access the private method for testing
+        const safeId = Utils.getSafeId('paid-zone', 'Синя зона 10');
+        expect(safeId).toBe('paid-zone-Синя-зона-10');
+
+        const complexId = Utils.getSafeId('paid-zone', '  Green   Zone 2  ');
+        expect(complexId).toBe('paid-zone--Green-Zone-2-');
+    });
+})
