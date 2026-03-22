@@ -1,6 +1,7 @@
+
 import express, {NextFunction, Request, Response} from 'express';
 import axios from 'axios';
-import fs from 'fs';
+import { readFileSync } from 'fs';
 import path from 'path';
 import {Config, GeoFeature, GeoFeatureCollection, SupportedLanguage, Target} from './Types.js'
 
@@ -81,43 +82,33 @@ const buildExtraQuery = (req: Partial<Request>) => {
     return params.toString() ? `?${params.toString()}` : '';
 };
 
+// --- Load static GeoJSON files once at startup ---
+function loadStaticJson(filename: string): object {
+    const filePath = path.join(__dirname, '..', filename);
+    try {
+        return JSON.parse(readFileSync(filePath, 'utf8'));
+    } catch (err) {
+        console.error(`CRITICAL ERROR: Failed to load ${filename} at startup:`, err);
+        process.exit(1);
+    }
+}
+
+const adminRegionsData = loadStaticJson('cau.json');
+const paidParkingZonesData = loadStaticJson('paid-parking-zones.json');
+
 // --- Expose Public Config ---
-app.get('/api/config', (req, res) => {
-    res.json({ allowFrameUrl: process.env.ALLOW_FRAME_URL as string || '*' });
+app.get('/api/config', (_req, res) => {
+    res.json({ allowFrameUrl: process.env.ALLOW_FRAME_URL || '*' });
 });
 
 // --- Administrative Regions ---
-app.get('/api/admin-regions', (req, res) => {
-    const filePath = path.join(__dirname, '../cau.json');
-    fs.readFile(filePath, 'utf8', (err, data) => {
-        if (err) {
-            console.error('Error reading cau.json:', err);
-            res.status(500).json({ error: 'Failed to load regions data' });
-            return;
-        }
-        try {
-            res.json(JSON.parse(data));
-        } catch (parseError) {
-            res.status(500).json({ error: 'Invalid JSON data' });
-        }
-    });
+app.get('/api/admin-regions', (_req, res) => {
+    res.json(adminRegionsData);
 });
 
 // --- Paid Parking Zones ---
-app.get('/api/paid-parking-zones', (req, res) => {
-    const filePath = path.join(__dirname, '../paid-parking-zones.json');
-    fs.readFile(filePath, 'utf8', (err, data) => {
-        if (err) {
-            console.error('Error reading paid-parking-zones.json:', err);
-            res.status(500).json({ error: 'Failed to load paid parking zones data' });
-            return;
-        }
-        try {
-            res.json(JSON.parse(data));
-        } catch (parseError) {
-            res.status(500).json({ error: 'Invalid JSON data' });
-        }
-    });
+app.get('/api/paid-parking-zones', (_req, res) => {
+    res.json(paidParkingZonesData);
 });
 
 // --- Dynamic API Proxy Router ---
