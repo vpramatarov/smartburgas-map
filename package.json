@@ -12,6 +12,7 @@
   "dependencies": {
     "@sentry/browser": "^10.45.0",
     "axios": "^1.13.5",
+    "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "leaflet": "^1.9.4"
   },

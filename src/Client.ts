@@ -22,7 +22,8 @@ import * as Sentry from "@sentry/browser";
 declare const L: typeof import('leaflet');
 
 class SmartMap {
-    private allowedOrigin: string = '*'; // Default to allow all until config loads
+    private config: {sentryDsn: string|null, allowFrameUrl: string} = {sentryDsn: null, allowFrameUrl: '*'};
+    // private allowedOrigin: string = '*'; // Default to allow all until config loads
     private compositeStrategy: CompositeDetailsStrategy;
     private map!: L.Map;
     private pinnedSensors: SensorProperties[] = [];
@@ -30,24 +31,8 @@ class SmartMap {
     private currentLang: SupportedLanguage = 'bg';
     private readonly spatialStrategies: ISpatialFilterStrategy[] = [];
 
-    constructor() {
-        Sentry.init({
-            dsn: "https://d363964eb58346fe193b483dc9d8eb44@o4511089829740544.ingest.de.sentry.io/4511089856348240",
-            // Setting this option to true will send default PII data to Sentry.
-            // For example, automatic IP address collection on events
-            sendDefaultPii: true,
-            integrations: [
-                Sentry.browserTracingIntegration(),
-                Sentry.replayIntegration()
-            ],
-            // Tracing
-            tracesSampleRate: 1.0, //  Capture 100% of the transactions
-            // Set 'tracePropagationTargets' to control for which URLs distributed tracing should be enabled
-            tracePropagationTargets: ["localhost", /^https:\/\/smartburgas\.eu\/general-map/],
-            // Session Replay
-            replaysSessionSampleRate: 0.1, // This sets the sample rate at 10%. You may want to change it to 100% while in development and then sample at a lower rate in production.
-            replaysOnErrorSampleRate: 1.0 // If you're not already sampling the entire session, change the sample rate to 100% when sampling sessions where errors occur.
-        });
+    constructor(config: {sentryDsn: string|null, allowFrameUrl: string}) {
+        this.config = config;
 
         const adminStrategy = new AdministrativeRegionStrategy((geometry, sourceStrategy) => {
             this.onRegionFilterChange(geometry, sourceStrategy);
@@ -158,9 +143,6 @@ class SmartMap {
             localStorage.setItem('sb_lang', lang);
         } catch (e) {
             console.warn("Cannot save language preference in Iframe.");
-            if (typeof Sentry !== 'undefined') {
-                Sentry.captureException(e);
-            }
         }
 
         document.querySelectorAll('[data-i18n]').forEach((element) => {
@@ -221,15 +203,8 @@ class SmartMap {
 
                 modal.classList.remove('hidden');
                 const configRaw = btnFullChart.dataset.chartConfig || '[]';
-                try {
-                    const config = JSON.parse(configRaw);
-                    this.compositeStrategy.renderFull(config, data, this.currentLang);
-                } catch (e) {
-                    console.error("Failed to parse chart config", e);
-                    if (typeof Sentry !== 'undefined') {
-                        Sentry.captureException(e);
-                    }
-                }
+                const config = JSON.parse(configRaw);
+                this.compositeStrategy.renderFull(config, data, this.currentLang);
             }
         });
 
@@ -478,25 +453,12 @@ class SmartMap {
 
     // --- Iframe Communication Bridge ---
     private async initIframeBridge() {
-        try {
-            const response = await fetch('/api/config');
-            const config = await response.json();
-            if (config.allowFrameUrl) {
-                this.allowedOrigin = config.allowFrameUrl;
-            }
-        } catch (error) {
-            console.error("Failed to load map configuration:", error);
-            if (typeof Sentry !== 'undefined') {
-                Sentry.captureException(error);
-            }
-        }
-
         // Listen for commands FROM the parent website
         window.addEventListener('message', (event) => {
             // SECURITY CHECK: Verify origin
             // If allowedOrigin is '*', we accept all (local dev only).
             // Otherwise, block any requests that don't match the .env url.
-            if (this.allowedOrigin !== '*' && event.origin !== this.allowedOrigin) {
+            if (this.config.allowFrameUrl !== '*' && event.origin !== this.config.allowFrameUrl) {
                 console.warn(`Blocked message from unauthorized origin: ${event.origin}`);
                 return;
             }
@@ -537,7 +499,7 @@ class SmartMap {
     private postToParent(message: object) {
         // We only post if we are actually inside an iframe
         if (window.parent !== window) {
-            window.parent.postMessage(message, this.allowedOrigin);
+            window.parent.postMessage(message, this.config.allowFrameUrl);
         }
     }
 
@@ -613,7 +575,34 @@ class SmartMap {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    new SmartMap();
+    fetch('/api/config')
+        .then(res => res.json())
+        .then(config => {
+            if (config.sentryDsn) {
+                Sentry.init({
+                    dsn: config.sentryDsn,
+                    // Setting this option to true will send default PII data to Sentry.
+                    // For example, automatic IP address collection on events
+                    //sendDefaultPii: true,
+                    integrations: [
+                        Sentry.browserTracingIntegration(),
+                        Sentry.replayIntegration()
+                    ],
+                    // Tracing
+                    tracesSampleRate: 1.0, //  Capture 100% of the transactions
+                    // Set 'tracePropagationTargets' to control for which URLs distributed tracing should be enabled
+                    tracePropagationTargets: ["localhost", /^https:\/\/smartburgas\.eu\/general-map/],
+                    // Session Replay
+                    replaysSessionSampleRate: 0.1, // This sets the sample rate at 10%. You may want to change it to 100% while in development and then sample at a lower rate in production.
+                    replaysOnErrorSampleRate: 1.0 // If not already sampling the entire session, change the sample rate to 100% when sampling sessions where errors occur.
+                });
+                console.log("Sentry initialized for this environment.");
+            }
+
+            new SmartMap(config);
+        }).catch(err => {
+            console.error('Failed to load configuration', err);
+        });
 });
 
 

@@ -3,7 +3,6 @@ import { BasePointStrategy } from './BasePointStrategy.js';
 import { ChartDataset, SensorProperties, SupportedLanguage } from '../Types.js';
 import { Utils } from '../Utils.js';
 import { t } from '../Translations.js';
-import * as Sentry from "@sentry/browser";
 
 export class TrafficSensorStrategy extends BasePointStrategy {
     public name = 'traffic_sensor';
@@ -44,29 +43,22 @@ export class TrafficSensorStrategy extends BasePointStrategy {
         this.layer.clearLayers();
         Utils.updateTimestampUI(this.getTimestampElementId(), t('loading', this.currentLang));
 
-        try {
-            const url = `/api/traffic?lang=${lang}&start_date=${dateParams.start}&end_date=${dateParams.end}`;
-            const res = await fetch(url);
+        const url = `/api/traffic?lang=${lang}&start_date=${dateParams.start}&end_date=${dateParams.end}`;
+        const res = await fetch(url);
 
-            if (!res.ok) {
-                throw new Error(`${res.status}`);
-            }
-
-            Utils.updateTimestampUI(
-                this.getTimestampElementId(),
-                new Date(res.headers.get('X-Last-Updated') || new Date())
-            );
-
-            const data = await res.json();
-            Utils.tagDataWithStrategy(data, this.name);
-            this.cachedData = Array.isArray(data) ? data : data.features || [];
-            this.applyRegionFilter(null);
-        } catch (err) {
-            console.error('Traffic load error:', err);
-            if (typeof Sentry !== 'undefined') {
-                Sentry.captureException(err);
-            }
+        if (!res.ok) {
+            throw new Error(`${res.status}`);
         }
+
+        Utils.updateTimestampUI(
+            this.getTimestampElementId(),
+            new Date(res.headers.get('X-Last-Updated') || new Date())
+        );
+
+        const data = await res.json();
+        Utils.tagDataWithStrategy(data, this.name);
+        this.cachedData = Array.isArray(data) ? data : data.features || [];
+        this.applyRegionFilter(null);
     }
 
     // Card
