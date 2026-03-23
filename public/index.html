@@ -31,21 +31,19 @@
 <div id="controls">
     <button id="close-controls" class="mobile-only">×</button>
     <div class="lang-switcher-wrapper">
-        <!-- Bulgarian Option -->
         <input type="radio" name="lang" id="bg" value="bg" checked>
         <label for="bg" class="lang-option">
             <span class="flag" data-flag="bg"><img src="images/bg-web.png" alt="BG"></span>
             <span data-i18n="bg">БГ</span>
         </label>
 
-        <!-- English Option -->
         <input type="radio" name="lang" id="en" value="en">
         <label for="en" class="lang-option">
             <span class="flag" data-flag="en"><img src="images/en-web.png" alt="EN"></span>
             <span data-i18n="en">АНГЛ</span>
         </label>
 
-        <!-- The animated background slider -->
+        <!-- Animated background slider -->
         <div class="selection-pill"></div>
     </div>
 
@@ -67,97 +65,99 @@
         <div id="paid-parking-zones-wrapper" class="wrapper"></div>
     </div>
 
-    <h4 data-i18n="filters">Филтри</h4>
-    <ul>
-        <li>
-            <label class="checkbox" for="toggle-air-quality-time">
-                <input type="checkbox" id="toggle-air-quality-time">
-                <span class="checkbox__checkmark"></span>
-                <span class="checkbox__body">
+    <div id="sensor-filters">
+        <h4 data-i18n="filters">Филтри</h4>
+        <ul>
+            <li>
+                <label class="checkbox" for="toggle-air-quality-time">
+                    <input type="checkbox" id="toggle-air-quality-time">
+                    <span class="checkbox__checkmark"></span>
+                    <span class="checkbox__body">
                     <span class="icon-air"></span>
                     <span data-i18n="layer_air_quality">Качество на въздуха</span>
                 </span>
-                <span id="air-quality-time" class="timestamp">-</span>
-            </label>
-        </li>
-        <li>
-            <label class="checkbox" for="toggle-traffic">
-                <input type="checkbox" id="toggle-traffic">
-                <span class="checkbox__checkmark"></span>
-                <span class="checkbox__body">
+                    <span id="air-quality-time" class="timestamp">-</span>
+                </label>
+            </li>
+            <li>
+                <label class="checkbox" for="toggle-traffic">
+                    <input type="checkbox" id="toggle-traffic">
+                    <span class="checkbox__checkmark"></span>
+                    <span class="checkbox__body">
                     <span class="icon-car"></span>
                     <span data-i18n="layer_traffic">Трафик камери</span>
                 </span>
-                <span id="traffic-time" class="timestamp">-</span>
-            </label>
-        </li>
-        <li>
-            <label class="checkbox" for="toggle-cctv">
-                <input type="checkbox" id="toggle-cctv">
-                <span class="checkbox__checkmark"></span>
-                <span class="checkbox__body" >
+                    <span id="traffic-time" class="timestamp">-</span>
+                </label>
+            </li>
+            <li>
+                <label class="checkbox" for="toggle-cctv">
+                    <input type="checkbox" id="toggle-cctv">
+                    <span class="checkbox__checkmark"></span>
+                    <span class="checkbox__body" >
                     <span class="icon-videocam"></span>
                     <span data-i18n="layer_camera">Камери</span>
                 </span>
-                <span id="cctv-time" class="timestamp">-</span>
-            </label>
-        </li>
-        <li>
-            <label class="checkbox" for="toggle-billing-machines">
-                <input type="checkbox" id="toggle-billing-machines">
-                <span class="checkbox__checkmark"></span>
-                <span class="checkbox__body">
+                    <span id="cctv-time" class="timestamp">-</span>
+                </label>
+            </li>
+            <li>
+                <label class="checkbox" for="toggle-billing-machines">
+                    <input type="checkbox" id="toggle-billing-machines">
+                    <span class="checkbox__checkmark"></span>
+                    <span class="checkbox__body">
                     <span class="icon-dollar"></span>
                     <span data-i18n="layer_billing_machines">Банкомати</span>
                 </span>
-                <span id="billing-time" class="timestamp">-</span>
-            </label>
-        </li>
-        <li>
-            <label class="checkbox" for="toggle-ev-stations">
-                <input type="checkbox" id="toggle-ev-stations">
-                <span class="checkbox__checkmark"></span>
-                <span class="checkbox__body">
+                    <span id="billing-time" class="timestamp">-</span>
+                </label>
+            </li>
+            <li>
+                <label class="checkbox" for="toggle-ev-stations">
+                    <input type="checkbox" id="toggle-ev-stations">
+                    <span class="checkbox__checkmark"></span>
+                    <span class="checkbox__body">
                     <span class="icon-battery"></span>
                     <span data-i18n="layer_ev_charging">Зареждане на ел. превозни средства</span>
                 </span>
-                <span id="ev-time" class="timestamp">-</span>
-            </label>
-        </li>
-        <li>
-            <label class="checkbox" for="toggle-waste">
-                <input type="checkbox" id="toggle-waste">
-                <span class="checkbox__checkmark"></span>
-                <span class="checkbox__body">
+                    <span id="ev-time" class="timestamp">-</span>
+                </label>
+            </li>
+            <li>
+                <label class="checkbox" for="toggle-waste">
+                    <input type="checkbox" id="toggle-waste">
+                    <span class="checkbox__checkmark"></span>
+                    <span class="checkbox__body">
                     <span class="icon-recycle"></span>
                     <span data-i18n="layer_mobile_waste">Мобилни центрове за отпадъци</span>
                 </span>
-                <span id="waste-time" class="timestamp">-</span>
-            </label>
-        </li>
-        <li>
-            <label class="checkbox" for="toggle-smart-parking">
-                <input type="checkbox" id="toggle-smart-parking">
-                <span class="checkbox__checkmark"></span>
-                <span class="checkbox__body">
+                    <span id="waste-time" class="timestamp">-</span>
+                </label>
+            </li>
+            <li>
+                <label class="checkbox" for="toggle-smart-parking">
+                    <input type="checkbox" id="toggle-smart-parking">
+                    <span class="checkbox__checkmark"></span>
+                    <span class="checkbox__body">
                     <span class="icon-car-parking"></span>
                     <span data-i18n="layer_smart_parking">Смарт Паркинги</span>
                 </span>
-                <span id="smart-car-parking-time" class="timestamp">-</span>
-            </label>
-        </li>
-        <li>
-            <label class="checkbox" for="toggle-taxi">
-                <input type="checkbox" id="toggle-taxi">
-                <span class="checkbox__checkmark"></span>
-                <span class="checkbox__body">
+                    <span id="smart-car-parking-time" class="timestamp">-</span>
+                </label>
+            </li>
+            <li>
+                <label class="checkbox" for="toggle-taxi">
+                    <input type="checkbox" id="toggle-taxi">
+                    <span class="checkbox__checkmark"></span>
+                    <span class="checkbox__body">
                     <span class="icon-taxi-sign_76588"></span>
                     <span data-i18n="layer_taxi_stands">Стоянки на таксита</span>
                 </span>
-                <span id="taxi-time" class="timestamp">-</span>
-            </label>
-        </li>
-    </ul>
+                    <span id="taxi-time" class="timestamp">-</span>
+                </label>
+            </li>
+        </ul>
+    </div>
 </div>
 
 <div id="map"></div>

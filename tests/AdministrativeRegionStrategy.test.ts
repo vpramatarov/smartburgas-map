@@ -283,11 +283,11 @@ describe('AdministrativeRegionStrategy — selection state management', () => {
 // ── loadData error handling 
 
 describe('AdministrativeRegionStrategy — loadData', () => {
-    it('does not throw when the API returns a non-ok response', async () => {
+    it('does throw when the API returns a non-ok response', async () => {
         vi.clearAllMocks();
         const { strategy } = makeStrategy();
         vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 500 }));
-        await expect(strategy.loadData('bg')).resolves.not.toThrow();
+        await expect(strategy.loadData('bg')).rejects.toThrow();
     });
 
     it('caches the features from the API response', async () => {

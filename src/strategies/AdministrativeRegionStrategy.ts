@@ -6,7 +6,6 @@ import { ISpatialFilterStrategy } from './ISpatialFilterStrategy.js';
 
 declare const L: typeof import('leaflet');
 import type * as GeoJSON from 'geojson';
-import * as Sentry from "@sentry/browser";
 
 export class AdministrativeRegionStrategy implements ISpatialFilterStrategy {
     public parentStrategy?: ISpatialFilterStrategy;
@@ -39,64 +38,57 @@ export class AdministrativeRegionStrategy implements ISpatialFilterStrategy {
         this.layer.clearLayers();
         this.currentLang = lang as SupportedLanguage;
 
-        try {
-            const res = await fetch('/api/admin-regions');
-            if (!res.ok) {
-                throw new Error(`Server returned ${res.status}`);
-            }
-
-            const data = await res.json();
-            this.cachedData = data.features || [];
-
-            const geoJsonLayer = L.geoJSON(data, {
-                style: {
-                    color: this.layerOptions.color,
-                    weight: 1,
-                    opacity: 0.5,
-                    fillColor: this.layerOptions.color,
-                    fillOpacity: 0.05,
-                    dashArray: '4, 4'
-                },
-                onEachFeature: (feature: GeoJSON.Feature, layer: L.Layer): void => {
-                    const geoFeature = feature as unknown as GeoFeature;
-                    const props = geoFeature.properties;
-                    const regionName: string = props?.CAU || t('status_unknown', this.currentLang);
-                    const path = layer as L.Path;
-                    const geometry = geoFeature.geometry as FilterGeometry;
-
-                    this.featureMap.set(regionName, path);
-
-                    layer.on('click', () => {
-                        this.selectRegion(regionName, path, geometry);
-                    });
-
-                    layer.on('mouseover', () => {
-                        if (this.currentSelection?.name !== regionName) {
-                            path.setStyle({ fillOpacity: 0.2, weight: 2 });
-                        }
-                    });
-
-                    layer.on('mouseout', () => {
-                        if (this.currentSelection?.name !== regionName) {
-                            geoJsonLayer.resetStyle(path);
-                        }
-                    });
-
-                    if (props?.Name) {
-                        (layer as L.Path & { bindTooltip: (s: string, o: object) => void })
-                            .bindTooltip(props.Name, { sticky: true });
-                    }
-                }
-            });
-
-            this.layer.addLayer(geoJsonLayer);
-            this.renderSidebarControls(data.features);
-        } catch (err) {
-            console.error('Error loading regions:', err);
-            if (typeof Sentry !== 'undefined') {
-                Sentry.captureException(err);
-            }
+        const res = await fetch('/api/admin-regions');
+        if (!res.ok) {
+            throw new Error(`Server returned ${res.status}`);
         }
+
+        const data = await res.json();
+        this.cachedData = data.features || [];
+
+        const geoJsonLayer = L.geoJSON(data, {
+            style: {
+                color: this.layerOptions.color,
+                weight: 1,
+                opacity: 0.5,
+                fillColor: this.layerOptions.color,
+                fillOpacity: 0.05,
+                dashArray: '4, 4'
+            },
+            onEachFeature: (feature: GeoJSON.Feature, layer: L.Layer): void => {
+                const geoFeature = feature as unknown as GeoFeature;
+                const props = geoFeature.properties;
+                const regionName: string = props?.CAU || t('status_unknown', this.currentLang);
+                const path = layer as L.Path;
+                const geometry = geoFeature.geometry as FilterGeometry;
+
+                this.featureMap.set(regionName, path);
+
+                layer.on('click', () => {
+                    this.selectRegion(regionName, path, geometry);
+                });
+
+                layer.on('mouseover', () => {
+                    if (this.currentSelection?.name !== regionName) {
+                        path.setStyle({ fillOpacity: 0.2, weight: 2 });
+                    }
+                });
+
+                layer.on('mouseout', () => {
+                    if (this.currentSelection?.name !== regionName) {
+                        geoJsonLayer.resetStyle(path);
+                    }
+                });
+
+                if (props?.Name) {
+                    (layer as L.Path & { bindTooltip: (s: string, o: object) => void })
+                        .bindTooltip(props.Name, { sticky: true });
+                }
+            }
+        });
+
+        this.layer.addLayer(geoJsonLayer);
+        this.renderSidebarControls(data.features);
     }
 
     public selectRegionByPoint(point: Position, triggerFilter: boolean = true): void {

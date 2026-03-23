@@ -14,7 +14,6 @@ import { t } from '../Translations.js';
 
 declare const L: typeof import('leaflet');
 import type * as GeoJSON from 'geojson';
-import * as Sentry from "@sentry/browser";
 
 /**
  * Abstract base class for all standard point-marker map strategies.
@@ -93,29 +92,22 @@ export abstract class BasePointStrategy implements IDetailsStrategy {
         this.layer.clearLayers();
         Utils.updateTimestampUI(this.getTimestampElementId(), t('loading', this.currentLang));
 
-        try {
-            const res = await fetch(this.getApiUrl(lang));
-            if (!res.ok) {
-                throw new Error(`${res.status}`);
-            }
-
-            Utils.updateTimestampUI(
-                this.getTimestampElementId(),
-                new Date(res.headers.get('X-Last-Updated') || new Date())
-            );
-
-            const data = await res.json();
-            Utils.tagDataWithStrategy(data, this.name);
-            this.cachedData = Array.isArray(data) ? data : data.features || [];
-
-            this.onLoadSuccess(data);
-            this.applyRegionFilter(null);
-        } catch (err) {
-            console.error(`${this.name} load error:`, err);
-            if (typeof Sentry !== 'undefined') {
-                Sentry.captureException(err);
-            }
+        const res = await fetch(this.getApiUrl(lang));
+        if (!res.ok) {
+            throw new Error(`${res.status}`);
         }
+
+        Utils.updateTimestampUI(
+            this.getTimestampElementId(),
+            new Date(res.headers.get('X-Last-Updated') || new Date())
+        );
+
+        const data = await res.json();
+        Utils.tagDataWithStrategy(data, this.name);
+        this.cachedData = Array.isArray(data) ? data : data.features || [];
+
+        this.onLoadSuccess(data);
+        this.applyRegionFilter(null);
     }
 
     applyRegionFilter(filterGeometry: FilterGeometry | null): void {

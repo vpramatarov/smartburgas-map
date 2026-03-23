@@ -1,4 +1,4 @@
-
+import 'dotenv/config';
 import express, {NextFunction, Request, Response} from 'express';
 import axios from 'axios';
 import { readFileSync } from 'fs';
@@ -11,20 +11,33 @@ import {Utils} from "./Utils.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// strict Environment Guard
+const requireEnv = (key: string, fallback?: string): string => {
+    const value = process.env[key] || fallback;
+    if (!value) {
+        console.error(`CRITICAL ERROR: Missing required environment variable: ${key}`);
+        process.exit(1);
+    }
+    return value;
+};
+
 export const app = express();
 
 const config: Config = {
-    appUrl: process.env.URL || 'http://localhost',
-    port: parseInt(process.env.PORT as string),
-    airQualityTime: { key: 'airQualityTime', endpoint: process.env.AIR_QUALITY_TIME_URL as string },
-    traffic: { key: 'traffic', endpoint: process.env.TRAFFIC_URL as string },
-    cctv: { key: 'cctv', endpoint: process.env.CCTV_URL as string },
-    billingMachines: { key: 'billingMachines', endpoint: process.env.BILLING_MACHINES_URL as string },
-    evStations: { key: 'evStations', endpoint: process.env.EV_URL as string },
-    wasteCentres: { key: 'wasteCentres', endpoint: process.env.WASTE_URL as string },
-    smartParking: { key: 'smartParking', endpoint: process.env.SMART_CAR_PARKS_TIME_URL as string },
-    taxiRanks: { key: 'taxiRanks', endpoint: process.env.TAXI_RANKS_URL as string }
+    appUrl: requireEnv('URL', 'http://localhost'),
+    port: parseInt(requireEnv('PORT', '3000'), 10),
+    airQualityTime: { key: 'airQualityTime', endpoint: requireEnv('AIR_QUALITY_TIME_URL') },
+    traffic: { key: 'traffic', endpoint: requireEnv('TRAFFIC_URL') },
+    cctv: { key: 'cctv', endpoint: requireEnv('CCTV_URL') },
+    billingMachines: { key: 'billingMachines', endpoint: requireEnv('BILLING_MACHINES_URL') },
+    evStations: { key: 'evStations', endpoint: requireEnv('EV_URL') },
+    wasteCentres: { key: 'wasteCentres', endpoint: requireEnv('WASTE_URL') },
+    smartParking: { key: 'smartParking', endpoint: requireEnv('SMART_CAR_PARKS_TIME_URL') },
+    taxiRanks: { key: 'taxiRanks', endpoint: requireEnv('TAXI_RANKS_URL') }
 }
+
+const ALLOW_FRAME_URL = requireEnv('ALLOW_FRAME_URL', '*');
+const FRONTEND_SENTRY_DSN = process.env.FRONTEND_SENTRY_DSN || null; // Optional
 
 const targets: Target[] = Object.keys(config)
     .filter(prop => prop !== 'appUrl' && prop !== 'port')
@@ -45,7 +58,7 @@ app.use('/js', express.static(path.join(__dirname, '../dist')));
 // --- Middleware ---
 app.use((req: Request, res: Response, next: NextFunction) => {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-    res.setHeader('Content-Security-Policy', `frame-ancestors ${process.env.ALLOW_FRAME_URL as string}`);
+    res.setHeader('Content-Security-Policy', `frame-ancestors ${ALLOW_FRAME_URL}`);
     next();
 });
 
@@ -98,7 +111,10 @@ const paidParkingZonesData = loadStaticJson('paid-parking-zones.json');
 
 // --- Expose Public Config ---
 app.get('/api/config', (_req, res) => {
-    res.json({ allowFrameUrl: process.env.ALLOW_FRAME_URL || '*' });
+    res.json({
+        allowFrameUrl: ALLOW_FRAME_URL,
+        sentryDsn: FRONTEND_SENTRY_DSN
+    });
 });
 
 // --- Administrative Regions ---
