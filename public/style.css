@@ -607,7 +607,11 @@ input[name="lang"]:checked + label .flag {
     flex-direction: row;
 }
 
-#chart-container.js-plotly-plot .plotly .modebar-container .modebar {
+#chart-container .js-plotly-plot .plotly .main-svg {
+    width: 100%;
+}
+
+#chart-container .js-plotly-plot .plotly .modebar-container .modebar {
     width: 100%;
     left: 0;
     bottom: 0;
@@ -618,11 +622,11 @@ input[name="lang"]:checked + label .flag {
     justify-content: center;
 }
 
-#chart-container.js-plotly-plot .plotly .modebar {
+#chart-container .js-plotly-plot .plotly .modebar {
     top: 12px;
 }
 
-#chart-container.js-plotly-plot .plotly .modebar-container .modebar .modebar-group {
+#chart-container .js-plotly-plot .plotly .modebar-container .modebar .modebar-group {
     float: none;
     display: flex;
     box-sizing: border-box;
