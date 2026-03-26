@@ -36,7 +36,7 @@ ul li {
 }
 
 .hidden,
-.mobile-only{
+.mobile-only {
     display: none;
 }
 
@@ -916,8 +916,21 @@ input[name="lang"]:checked + label .flag {
     }
 
     #close-panel {
-        top: 15px;
-        right: 15px;
+        position: sticky;
+        top: 0;
+        right: 0;
+        float: right;
+        z-index: 1010;
+        background: rgba(255,255,255,0.95);
+        border-radius: 50%;
+        border: 1px solid #ccc;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: auto;
+        margin-bottom: 4px;
     }
 
     .mobile-only {
@@ -989,6 +1002,10 @@ input[name="lang"]:checked + label .flag {
 
     .checkbox .checkbox__body {
         font-size: 1em;
+    }
+
+    #chart-container {
+        display: none !important;
     }
 
     .modal-content {

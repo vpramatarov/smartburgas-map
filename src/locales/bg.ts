@@ -43,7 +43,7 @@ export const bg = {
     status_inactive: 'Неактивен',
     status_unknown: 'Неизвестен',
 
-    // --- Chart Labels ---
+    // --- Chart ---
     chart: 'Диаграма',
     time: 'Време',
     spots: 'Места',
