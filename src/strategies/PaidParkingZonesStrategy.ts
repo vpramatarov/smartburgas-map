@@ -308,10 +308,10 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
                 return;
             }
 
-            const div = document.createElement('div');
+            const div = document.createElement('div') as HTMLDivElement;
             div.className = 'paid-zone-item';
 
-            const checkbox = document.createElement('input');
+            const checkbox = document.createElement('input') as HTMLInputElement;
             checkbox.type = 'checkbox';
             checkbox.id = Utils.getSafeId('paid-zone', name);
             checkbox.value = name;
@@ -360,7 +360,7 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
                 }
             });
 
-            const label = document.createElement('label');
+            const label = document.createElement('label') as HTMLLabelElement;
             label.htmlFor = Utils.getSafeId('paid-zone', name);
             label.innerText = name;
 
