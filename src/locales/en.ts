@@ -44,17 +44,17 @@ export const en: TranslationKeys = {
     status_inactive: 'Inactive',
     status_unknown: 'Unknown',
 
-    // --- Chart Labels ---
+    // --- Chart ---
     chart: 'Chart',
     time: 'Time',
     spots: 'Spots',
-    speed: 'Speed',
-    cars: 'cars',
 
     // --- Traffic ---
     car_count: 'Car Count',
     car_speed: 'Car Speed',
     km_h: 'km/h',
+    speed: 'Speed',
+    cars: 'cars',
 
     // --- Hidden by filter ---
     feature_hidden_by_filters: 'Feature currently hidden by filters',
