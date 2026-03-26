@@ -315,6 +315,7 @@ input[name="lang"]:checked + label .flag {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 5px;
 }
 
 #info-panel .prop-label {
@@ -1062,6 +1063,15 @@ input[name="lang"]:checked + label .flag {
         padding: 10px 5px;
     }
 
+    #controls .bulk-controls span {
+        display: none;
+    }
+
+    #controls .bulk-controls a {
+        display: block;
+        margin-bottom: 10px;
+    }
+
     #close-controls {
         display: none;
     }
@@ -1079,10 +1089,6 @@ input[name="lang"]:checked + label .flag {
         flex-direction: column;
         gap: 5px;
         align-items: flex-start;
-    }
-
-    #info-panel .prop-label {
-        display: block;
     }
 
     #info-panel .prop-additional {
