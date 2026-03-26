@@ -766,10 +766,6 @@ input[name="lang"]:checked + label .flag {
     font-size: 1.25em;
     font-weight: 600;
     color: #333;
-    max-width: 70%;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .sensor-description {
