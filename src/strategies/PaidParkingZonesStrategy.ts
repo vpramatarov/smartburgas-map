@@ -12,10 +12,7 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
     public childStrategies?: ISpatialFilterStrategy[];
     public name = 'paid_parking_zones';
     public checkbox_id = 'toggle-paid-parking-zones';
-    public layerOptions: { translate_name_key: string; color: string } = {
-        translate_name_key: 'layer_paid_parking_zones',
-        color: '#3498db'
-    };
+    public layerOptions: { translate_name_key: string; color: string } = {translate_name_key: 'layer_paid_parking_zones', color: '#3498db'};
 
     private map!: L.Map;
     private layer!: L.LayerGroup;
@@ -25,6 +22,9 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
     private featureMap: Map<string, L.Path> = new Map();
     private cachedData: GeoFeature[] = [];
     private geoJsonLayer!: L.GeoJSON;
+    // Persistent popup shown after a click (desktop & mobile)
+    private activePopup: L.Popup | null = null;
+    private tooltipHtmlMap: Map<string, string> = new Map();
 
     constructor(onFilterChange: (geometry: FilterGeometry | null, sourceStrategy: ISpatialFilterStrategy, feature?: GeoFeature) => void) {
         this.onFilterChange = onFilterChange;
@@ -34,6 +34,13 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
         this.map = map;
         this.layer = L.layerGroup();
         this.layer.addTo(map);
+
+        // Close popup + clear selection when user clicks on the map background (i.e. not on a paid zone polygon)
+        this.map.on('click', () => {
+            if (this.currentSelection) {
+                this.clearSelection();
+            }
+        });
     }
 
     getLayer(): L.LayerGroup {
@@ -59,14 +66,14 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
             return;
         }
 
-        // If the geometry being passed is a Paid Parking Zone itself, don't filter —
-        // keep all zones visible so the user can switch between them.
+        // If the geometry being passed is a Paid Parking Zone itself, don't filter — keep all zones visible so the user can switch between them.
         if (geometry && this.cachedData.some(f => f.geometry === geometry)) {
             return;
         }
 
         this.layer.clearLayers();
         this.featureMap.clear();
+        this.tooltipHtmlMap.clear();
 
         let filteredFeatures = this.cachedData;
 
@@ -104,14 +111,19 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
                 this.geoJsonLayer.resetStyle(prevLayer);
             }
 
+            // Rebind tooltip now that it's no longer selected
+            const prevHtml = this.tooltipHtmlMap.get(prevName);
+            if (prevHtml && prevLayer.bindTooltip) {
+                prevLayer.bindTooltip(prevHtml, { sticky: true });
+            }
+
             const prevCb = document.getElementById(Utils.getSafeId('paid-zone', prevName)) as HTMLInputElement | null;
             if (prevCb) {
                 prevCb.checked = false;
             }
 
-            if (window.innerWidth <= 991 && this.map) {
-                this.map.closePopup();
-            }
+            // Close the persistent popup on ALL platforms
+            this.closeActivePopup();
         }
 
         if (triggerFilter) {
@@ -125,9 +137,7 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
     public selectRegionByPoint(point: Position, triggerFilter: boolean = true): void {
         const feature = this.cachedData.find(f => Utils.isPointInPolygon(point, f.geometry as FilterGeometry));
         if (feature) {
-            const name: string = this.currentLang === 'en' && feature.properties?.NameEn
-                ? feature.properties.NameEn
-                : feature.properties?.Name;
+            const name: string = this.currentLang === 'en' && feature.properties?.NameEn ? feature.properties.NameEn : feature.properties?.Name;
             const layer = this.featureMap.get(name);
             if (name && layer) {
                 this.toggleSelection(name, layer, feature, false, triggerFilter);
@@ -142,6 +152,34 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
             return (this.currentSelection.layer as any).feature?.geometry ?? null;
         }
         return null;
+    }
+
+    /** Closes and removes any currently open persistent popup */
+    private closeActivePopup(): void {
+        if (this.activePopup) {
+            this.activePopup.remove();
+            this.activePopup = null;
+        }
+    }
+
+    /** Returns the visual center (centroid) of a GeoJSON polygon feature for popup placement */
+    private getFeatureCenter(feature: GeoFeature): L.LatLng {
+        // Use Leaflet's built-in bounds center for polygons
+        try {
+            const tempLayer = L.geoJSON(feature as any);
+            return tempLayer.getBounds().getCenter();
+        } catch {
+            // Fallback: first coordinate
+            if (feature.geometry.type === 'Polygon') {
+                const coords = (feature.geometry.coordinates as Position[][])[0][0];
+                return L.latLng(coords[1], coords[0]);
+            }
+            if (feature.geometry.type === 'MultiPolygon') {
+                const coords = (feature.geometry.coordinates as Position[][][])[0][0][0];
+                return L.latLng(coords[1], coords[0]);
+            }
+            return this.map.getCenter();
+        }
     }
 
     private addGeoJsonToLayer(features: GeoFeature[]): void {
@@ -163,9 +201,11 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
                 return { color, weight: 2, opacity: 0.8, fillColor: color, fillOpacity: 0.2, dashArray: '3, 6' };
             },
             onEachFeature: (feature: GeoJSON.Feature, layer: L.Layer): void => {
-                const geoFeature = feature as unknown as GeoFeature;
+                const geoFeature = feature as GeoFeature;
                 const props = geoFeature.properties;
-                if (!props) return;
+                if (!props) {
+                    return;
+                }
 
                 const name: string = this.currentLang === 'en' && props.NameEn ? props.NameEn : props.Name;
                 const path = layer as L.Path;
@@ -178,7 +218,9 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
                 }
 
                 const formatTime = (timeStr: string): string => {
-                    if (!timeStr) return '';
+                    if (!timeStr) {
+                        return '';
+                    }
                     const match = timeStr.match(/\s(\d{2}:\d{2})/);
                     return match ? match[1] : timeStr;
                 };
@@ -197,36 +239,48 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
                     </div>
                 `;
 
-                (path as any).bindTooltip(popupHtml, { sticky: true });
+                this.tooltipHtmlMap.set(name, popupHtml);
+
+                // Desktop-only: tooltip on hover (only for non-selected zones)
+                const isMobile = () => window.innerWidth <= 991;
 
                 layer.on('click', (e: L.LeafletEvent): void => {
-                    const mouseEvent = e as L.LeafletMouseEvent;
-                    if (window.innerWidth <= 991) {
-                        (path as any).closeTooltip();
+                    // Stop propagation so the map background 'click' handler doesn't immediately trigger clearSelection after we just set the new selection.
+                    L.DomEvent.stopPropagation(e as L.LeafletMouseEvent);
+
+                    const wasSelected = this.currentSelection?.name === name;
+
+                    // Close any existing tooltip on this path to avoid overlap with the popup
+                    if (path.closeTooltip) {
+                        path.closeTooltip();
                     }
 
-                    this.toggleSelection(name, path, geoFeature);
+                    if (wasSelected) {
+                        // Clicking the already-selected zone toggles it off
+                        this.clearSelection();
+                    } else {
+                        // Select new zone, show persistent popup
+                        this.toggleSelection(name, path, geoFeature);
 
-                    if (window.innerWidth <= 991) {
-                        if (this.currentSelection?.name === name) {
-                            L.popup()
-                                .setLatLng(mouseEvent.latlng)
-                                .setContent(popupHtml)
-                                .openOn(this.map);
-                        } else {
-                            this.map.closePopup();
-                        }
+                        // Place popup at the visual center of the polygon
+                        const center = this.getFeatureCenter(geoFeature);
+                        this.closeActivePopup();
+                        this.activePopup = L.popup({ closeButton: true, autoClose: false, closeOnClick: false })
+                            .setLatLng(center)
+                            .setContent(popupHtml)
+                            .openOn(this.map);
                     }
                 });
 
+                // Desktop hover: highlight non-selected zones; do NOT disturb active popup
                 layer.on('mouseover', (): void => {
-                    if (this.currentSelection?.name !== name) {
+                    if (!isMobile() && this.currentSelection?.name !== name) {
                         path.setStyle({ fillOpacity: 0.4, weight: 3 });
                     }
                 });
 
                 layer.on('mouseout', (): void => {
-                    if (this.currentSelection?.name !== name) {
+                    if (!isMobile() && this.currentSelection?.name !== name) {
                         this.geoJsonLayer.resetStyle(path);
                     }
                 });
@@ -239,18 +293,20 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
 
     private renderSidebarControls(features: GeoFeature[]): void {
         const container = document.getElementById('paid-parking-zones-wrapper') as HTMLDivElement | null;
-        if (!container) return;
+        if (!container) {
+            return;
+        }
 
         container.innerHTML = '';
 
         const zoneNames = Array.from(new Set(
-            features.map(f => this.currentLang === 'en' && f.properties.NameEn
-                ? f.properties.NameEn as string
-                : f.properties.Name as string)
+            features.map(f => this.currentLang === 'en' && f.properties.NameEn ? f.properties.NameEn as string : f.properties.Name as string)
         )).sort();
 
         zoneNames.forEach(name => {
-            if (!name) return;
+            if (!name) {
+                return;
+            }
 
             const div = document.createElement('div');
             div.className = 'paid-zone-item';
@@ -267,14 +323,38 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
             checkbox.addEventListener('change', (e) => {
                 const target = e.target as HTMLInputElement;
                 const layer = this.featureMap.get(name);
-                const feature = features.find(f =>
-                    (this.currentLang === 'en' && f.properties.NameEn
-                        ? f.properties.NameEn
-                        : f.properties.Name) === name
-                );
+                const feature = features.find(f => (this.currentLang === 'en' && f.properties.NameEn ? f.properties.NameEn : f.properties.Name) === name);
 
                 if (target.checked && feature && layer) {
                     this.toggleSelection(name, layer, feature, true);
+
+                    // Show popup when selecting from sidebar too
+                    const center = this.getFeatureCenter(feature);
+                    this.closeActivePopup();
+
+                    const formatTime = (timeStr: string): string => {
+                        if (!timeStr) {
+                            return '';
+                        }
+                        const match = timeStr.match(/\s(\d{2}:\d{2})/);
+                        return match ? match[1] : timeStr;
+                    };
+                    const start = formatTime(feature.properties.StartTime);
+                    const end = formatTime(feature.properties.EndTime);
+                    const hoursStr = start && end ? `${start} - ${end}` : t('status_unknown', this.currentLang);
+                    const popupHtml = `
+                        <div class="marker-popup-hover" style="min-width: 160px;">
+                            <h4 style="margin-bottom:8px; border-bottom:1px solid #ccc; padding-bottom:4px;">${name}</h4>
+                            <p style="margin:4px 0;"><strong>${t('price_per_hour', this.currentLang)}:</strong> ${feature.properties.PricePerHo} ${t('bgn', this.currentLang)}</p>
+                            <p style="margin:4px 0;"><strong>${t('sms_number', this.currentLang)}:</strong> ${feature.properties.SmsNumber}</p>
+                            <p style="margin:4px 0;"><strong>${t('working_hours', this.currentLang)}:</strong> ${hoursStr}</p>
+                            <p style="margin:8px 0 0 0; font-size: 0.85em; color: #666; font-style: italic;">${t('click_to_filter', this.currentLang)}</p>
+                        </div>
+                    `;
+                    this.activePopup = L.popup({ closeButton: true, autoClose: false, closeOnClick: false })
+                        .setLatLng(center)
+                        .setContent(popupHtml)
+                        .openOn(this.map);
                 } else {
                     this.clearSelection();
                 }
@@ -304,15 +384,29 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
                     this.geoJsonLayer.resetStyle(prevLayer);
                 }
 
+                // Rebind tooltip for the zone being deselected
+                const prevHtml = this.tooltipHtmlMap.get(prevName);
+                if (prevHtml && prevLayer.bindTooltip) {
+                    prevLayer.bindTooltip(prevHtml, { sticky: true });
+                }
+
                 const prevCb = document.getElementById(Utils.getSafeId('paid-zone', prevName)) as HTMLInputElement | null;
-                if (prevCb) prevCb.checked = false;
+                if (prevCb) {
+                    prevCb.checked = false;
+                }
+
+                // Close previous popup when switching zones
+                this.closeActivePopup();
             }
 
             this.currentSelection = { name, layer };
             layer.setStyle({ color: '#e74c3c', weight: 3, fillOpacity: 0.4, dashArray: '' });
+            layer.unbindTooltip?.();
 
             const newCb = document.getElementById(Utils.getSafeId('paid-zone', name)) as HTMLInputElement | null;
-            if (newCb) newCb.checked = true;
+            if (newCb) {
+                newCb.checked = true;
+            }
 
             if (triggerFilter) {
                 this.onFilterChange(feature.geometry as FilterGeometry, this, feature);
@@ -320,4 +414,3 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
         }
     }
 }
-
