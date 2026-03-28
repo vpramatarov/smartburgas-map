@@ -17,7 +17,7 @@ export class WasteCentreStrategy extends BasePointStrategy {
         return 'waste-time';
     }
 
-    protected getIconClass(): string {
+    getIconClass(): string {
         return 'icon-recycle';
     }
 

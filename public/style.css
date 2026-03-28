@@ -206,6 +206,7 @@ input[name="lang"]:checked + label .flag {
     align-items: center;
     box-shadow: 2px 2px 4px rgba(0,0,0,0.3);
     border: 2px solid #fff;
+    color: #fff;
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy transition */
 }
@@ -214,7 +215,6 @@ input[name="lang"]:checked + label .flag {
 .custom-pin-marker i,
 .custom-pin-marker span {
     transform: rotate(45deg);
-    color: white;
     font-size: 1em;
 }
 
@@ -586,7 +586,7 @@ input[name="lang"]:checked + label .flag {
     border-color: #219150;
 }
 
-#btn-full-chart {
+#btn-full-chart, #btn-full-chart-min {
     background-color: #3498db;
     color: #fff;
 }
@@ -913,7 +913,127 @@ input[name="lang"]:checked + label .flag {
     #info-panel-container {
         margin: 0;
         border-radius: 20px 20px 0 0;
-        padding: 15px 15px 30px;
+        padding: 0 15px 15px 30px;
+    }
+
+    /* ---- Panel Minimize / Compact View ---- */
+    #panel-header-bar {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 6px 0;
+        position: sticky;
+        top: 0;
+        background: #fff;
+        z-index: 10;
+    }
+
+    #minimize-panel {
+        background: #e9ecef;
+        color: #333;
+        border: none;
+        cursor: pointer;
+        font-size: 1.4em;
+        padding: 4px 6px;
+        border-radius: 4px;
+        line-height: 1;
+        transition: background 0.2s, color 0.2s;
+    }
+
+    /* Minimized bar: compact strip shown instead of the full panel */
+    #panel-minimized-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 10px;
+        gap: 8px;
+        border-bottom: 1px solid #eee;
+        flex-wrap: nowrap;
+        overflow: hidden;
+    }
+
+    #panel-minimized-bar.hidden {
+        display: none;
+    }
+
+    .minimized-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: nowrap;
+        overflow: hidden;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .minimized-row .sensor-icon {
+        color: #fff;
+        border-radius: 50%;
+        padding: 5px;
+        border: 2px solid #fff;
+    }
+
+    .minimized-row [class^="icon-taxi"].sensor-icon {
+        color: #000;
+    }
+
+    /* Each compact sensor chip */
+    .minimized-sensor-chip {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 3px 10px;
+        font-size: 0.85em;
+        font-weight: 500;
+        color: #023664;
+        white-space: nowrap;
+        max-width: 160px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex-shrink: 1;
+        min-width: 0;
+    }
+
+    .minimized-sensor-chip.chip-pinned {
+        border-color: #3498db;
+        background: #ebf5fb;
+    }
+
+    #panel-minimized-actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex-shrink: 0;
+    }
+
+    /* In minimized mode: hide the full content and bottom action bar */
+    #info-panel.panel-minimized #info-content,
+    #info-panel.panel-minimized #chart-container,
+    #info-panel.panel-minimized .actions {
+        display: none;
+    }
+
+    #info-panel.panel-minimized {
+        height: auto;
+        bottom: 0;
+        min-height: 0;
+        overflow: visible;
+    }
+
+    #info-panel.panel-minimized #info-panel-container {
+        overflow: visible;
+        height: auto;
+        max-height: none;
+    }
+
+    #info-panel.panel-minimized #info-content,
+    #info-panel.panel-minimized #chart-container,
+    #info-panel.panel-minimized .actions {
+        display: none;
     }
 
     #close-panel {

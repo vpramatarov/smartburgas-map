@@ -1,6 +1,6 @@
 // src/strategies/TaxiRankStrategy.ts
 import { BasePointStrategy } from './BasePointStrategy.js';
-import { ChartDataset, SensorProperties } from '../Types.js';
+import {ChartDataset, GeoFeature, SensorProperties} from '../Types.js';
 
 export class TaxiRankStrategy extends BasePointStrategy {
     public name = 'taxi_rank';
@@ -15,8 +15,16 @@ export class TaxiRankStrategy extends BasePointStrategy {
         return 'taxi-time';
     }
 
-    protected getIconClass(): string {
+    getIconClass(): string {
         return 'icon-taxi-sign_76588';
+    }
+
+    protected buildMarkerHtml(_feature: GeoFeature): string {
+        return `
+            <div class="custom-pin-marker" style="background-color: ${this.layerOptions.color}; color: #000;">
+                <i class="${this.getIconClass()}"></i>
+            </div>
+        `;
     }
 
     renderCardContent(container: HTMLElement, sensor: SensorProperties): void {

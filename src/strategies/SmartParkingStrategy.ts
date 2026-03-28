@@ -17,7 +17,7 @@ export class SmartParkingStrategy extends BasePointStrategy {
         return 'smart-car-parking-time';
     }
 
-    protected getIconClass(): string {
+    getIconClass(): string {
         return 'icon-car-parking';
     }
 

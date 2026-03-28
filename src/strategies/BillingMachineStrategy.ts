@@ -15,7 +15,7 @@ export class BillingMachineStrategy extends BasePointStrategy {
         return 'billing-time';
     }
 
-    protected getIconClass(): string {
+    getIconClass(): string {
         return 'icon-dollar';
     }
 

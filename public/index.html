@@ -164,7 +164,24 @@
 
 <div id="info-panel" class="hidden">
     <div id="info-panel-container">
-        <button id="close-panel">×</button>
+        <div id="panel-header-bar">
+            <button id="minimize-panel" class="mobile-only" title="Minimize panel">
+                <span class="icon-resize-small"></span>
+            </button>
+            <button id="close-panel">×</button>
+        </div>
+        <div id="panel-minimized-bar" class="hidden mobile-only">
+            <div id="panel-minimized-items"></div>
+            <div id="panel-minimized-actions">
+                <button class="action-btn btn-download-csv">
+                    <span class="icon-download"></span>
+                </button>
+                <button id="btn-full-chart-min" class="action-btn hidden">
+                    <span class="icon-resize-full"></span>
+                </button>
+                <button id="close-panel-min">×</button>
+            </div>
+        </div>
         <div id="info-content">
             <p></p>
         </div>

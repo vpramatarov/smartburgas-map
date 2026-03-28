@@ -26,7 +26,7 @@ export class CCTVStrategy extends BasePointStrategy {
         return 'cctv-time';
     }
 
-    protected getIconClass(): string {
+    getIconClass(): string {
         return 'icon-videocam';
     }
 

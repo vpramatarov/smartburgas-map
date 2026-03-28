@@ -33,7 +33,7 @@ describe('PaidParkingZonesStrategy Core Logic', () => {
         strategy = new PaidParkingZonesStrategy(mockOnFilterChange);
 
         // Initialize the mocked layer
-        strategy.initialize({}, vi.fn());
+        strategy.initialize({ on: vi.fn() } as any, vi.fn());
     });
 
     it('should bypass the region filter if the geometry matches one of its own zones (Self-Filter Guard)', () => {
