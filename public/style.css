@@ -729,6 +729,21 @@ input[name="lang"]:checked + label .flag {
     position: relative;
 }
 
+.sensor-card h2 .sensor-icon {
+    margin-right: 5px;
+}
+
+.sensor-icon {
+    color: #fff;
+    border-radius: 50%;
+    padding: 5px;
+    border: 2px solid #fff;
+}
+
+[class^="icon-taxi"].sensor-icon {
+    color: #000;
+}
+
 .sensor-header {
     display: flex;
     justify-content: space-between;
@@ -965,17 +980,6 @@ input[name="lang"]:checked + label .flag {
         overflow: hidden;
         flex: 1;
         min-width: 0;
-    }
-
-    .minimized-row .sensor-icon {
-        color: #fff;
-        border-radius: 50%;
-        padding: 5px;
-        border: 2px solid #fff;
-    }
-
-    .minimized-row [class^="icon-taxi"].sensor-icon {
-        color: #000;
     }
 
     /* Each compact sensor chip */
