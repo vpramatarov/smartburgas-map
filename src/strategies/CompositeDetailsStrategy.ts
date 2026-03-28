@@ -104,7 +104,15 @@ export class CompositeDetailsStrategy {
             if (strategy.layerOptions.translate_name_key) {
                 filter = document.createElement('h2') as HTMLHeadingElement;
                 const translation_key = strategy.layerOptions.translate_name_key as keyof TranslationKeys;
-                filter.innerText = t(translation_key, lang);
+
+                if (strategy && typeof strategy.getIconClass === 'function') {
+                    const icon = document.createElement('span') as HTMLSpanElement;
+                    icon.className = `${strategy.getIconClass()} sensor-icon`;
+                    icon.style.backgroundColor = strategy.layerOptions.color;
+                    filter.appendChild(icon);
+                }
+
+                filter.innerHTML += t(translation_key, lang);
             }
 
             const actions = document.createElement('div') as HTMLDivElement;
