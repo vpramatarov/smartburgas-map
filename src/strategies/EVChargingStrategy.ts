@@ -15,7 +15,7 @@ export class EVChargingStrategy extends BasePointStrategy {
         return 'ev-time';
     }
 
-    protected getIconClass(): string {
+    getIconClass(): string {
         return 'icon-battery';
     }
 

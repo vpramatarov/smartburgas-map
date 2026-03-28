@@ -20,7 +20,7 @@ export class TrafficSensorStrategy extends BasePointStrategy {
         return 'traffic-time';
     }
 
-    protected getIconClass(): string {
+    getIconClass(): string {
         return 'icon-car';
     }
 

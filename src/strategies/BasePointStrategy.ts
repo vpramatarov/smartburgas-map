@@ -35,6 +35,7 @@ export abstract class BasePointStrategy implements IDetailsStrategy {
     abstract name: string;
     abstract checkbox_id: string;
     abstract layerOptions: { translate_name_key?: string; color: string };
+    abstract getIconClass(): string;
 
     protected layer!: L.LayerGroup;
     protected onPin: ((sensor: SensorProperties) => void) | undefined;
@@ -45,7 +46,6 @@ export abstract class BasePointStrategy implements IDetailsStrategy {
 
     protected abstract getApiUrl(lang: string): string;
     protected abstract getTimestampElementId(): string;
-    protected abstract getIconClass(): string;
 
     abstract renderCardContent(
         container: HTMLElement,

@@ -16,7 +16,7 @@ export class AirQualityTimeSensorStrategy extends BasePointStrategy {
         return 'air-quality-time';
     }
 
-    protected getIconClass(): string {
+    getIconClass(): string {
         return 'icon-air';
     }
 

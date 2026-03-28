@@ -18,6 +18,7 @@ import { ChartRenderer } from './components/ChartRenderer.js';
 import {ISpatialFilterStrategy} from "./strategies/ISpatialFilterStrategy.js";
 import {Utils} from "./Utils.js";
 import * as Sentry from "@sentry/browser";
+import {BasePointStrategy} from "./strategies/BasePointStrategy.js";
 
 declare const L: typeof import('leaflet');
 
@@ -191,6 +192,16 @@ class SmartMap {
         const modal = document.getElementById('chart-modal') as HTMLElement;
         const btnFullChart = document.getElementById('btn-full-chart') as HTMLElement;
         const btnCloseModal = document.getElementById('close-modal') as HTMLElement;
+        const btnSelectAll = document.getElementById('btn-select-all') as HTMLLinkElement;
+        const btnDeselectAll = document.getElementById('btn-deselect-all') as HTMLLinkElement;
+        const mobileFilterBtn = document.getElementById('mobile-filter-btn') as HTMLButtonElement;
+        const closeControlsBtn = document.getElementById('close-controls') as HTMLButtonElement;
+        const controlsPanel = document.getElementById('controls') as HTMLDivElement;
+        const infoPanelEl = document.getElementById('info-panel') as HTMLElement;
+        const infoContentEl = document.getElementById('info-content') as HTMLDivElement;
+        const minimizedBar = document.getElementById('panel-minimized-bar') as HTMLElement;
+        const minimizeBtn = document.getElementById('minimize-panel') as HTMLButtonElement;
+        const btnFullChartMin = document.getElementById('btn-full-chart-min') as HTMLButtonElement;
 
         // --- Chart Modal Logic ---
         btnFullChart?.addEventListener('click', () => {
@@ -219,9 +230,6 @@ class SmartMap {
                 ChartRenderer.clear('full-chart-container');
             }
         });
-
-        const btnSelectAll = document.getElementById('btn-select-all') as HTMLLinkElement;
-        const btnDeselectAll = document.getElementById('btn-deselect-all') as HTMLLinkElement;
 
         const batchUpdate = (check: boolean) => {
             const checkboxes = document.querySelectorAll('#controls input[type="checkbox"]') as NodeListOf<HTMLInputElement>;
@@ -301,10 +309,9 @@ class SmartMap {
 
         // --- Panel Actions ---
         document.getElementById('close-panel')?.addEventListener('click', () => {
-            document.getElementById('info-panel')?.classList.add('hidden');
-            const content = document.getElementById('info-content') as HTMLDivElement;
-            if (content) {
-                content.innerHTML = '';
+            infoPanelEl?.classList.add('hidden');
+            if (infoContentEl) {
+                infoContentEl.innerHTML = '';
             }
 
             this.pinnedSensors = [];
@@ -326,10 +333,6 @@ class SmartMap {
             });
         });
 
-        const mobileFilterBtn = document.getElementById('mobile-filter-btn') as HTMLButtonElement;
-        const closeControlsBtn = document.getElementById('close-controls') as HTMLButtonElement;
-        const controlsPanel = document.getElementById('controls') as HTMLDivElement;
-
         mobileFilterBtn?.addEventListener('click', () => {
             controlsPanel?.classList.toggle('open');
             mobileFilterBtn.classList.toggle('open');
@@ -338,6 +341,37 @@ class SmartMap {
         closeControlsBtn?.addEventListener('click', () => {
             controlsPanel?.classList.remove('open');
             mobileFilterBtn?.classList.remove('open');
+        });
+
+        // --- Minimize/Compact Info Panel view ---
+        const setMinimized = (minimized: boolean) => {
+            if (minimized) {
+                infoPanelEl.classList.add('panel-minimized');
+                minimizedBar.classList.remove('hidden');
+                this.syncMinimizedBar();
+            } else {
+                infoPanelEl.classList.remove('panel-minimized');
+                minimizedBar.classList.add('hidden');
+            }
+        };
+
+        const isMobile = () => window.innerWidth <= 991;
+
+        minimizeBtn?.addEventListener('click', () => {
+            if (isMobile()) {
+                const isCurrentlyMinimized = infoPanelEl.classList.contains('panel-minimized');
+                setMinimized(!isCurrentlyMinimized);
+
+                const icon = minimizeBtn.querySelector('span');
+                if (icon) {
+                    icon.className = isCurrentlyMinimized ? 'icon-resize-small' : 'icon-resize-full';
+                }
+            }
+        });
+
+        // Full-chart button in minimized bar mirrors the main one
+        btnFullChartMin?.addEventListener('click', () => {
+            btnFullChart?.click();
         });
     }
 
@@ -357,6 +391,14 @@ class SmartMap {
 
         this.previewSensor = sensor;
         this.refreshPanel();
+
+        const infoPanelEl = document.getElementById('info-panel') as HTMLElement;
+        const isMobile = () => window.innerWidth <= 991;
+
+        if (isMobile() && infoPanelEl.classList.contains('panel-minimized')) {
+            infoPanelEl.classList.remove('panel-minimized');
+            document.getElementById('panel-minimized-bar')?.classList.add('hidden');
+        }
 
         this.postToParent({
             event: 'SENSOR_SELECTED',
@@ -448,6 +490,10 @@ class SmartMap {
             }
 
             ChartRenderer.clear('chart-container');
+        }
+
+        if (panel.classList.contains('panel-minimized')) {
+            this.syncMinimizedBar();
         }
     }
 
@@ -571,6 +617,52 @@ class SmartMap {
         });
 
         this.clearSidePanel();
+    }
+
+    private syncMinimizedBar(): void {
+        const itemsContainer = document.getElementById('panel-minimized-items') as HTMLElement;
+
+        if (!itemsContainer) {
+            return;
+        }
+
+        const btnFullChartMin = document.getElementById('btn-full-chart-min') as HTMLButtonElement;
+        itemsContainer.innerHTML = '';
+
+        const allItems = [...this.pinnedSensors];
+        if (this.previewSensor) {
+            allItems.push(this.previewSensor);
+        }
+
+        allItems.forEach(sensor => {
+            const item = document.createElement('div') as HTMLDivElement;
+            item.className = 'minimized-row';
+            const chip = document.createElement('span') as HTMLSpanElement;
+            const isPinned = this.pinnedSensors.some(p => Utils.getSensorId(p) === Utils.getSensorId(sensor));
+            chip.className = `minimized-sensor-chip ${isPinned ? 'chip-pinned' : ''}`;
+            chip.title = sensor.name || sensor.publicname || '';
+            chip.textContent = sensor.name || sensor.publicname || '—';
+
+            const strategy = this.compositeStrategy.getStrategies().get(sensor.strategy || '') as BasePointStrategy;
+
+            if (strategy && typeof strategy.getIconClass === 'function') {
+                const icon = document.createElement('span') as HTMLSpanElement;
+                icon.className = `${strategy.getIconClass()} sensor-icon`;
+                icon.style.backgroundColor = strategy.layerOptions.color;
+                item.appendChild(icon);
+            }
+
+            item.appendChild(chip);
+            itemsContainer.appendChild(item);
+        });
+
+        // Mirror the full-chart button visibility in the minimized bar
+        const mainFullChart = document.getElementById('btn-full-chart') as HTMLButtonElement;
+        if (mainFullChart && !mainFullChart.classList.contains('hidden')) {
+            btnFullChartMin?.classList.remove('hidden');
+        } else {
+            btnFullChartMin?.classList.add('hidden');
+        }
     }
 }
 
