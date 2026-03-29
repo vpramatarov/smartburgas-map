@@ -11,6 +11,10 @@ RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
 RUN git config --system --add safe.directory /app
 # Install ALL dependencies (including nodemon, typescript)
 RUN npm install
+
+# Install Playwright OS dependencies and the Chromium browser
+RUN npx playwright install --with-deps chromium
+
 # give ownership to the node user
 RUN chown -R node:node /app/node_modules
 # Switch to the built-in non-root user
