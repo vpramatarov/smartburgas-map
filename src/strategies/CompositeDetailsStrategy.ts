@@ -4,6 +4,7 @@ import {ChartDataset, SensorProperties, SupportedLanguage} from '../Types.js';
 import { t } from '../Translations.js';
 import {TranslationKeys} from "../locales/bg.js";
 import {Utils} from "../Utils.js";
+import {BasePointStrategy} from "./BasePointStrategy.js";
 
 /**
  * Manages the Side Panel.
@@ -78,7 +79,7 @@ export class CompositeDetailsStrategy {
 
         items.forEach((sensor, index) => {
             const strategyName = sensor.strategy || '';
-            const strategy = this.strategies.get(strategyName);
+            const strategy = this.strategies.get(strategyName) as BasePointStrategy;
             if (!strategy) {
                 return;
             }
