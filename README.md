@@ -83,6 +83,4 @@ Website where iframe is integrated sample code (HTML/JS):
 run inside docker container.
 
 1. Backend & API tests: run `npm test`
-2. E2E tests
-   * Install dependencies: run `npx playwright install chromium` & `npx playwright install-deps chromium`
-   * Run tests: `npm run test:e2e` or `npx playwright test e2e/app.spec.ts --trace on` to generate trace files in `test-results` folder.
+2. E2E tests: run `npm run test:e2e` or `npx playwright test e2e/app.spec.ts --trace on` to generate trace files in `test-results` folder.
