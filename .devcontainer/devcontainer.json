@@ -1,0 +1,15 @@
+{
+  "name": "SmartBurgas Node App",
+  "dockerComposeFile": ["../docker-compose.yaml"],
+  "service": "app",
+  "workspaceFolder": "/app",
+  "remoteUser": "node",
+  "mounts": [
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,target=/home/node/.gitconfig,type=bind,readonly"
+  ],
+  "customizations": {
+    "jetbrains": {
+      "backend": "PhpStorm"
+    }
+  }
+}
