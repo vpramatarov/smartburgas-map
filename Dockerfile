@@ -9,16 +9,28 @@ FROM base AS development
 RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
 # Tell Git to trust the /app directory globally for the whole container
 RUN git config --system --add safe.directory /app
+
+# Set the Playwright path variable globally
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+
+# 3. Create ALL necessary folders while we are still 'root', and give them to 'node'
+RUN mkdir -p /app/node_modules /ms-playwright && chown -R node:node /app /ms-playwright
+
+# Switch to the node user BEFORE installing packages
+USER node
 # Install ALL dependencies (including nodemon, typescript)
 RUN npm install
 
+# Switch to root JUST to install Playwright's OS-level dependencies (fonts, libraries)
+USER root
 # Install Playwright OS dependencies and the Chromium browser
-RUN npx playwright install --with-deps chromium
+RUN npx playwright install-deps chromium
 
-# give ownership to the node user
-RUN chown -R node:node /app/node_modules
-# Switch to the built-in non-root user
+# Switch back to the built-in non-root user
 USER node
+# Switch back to node to install the actual browser binaries in the node user's safe cache
+RUN npx playwright install chromium
+
 CMD ["npm", "start"]
 
 # Stage: BUILDER - Compiles the TS code for production
