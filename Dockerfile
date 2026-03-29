@@ -5,6 +5,10 @@ COPY package*.json ./
 
 # Stage: DEVELOPMENT - Used by docker-compose for local coding
 FROM base AS development
+# Install Git
+RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+# Tell Git to trust the /app directory globally for the whole container
+RUN git config --system --add safe.directory /app
 # Install ALL dependencies (including nodemon, typescript)
 RUN npm install
 CMD ["npm", "start"]
