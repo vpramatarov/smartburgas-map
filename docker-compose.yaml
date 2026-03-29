@@ -5,6 +5,7 @@ services:
       target: development
     ports:
       - "${PORT}:${PORT}"
+    shm_size: '2gb'
     volumes:
       - .:/app
       - smartburgas_node_modules:/app/node_modules
