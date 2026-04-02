@@ -1,6 +1,5 @@
 import 'dotenv/config';
 import express, {NextFunction, Request, Response} from 'express';
-import axios from 'axios';
 import { readFileSync } from 'fs';
 import path from 'path';
 import {Config, GeoFeature, GeoFeatureCollection, SupportedLanguage, Target} from './Types.js'
@@ -166,8 +165,14 @@ routeConfigs.forEach(route => {
 async function getData(url: string, req: Partial<Request>) {
     const upstreamUrl = `${url}${buildExtraQuery(req)}`;
     console.log(`[Proxy] Fetching ${upstreamUrl}`);
-    const response = await axios.get(upstreamUrl);
-    return {data: response.data, lastUpdated: Date.now()};
+    const response = await fetch(upstreamUrl);
+
+    if (!response.ok) {
+        throw new Error(`Upstream returned ${response.status}`);
+    }
+
+    const jsonData = await response.json();
+    return {data: jsonData, lastUpdated: Date.now()};
 }
 
 async function prefetchAll() {
