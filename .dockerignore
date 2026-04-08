@@ -3,7 +3,12 @@ npm-debug.log
 Dockerfile
 .dockerignore
 .git
+coverage
+*.log
 .env
+.vscode
+.idea
+.DS_Store
 tests
 e2e
 playwright-report
