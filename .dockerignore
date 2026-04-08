@@ -1,15 +1,45 @@
+# Dependencies
 node_modules
 npm-debug.log
+
+# Docker
 Dockerfile
 .dockerignore
+docker-compose.*
+
+# GIT
+.github
 .git
-coverage
+.gitignore
+.gitattributes
+
+# Log files
 *.log
+*.txt
+
+# Documentation & Markdown
+README.md
+LICENSE
+CHANGELOG.md
+docs/
+
+# Environment variables
 .env
+.env.local
+.env.*
+
+# Local Dev Tooling
+.devcontainer
 .vscode
 .idea
 .DS_Store
+
+# Tests
 tests
 e2e
 playwright-report
 test-results
+coverage
+playwright.config.ts
+vitest.config.ts
+vitest.workspace.ts
