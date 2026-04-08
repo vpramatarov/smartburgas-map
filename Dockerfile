@@ -51,6 +51,7 @@ RUN npm ci --omit=dev
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/cau.json ./cau.json
+COPY --from=builder /app/paid-parking-zones.json ./paid-parking-zones.json
 
 # Switch to the built-in non-root user for security
 USER node
