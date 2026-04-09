@@ -199,7 +199,7 @@ async function prefetchAll() {
 }
 
 function createFeaturesCollectionFromApiResult(result: { data: {features1: GeoFeature[]}; }, target_key: string): GeoFeatureCollection {
-    let features: GeoFeature[] = [];
+    const featureMap = new Map<string, GeoFeature>();
 
     for (let i = 0; i < result.data.features1.length; i++) {
         let feature = result.data.features1[i];
@@ -231,25 +231,33 @@ function createFeaturesCollectionFromApiResult(result: { data: {features1: GeoFe
             };
         }
 
-        features[i] = {
+        const id = feature.properties.detector_id || feature.properties.id || feature.properties.MobileCenterId || feature.properties.parking_id || null;
+        const name = feature.properties.name || feature.properties.MobileCenterName || target_key + '_' + Utils.generateCustomId();
+        const key = id != null ? String(id) : name;
+
+        if (featureMap.has(key)) {
+            continue;
+        }
+
+        featureMap.set(key, {
             type: "Feature",
             geometry: {
                 "type": feature.properties.geometry.type,
                 "coordinates": [lat, lng]
             },
             properties: {
-                id: feature.properties.detector_id || feature.properties.id || feature.properties.MobileCenterId || feature.properties.parking_id || null,
-                name: feature.properties.name || feature.properties.MobileCenterName || target_key + '_' + Utils.generateCustomId(),
+                id: id,
+                name: name,
                 description: feature.properties.description || feature.properties.MobileCenterDescription || '',
                 data: feature.properties.data,
                 additional_info: additional_info
             }
-        };
+        });
     }
 
     return {
         type: "FeatureCollection",
-        features: features
+        features: Array.from(featureMap.values())
     };
 }
 

@@ -6,11 +6,12 @@ import { TrafficSensorStrategy } from '../src/strategies/TrafficSensorStrategy.j
 
 const mockTimestampEl = { innerText: '' };
 
+const mockLayerGroup = { addTo: vi.fn(), clearLayers: vi.fn() };
 vi.stubGlobal('L', {
-    layerGroup: vi.fn(() => ({
-        addTo: vi.fn(),
-        clearLayers: vi.fn(),
-    })),
+    layerGroup: vi.fn(() => mockLayerGroup),
+    markerClusterGroup: vi.fn(() => mockLayerGroup),
+    divIcon: vi.fn(() => ({})),
+    point: vi.fn(() => ({})),
 });
 
 vi.stubGlobal('document', {

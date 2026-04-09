@@ -3,6 +3,14 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { CCTVStrategy } from '../src/strategies/CCTVStrategy.js';
 import { SensorProperties } from '../src/Types.js';
 
+// Mock Leaflet (CCTVStrategy extends BasePointStrategy which uses markerClusterGroup)
+vi.stubGlobal('L', {
+    layerGroup: vi.fn(() => ({ addTo: vi.fn(), clearLayers: vi.fn() })),
+    markerClusterGroup: vi.fn(() => ({ addTo: vi.fn(), clearLayers: vi.fn() })),
+    divIcon: vi.fn(() => ({})),
+    point: vi.fn(() => ({})),
+});
+
 // Mock the Browser DOM
 vi.stubGlobal('document', {
     createElement: vi.fn((tag) => {

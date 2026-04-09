@@ -3,8 +3,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { SmartParkingStrategy } from '../src/strategies/SmartParkingStrategy.js';
 import { SensorProperties } from '../src/Types.js';
 
+const mockLayerGroup = { addTo: vi.fn(), clearLayers: vi.fn() };
 vi.stubGlobal('L', {
-    layerGroup: vi.fn(() => ({ addTo: vi.fn(), clearLayers: vi.fn() })),
+    layerGroup: vi.fn(() => mockLayerGroup),
+    markerClusterGroup: vi.fn(() => mockLayerGroup),
+    divIcon: vi.fn(() => ({})),
+    point: vi.fn(() => ({})),
 });
 
 vi.mock('../src/Translations.js', () => ({

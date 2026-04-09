@@ -13,6 +13,7 @@ import { Utils } from '../Utils.js';
 import { t } from '../Translations.js';
 
 declare const L: typeof import('leaflet');
+/// <reference types="leaflet.markercluster" />
 import type * as GeoJSON from 'geojson';
 
 /**
@@ -37,7 +38,7 @@ export abstract class BasePointStrategy implements IDetailsStrategy {
     abstract layerOptions: { translate_name_key?: string; color: string };
     abstract getIconClass(): string;
 
-    protected layer!: L.LayerGroup;
+    protected layer!: InstanceType<typeof L.MarkerClusterGroup>;
     protected onPin: ((sensor: SensorProperties) => void) | undefined;
     protected currentLang: SupportedLanguage = 'bg';
     protected cachedData: GeoFeature[] = [];
@@ -76,7 +77,25 @@ export abstract class BasePointStrategy implements IDetailsStrategy {
 
     initialize(map: L.Map, onPin: (sensor: SensorProperties) => void): void {
         this.onPin = onPin;
-        this.layer = L.layerGroup();
+        this.layer = L.markerClusterGroup({
+            maxClusterRadius: 50,
+            iconCreateFunction: (cluster) => {
+                const count = cluster.getChildCount();
+                let sizeClass = 'marker-cluster-small';
+                let size = 40;
+                if (count >= 50) {
+                    sizeClass = 'marker-cluster-large'; size = 60;
+                } else if (count >= 10) {
+                    sizeClass = 'marker-cluster-medium'; size = 50;
+                }
+
+                return L.divIcon({
+                    html: `<div style="background-color: ${this.layerOptions.color}"><i class="${this.getIconClass()}"></i><span>${count}</span></div>`,
+                    className: `marker-cluster ${sizeClass}`,
+                    iconSize: L.point(size, size)
+                });
+            }
+        });
     }
 
     getLayer(): L.LayerGroup {

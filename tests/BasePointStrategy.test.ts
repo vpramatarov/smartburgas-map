@@ -15,6 +15,7 @@ const mockGeoJsonLayer = { addTo: vi.fn() };
 
 vi.stubGlobal('L', {
     layerGroup: vi.fn(() => mockLayerGroup),
+    markerClusterGroup: vi.fn(() => mockLayerGroup),
     geoJSON: vi.fn(() => mockGeoJsonLayer),
     marker: vi.fn(() => ({ bindPopup: vi.fn().mockReturnThis(), on: vi.fn() })),
     divIcon: vi.fn(() => ({})),
@@ -172,5 +173,40 @@ describe('BasePointStrategy.buildMarkerHtml', () => {
     it('includes the icon class in the marker HTML', () => {
         const html = (strategy as any).buildMarkerHtml(makePointFeature([5, 5]));
         expect(html).toContain('icon-test');
+    });
+});
+
+// ── Clustering
+
+describe('BasePointStrategy.initialize — clustering', () => {
+    let strategy: TestStrategy;
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+        strategy = new TestStrategy();
+        strategy.initialize({} as any, vi.fn());
+    });
+
+    it('creates a MarkerClusterGroup instead of a plain LayerGroup', () => {
+        expect(L.markerClusterGroup).toHaveBeenCalledOnce();
+        expect(L.layerGroup).not.toHaveBeenCalled();
+    });
+
+    it('passes a custom iconCreateFunction that uses the strategy color', () => {
+        const options = vi.mocked(L.markerClusterGroup).mock.calls[0][0] as any;
+        expect(options).toBeDefined();
+        expect(typeof options.iconCreateFunction).toBe('function');
+
+        // Simulate calling the iconCreateFunction with a mock cluster
+        const mockCluster = { getChildCount: () => 5 };
+        options.iconCreateFunction(mockCluster);
+
+        // The divIcon should include the strategy's color (#ff0000)
+        const divIconCall = vi.mocked(L.divIcon).mock.calls.at(-1)![0] as any;
+        expect(divIconCall.html).toContain('#ff0000');
+    });
+
+    it('returns the cluster group from getLayer()', () => {
+        expect(strategy.getLayer()).toBe(mockLayerGroup);
     });
 });
