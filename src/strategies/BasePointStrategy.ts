@@ -89,9 +89,15 @@ export abstract class BasePointStrategy implements IDetailsStrategy {
                     sizeClass = 'marker-cluster-medium'; size = 50;
                 }
 
+                let colorClass = '';
+
+                if (this.name === 'taxi_rank') {
+                    colorClass += 'dark-text'
+                }
+
                 return L.divIcon({
                     html: `<div style="background-color: ${this.layerOptions.color}"><i class="${this.getIconClass()}"></i><span>${count}</span></div>`,
-                    className: `marker-cluster ${sizeClass}`,
+                    className: `marker-cluster ${sizeClass} ${colorClass}`,
                     iconSize: L.point(size, size)
                 });
             }

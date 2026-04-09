@@ -21,7 +21,7 @@ export class TaxiRankStrategy extends BasePointStrategy {
 
     protected buildMarkerHtml(_feature: GeoFeature): string {
         return `
-            <div class="custom-pin-marker" style="background-color: ${this.layerOptions.color}; color: #000;">
+            <div class="custom-pin-marker dark-text" style="background-color: ${this.layerOptions.color};">
                 <i class="${this.getIconClass()}"></i>
             </div>
         `;

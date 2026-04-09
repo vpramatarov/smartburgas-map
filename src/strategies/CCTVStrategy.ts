@@ -32,7 +32,7 @@ export class CCTVStrategy extends BasePointStrategy {
 
     // ── Custom zoom-scale setup 
 
-    override initialize(map: any, onPin: (sensor: SensorProperties) => void): void {
+    override initialize(map: L.Map, onPin: (sensor: SensorProperties) => void): void {
         super.initialize(map, onPin);
 
         const updateZoomScale = () => {

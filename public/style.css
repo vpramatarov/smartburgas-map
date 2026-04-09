@@ -27,6 +27,10 @@ ul li {
     margin-bottom: 8px;
 }
 
+.dark-text, .dark-text i, .dark-text span {
+    color: #000;
+}
+
 .leaflet-container {
     font-size: 0.9em;
 }

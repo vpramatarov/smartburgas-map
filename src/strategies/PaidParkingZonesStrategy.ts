@@ -228,11 +228,12 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
                 const start = formatTime(props.StartTime);
                 const end = formatTime(props.EndTime);
                 const hoursStr = start && end ? `${start} - ${end}` : t('status_unknown', this.currentLang);
+                // ${props.PricePerHo} - 2
 
                 const popupHtml = `
                     <div class="marker-popup-hover" style="min-width: 160px;">
                         <h4 style="margin-bottom:8px; border-bottom:1px solid #ccc; padding-bottom:4px;">${name}</h4>
-                        <p style="margin:4px 0;"><strong>${t('price_per_hour', this.currentLang)}:</strong> ${props.PricePerHo} ${t('bgn', this.currentLang)}</p>
+                        <p style="margin:4px 0;"><strong>${t('price_per_hour', this.currentLang)}:</strong> 1 &euro; / 1.96 ${t('bgn', this.currentLang)}</p>
                         <p style="margin:4px 0;"><strong>${t('sms_number', this.currentLang)}:</strong> ${props.SmsNumber}</p>
                         <p style="margin:4px 0;"><strong>${t('working_hours', this.currentLang)}:</strong> ${hoursStr}</p>
                         <p style="margin:8px 0 0 0; font-size: 0.85em; color: #666; font-style: italic;">${t('click_to_filter', this.currentLang)}</p>
