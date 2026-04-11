@@ -69,7 +69,7 @@ describe('TaxiRankStrategy.buildMarkerHtml', () => {
 
     it('uses dark text color for contrast on the yellow background', () => {
         const html = (strategy as any).buildMarkerHtml(dummyFeature);
-        expect(html).toContain('color: #000');
+        expect(html).toContain('dark-text');
     });
 
     it('includes the taxi icon class', () => {
