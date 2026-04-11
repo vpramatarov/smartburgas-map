@@ -84,6 +84,7 @@ export const en: TranslationKeys = {
     working_hours: 'Working Hours',
     sms_number: 'SMS Number',
     bgn: 'BGN',
+    paid_zone_info: 'More info',
 
     // --- Misc ---
     filters: 'Filters',

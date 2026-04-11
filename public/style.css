@@ -182,7 +182,6 @@ input[name="lang"]:checked + label .flag {
 /** Marker popup */
 .marker-popup-hover {
     min-width: 150px;
-    pointer-events: none;
 }
 
 .marker-popup-hover h4 {

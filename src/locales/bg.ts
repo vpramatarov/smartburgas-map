@@ -83,6 +83,7 @@ export const bg = {
     working_hours: 'Работно време',
     sms_number: 'SMS номер',
     bgn: 'лв.',
+    paid_zone_info: 'Информация за зоната',
 
     // --- Misc ---
     filters: 'Филтри',

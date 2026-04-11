@@ -2,7 +2,7 @@ import 'dotenv/config';
 import express, {NextFunction, Request, Response} from 'express';
 import { readFileSync } from 'fs';
 import path from 'path';
-import {Config, GeoFeature, GeoFeatureCollection, SupportedLanguage, Target} from './Types.js'
+import {Config, GeoFeature, GeoFeatureCollection, SupportedLanguage, Target, ZonePrice} from './Types.js'
 
 import {fileURLToPath} from 'url';
 import {Utils} from "./Utils.js";
@@ -107,6 +107,54 @@ function loadStaticJson(filename: string): object {
 
 const adminRegionsData = loadStaticJson('cau.json');
 const paidParkingZonesData = loadStaticJson('paid-parking-zones.json');
+const zonePriceCache: Record<'blue' | 'green', ZonePrice | null> = { blue: null, green: null };
+
+const ZONE_PRICE_URLS: Record<'blue' | 'green', string> = {
+    blue:  'https://www.transportburgas.bg/bg/правила-в-платени-зони-град-бургас',
+    green: 'https://www.transportburgas.bg/bg/правила-в-зелена-зона-град-бургас',
+};
+
+
+async function scrapeZonePrice(zone: 'blue' | 'green'): Promise<void> {
+    const url = ZONE_PRICE_URLS[zone];
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const html = await response.text();
+
+        // Strip all tags and decode entities first, then match the price
+        const text = html
+            .replace(/<[^>]+>/g, ' ')
+            .replace(/&nbsp;/g, ' ')
+            .replace(/&euro;/g, 'евро')
+            .replace(/\s+/g, ' ');
+
+        const priceMatch = text.match(/([\d,\.]+)\s*евро\s*\/?[\s]*?([\d,\.]+)\s*лева/i);
+
+        if (!priceMatch) {
+            console.warn(`[ZonePriceScraper] Could not find price for zone: ${zone}`);
+            return;
+        }
+
+        const price = `${priceMatch[1].replace(',', '.')} &euro; / ${priceMatch[2]}`;
+
+        zonePriceCache[zone] = { raw: price, fetchedAt: new Date().toISOString() };
+        console.log(`[ZonePriceScraper] ${zone} zone price: "${price}"`);
+
+    } catch (err: any) {
+        console.error(`[ZonePriceScraper] Failed to fetch ${zone} zone price:`, err.message);
+    }
+}
+
+async function scrapeAllZonePrices(): Promise<void> {
+    await Promise.allSettled([
+        scrapeZonePrice('blue'),
+        scrapeZonePrice('green'),
+    ]);
+}
 
 // --- Expose Public Config ---
 app.get('/api/config', (_req, res) => {
@@ -123,7 +171,24 @@ app.get('/api/admin-regions', (_req, res) => {
 
 // --- Paid Parking Zones ---
 app.get('/api/paid-parking-zones', (_req, res) => {
-    res.json(paidParkingZonesData);
+    // res.json(paidParkingZonesData);
+    const data = paidParkingZonesData as GeoFeatureCollection;
+
+    const paidZonesData = {
+        ...data,
+        features: data.features.map((feature: GeoFeature) => ({
+            ...feature,
+            properties: {
+                ...feature.properties,
+                parsedPrice: feature.properties.ZoneType === 1
+                    ? zonePriceCache.green?.raw ?? null
+                    : zonePriceCache.blue?.raw ?? null,
+                zoneInfoUrl: feature.properties.ZoneType === 1 ? ZONE_PRICE_URLS.green : ZONE_PRICE_URLS.blue
+            }
+        }))
+    };
+
+    res.json(paidZonesData);
 });
 
 // --- Dynamic API Proxy Router ---
@@ -261,10 +326,37 @@ function createFeaturesCollectionFromApiResult(result: { data: {features1: GeoFe
     };
 }
 
+// midnight scheduler for paid zones prices
+function scheduleMidnightJob(job: () => Promise<void>): void {
+    const msUntilMidnight = (): number => {
+        const now = new Date();
+        const midnight = new Date(now);
+        midnight.setHours(24, 0, 0, 0);   // next midnight in local time
+        return midnight.getTime() - now.getTime();
+    };
+
+    // Fire once at the next midnight, then every 24 h after that
+    setTimeout(() => {
+        job();
+        setInterval(job, 24 * 60 * 60 * 1000);
+    }, msUntilMidnight());
+
+    console.log(`[ZonePriceScraper] Next scrape in ${Math.round(msUntilMidnight() / 60000)} minutes`);
+}
+
+async function initialize(): Promise<void> {
+    // Scrape zone prices immediately on startup, then every night at midnight
+    console.log('[ZonePriceScraper] Running initial scrape...');
+    await scrapeAllZonePrices();
+    console.log('[ZonePriceScraper] Initial scrape done.');
+    scheduleMidnightJob(scrapeAllZonePrices);
+    await prefetchAll();
+}
+
 // Start Server
 if (process.env.NODE_ENV !== 'test') {
     app.listen(config.port, async () => {
         console.log(`\n🚀 Server running at ${config.appUrl}:${config.port}`);
-        await prefetchAll();
+        await initialize();
     });
 }
