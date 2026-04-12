@@ -154,6 +154,72 @@ describe('BasePointStrategy.applyRegionFilter', () => {
     });
 });
 
+// ── loadData — filter persistence
+
+describe('BasePointStrategy.loadData — filter persistence', () => {
+    let strategy: TestStrategy;
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+        strategy = new TestStrategy();
+        strategy.initialize({} as any, vi.fn());
+
+        vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+            ok: true,
+            headers: { get: () => null },
+            json: async () => ({
+                features: [
+                    makePointFeature([5, 5]),   // inside [0,0]→[10,10]
+                    makePointFeature([15, 15]), // outside
+                ]
+            })
+        }));
+    });
+
+    it('re-applies the active region filter after loadData completes', async () => {
+        // Set an active filter BEFORE loading data
+        (strategy as any).cachedData = [makePointFeature([5, 5])];
+        strategy.applyRegionFilter(insidePolygon);
+        vi.mocked(L.geoJSON).mockClear();
+
+        // loadData fetches fresh data and should re-apply insidePolygon, not null
+        await strategy.loadData('bg');
+
+        const rendered = vi.mocked(L.geoJSON).mock.calls[0][0] as GeoFeature[];
+        // Only [5,5] is inside — [15,15] should be filtered out
+        expect(rendered).toHaveLength(1);
+        expect((rendered[0].geometry.coordinates as number[])[0]).toBe(5);
+    });
+
+    it('shows all data when no filter was ever set (default null)', async () => {
+        // No applyRegionFilter call — currentFilterGeometry defaults to null
+        await strategy.loadData('bg');
+
+        const rendered = vi.mocked(L.geoJSON).mock.calls[0][0] as GeoFeature[];
+        expect(rendered).toHaveLength(2);
+    });
+
+    it('uses the most recent filter if filter changes before loadData resolves', async () => {
+        // Set filter A
+        (strategy as any).cachedData = [makePointFeature([5, 5])];
+        strategy.applyRegionFilter(insidePolygon);
+
+        // Now change filter to a smaller polygon that excludes [5,5]
+        const smallPolygon: FilterGeometry = {
+            type: 'Polygon',
+            coordinates: [[[20, 20], [30, 20], [30, 30], [20, 30], [20, 20]]]
+        };
+        strategy.applyRegionFilter(smallPolygon);
+        vi.mocked(L.geoJSON).mockClear();
+
+        await strategy.loadData('bg');
+
+        const rendered = vi.mocked(L.geoJSON).mock.calls[0][0] as GeoFeature[];
+        // Neither [5,5] nor [15,15] is inside [20,20]→[30,30]
+        expect(rendered).toHaveLength(0);
+    });
+});
+
 // ── buildMarkerHtml
 
 describe('BasePointStrategy.buildMarkerHtml', () => {

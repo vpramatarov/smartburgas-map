@@ -616,7 +616,13 @@ class SmartMap {
             }
         });
 
-        this.clearSidePanel();
+        // Clear the preview sensor (transient) but keep pinned sensors
+        this.previewSensor = null;
+        if (this.pinnedSensors.length === 0) {
+            CCTVStrategy.stopAll();
+        }
+        this.refreshPanel();
+        CCTVStrategy.garbageCollect();
     }
 
     private syncMinimizedBar(): void {

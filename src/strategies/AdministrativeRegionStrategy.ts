@@ -35,6 +35,10 @@ export class AdministrativeRegionStrategy implements ISpatialFilterStrategy {
     }
 
     async loadData(lang: string): Promise<void> {
+        // Remember selection before reload (CAU name is language-independent)
+        const selectedName = this.currentSelection?.name ?? null;
+        this.currentSelection = null;
+
         this.layer.clearLayers();
         this.currentLang = lang as SupportedLanguage;
 
@@ -89,6 +93,15 @@ export class AdministrativeRegionStrategy implements ISpatialFilterStrategy {
 
         this.layer.addLayer(geoJsonLayer);
         this.renderSidebarControls(data.features);
+
+        // Re-apply selection if one was active before the reload
+        if (selectedName) {
+            const layer = this.featureMap.get(selectedName);
+            if (layer) {
+                const geometry = (layer as any).feature?.geometry as FilterGeometry;
+                this.selectRegion(selectedName, layer, geometry, false);
+            }
+        }
     }
 
     public selectRegionByPoint(point: Position, triggerFilter: boolean = true): void {

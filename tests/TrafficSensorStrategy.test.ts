@@ -2,14 +2,21 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TrafficSensorStrategy } from '../src/strategies/TrafficSensorStrategy.js';
 
-// ── Minimal mocks 
+// ── Minimal mocks
+
+vi.mock('../src/Translations.js', () => ({
+    t: vi.fn((key: string) => key),
+}));
 
 const mockTimestampEl = { innerText: '' };
 
 const mockLayerGroup = { addTo: vi.fn(), clearLayers: vi.fn() };
+const mockGeoJsonLayer = { addTo: vi.fn() };
 vi.stubGlobal('L', {
     layerGroup: vi.fn(() => mockLayerGroup),
     markerClusterGroup: vi.fn(() => mockLayerGroup),
+    geoJSON: vi.fn(() => mockGeoJsonLayer),
+    marker: vi.fn(() => ({ bindPopup: vi.fn().mockReturnThis(), on: vi.fn() })),
     divIcon: vi.fn(() => ({})),
     point: vi.fn(() => ({})),
 });
@@ -109,6 +116,59 @@ describe('TrafficSensorStrategy.loadData error handling', () => {
     });
 });
 
+// ── loadData — filter persistence
+
+describe('TrafficSensorStrategy.loadData — filter persistence', () => {
+    it('re-applies the active region filter after loadData completes', async () => {
+        const strategy = makeStrategy();
+
+        // Polygon covering [0,0]→[10,10]
+        const insidePolygon = {
+            type: 'Polygon' as const,
+            coordinates: [[[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]]
+        };
+
+        // Prime the strategy with cached data so applyRegionFilter stores the geometry
+        (strategy as any).cachedData = [{
+            type: 'Feature',
+            geometry: { type: 'Point', coordinates: [5, 5] },
+            properties: { name: 'inside', strategy: 'traffic_sensor', additional_info: {} }
+        }];
+        strategy.applyRegionFilter(insidePolygon as any);
+
+        // Mock fetch to return features inside and outside the polygon
+        vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+            ok: true,
+            headers: { get: () => '2025-01-01T00:00:00Z' },
+            json: async () => ({
+                features: [
+                    {
+                        type: 'Feature',
+                        geometry: { type: 'Point', coordinates: [5, 5] },
+                        properties: { name: 'inside', strategy: 'traffic_sensor', additional_info: {}, data: [] }
+                    },
+                    {
+                        type: 'Feature',
+                        geometry: { type: 'Point', coordinates: [15, 15] },
+                        properties: { name: 'outside', strategy: 'traffic_sensor', additional_info: {}, data: [] }
+                    }
+                ]
+            })
+        }));
+
+        vi.mocked(L.markerClusterGroup).mockClear();
+
+        // loadData with a valid date range — should re-apply insidePolygon filter
+        await strategy.loadData('bg', { start_date: '2025-01-01', end_date: '2025-01-10' });
+
+        // The last L.geoJSON call should have received only the inside feature
+        const lastCall = vi.mocked(L.geoJSON).mock.calls;
+        const rendered = lastCall[lastCall.length - 1][0] as any[];
+        expect(rendered).toHaveLength(1);
+        expect(rendered[0].properties.name).toBe('inside');
+    });
+});
+
 // ── Date parsing
 
 describe('TrafficSensorStrategy.parseTrafficDate', () => {
@@ -174,7 +234,7 @@ describe('TrafficSensorStrategy.getChartData', () => {
         expect(result).not.toBeNull();
         expect(result!.values).toEqual([30, 20, 50]); // sorted chronologically
         expect(result!.times).toHaveLength(3);
-        expect(result!.unit).toBe('коли');
+        expect(result!.unit).toBe('cars');
     });
 
     it('returns sorted data points for car_speed', () => {

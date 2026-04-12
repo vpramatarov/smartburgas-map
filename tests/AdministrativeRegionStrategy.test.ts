@@ -280,7 +280,79 @@ describe('AdministrativeRegionStrategy — selection state management', () => {
     });
 });
 
-// ── loadData error handling 
+// ── Selection persistence across loadData reloads
+
+describe('AdministrativeRegionStrategy — selection persistence across reload', () => {
+    let strategy: AdministrativeRegionStrategy;
+    let onFilterChange: ReturnType<typeof vi.fn>;
+
+    beforeEach(async () => {
+        vi.clearAllMocks();
+        mockCheckbox.checked = false;
+        mockContainer.innerHTML = '';
+        ({ strategy, onFilterChange } = makeStrategy());
+    });
+
+    it('preserves the selected region highlight after loadData is called again', async () => {
+        // Load and select a region
+        const layerMock = await loadWithOneRegion(strategy);
+        layerMock.fire('click');
+        expect(onFilterChange).toHaveBeenCalledOnce();
+
+        // Reload data (e.g., language change) — uses the same mock response
+        onFilterChange.mockClear();
+        createdLayers.clear();
+        vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+            ok: true,
+            json: async () => ({ features: [mockGeoJsonFeature] })
+        }));
+        await strategy.loadData('en');
+
+        // The newly created layer for the same region should have the selection style
+        const newLayer = createdLayers.get('Бургас')!;
+        const styleCall = newLayer.setStyle.mock.calls.find(
+            (call: any) => call[0].color === '#e74c3c'
+        );
+        expect(styleCall).toBeDefined();
+    });
+
+    it('does not re-trigger onFilterChange when re-applying selection after reload', async () => {
+        const layerMock = await loadWithOneRegion(strategy);
+        layerMock.fire('click');
+
+        onFilterChange.mockClear();
+        createdLayers.clear();
+        vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+            ok: true,
+            json: async () => ({ features: [mockGeoJsonFeature] })
+        }));
+        await strategy.loadData('en');
+
+        // Re-applying the selection should NOT trigger the filter callback
+        expect(onFilterChange).not.toHaveBeenCalled();
+    });
+
+    it('does not attempt re-selection when no region was selected before reload', async () => {
+        await loadWithOneRegion(strategy);
+
+        // No click — no selection
+        createdLayers.clear();
+        vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+            ok: true,
+            json: async () => ({ features: [mockGeoJsonFeature] })
+        }));
+        await strategy.loadData('en');
+
+        // The new layer should NOT have the selection style
+        const newLayer = createdLayers.get('Бургас')!;
+        const selectionStyleCall = newLayer.setStyle.mock.calls.find(
+            (call: any) => call[0].color === '#e74c3c'
+        );
+        expect(selectionStyleCall).toBeUndefined();
+    });
+});
+
+// ── loadData error handling
 
 describe('AdministrativeRegionStrategy — loadData', () => {
     it('does throw when the API returns a non-ok response', async () => {

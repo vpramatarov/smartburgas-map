@@ -25,6 +25,7 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
     // Persistent popup shown after a click (desktop & mobile)
     private activePopup: L.Popup | null = null;
     private tooltipHtmlMap: Map<string, string> = new Map();
+    private currentFilterGeometry: FilterGeometry | null = null;
 
     constructor(onFilterChange: (geometry: FilterGeometry | null, sourceStrategy: ISpatialFilterStrategy, feature?: GeoFeature) => void) {
         this.onFilterChange = onFilterChange;
@@ -48,6 +49,18 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
     }
 
     async loadData(lang: string): Promise<void> {
+        // Save the selected zone's BG Name before reload (display name changes with language, but Name is stable)
+        let reSelectName: string | null = null;
+        if (this.currentSelection) {
+            const geom = this.getCurrentGeometry();
+            const feature = this.cachedData.find(f => f.geometry === geom);
+            if (feature) {
+                reSelectName = feature.properties?.Name ?? null;
+            }
+        }
+        this.currentSelection = null;
+        this.closeActivePopup();
+
         this.currentLang = lang as SupportedLanguage;
         this.layer.clearLayers();
 
@@ -58,7 +71,20 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
 
         const data = await res.json();
         this.cachedData = data.features || [];
-        this.applyRegionFilter(null);
+        this.applyRegionFilter(this.currentFilterGeometry);
+
+        // Re-apply selection if one was active before the reload
+        if (reSelectName) {
+            const feature = this.cachedData.find(f => f.properties?.Name === reSelectName);
+            if (feature) {
+                const displayName = this.currentLang === 'en' && feature.properties?.NameEn
+                    ? feature.properties.NameEn : feature.properties?.Name;
+                const layer = this.featureMap.get(displayName);
+                if (displayName && layer) {
+                    this.toggleSelection(displayName, layer, feature, false, false);
+                }
+            }
+        }
     }
 
     applyRegionFilter(geometry: FilterGeometry | null): void {
@@ -71,6 +97,7 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
             return;
         }
 
+        this.currentFilterGeometry = geometry;
         this.layer.clearLayers();
         this.featureMap.clear();
         this.tooltipHtmlMap.clear();
@@ -189,7 +216,7 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
 
         this.geoJsonLayer = L.geoJSON(features as any, {
             style: (feature?: GeoJSON.Feature): L.PathOptions => {
-                const props = (feature as unknown as GeoFeature)?.properties;
+                const props = (feature as GeoFeature)?.properties;
                 const isGreen = props?.ZoneType === 1;
                 const color = isGreen ? '#2ecc71' : '#3498db';
                 const name: string = this.currentLang === 'en' && props?.NameEn ? props.NameEn : props?.Name;

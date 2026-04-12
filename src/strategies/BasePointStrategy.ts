@@ -42,6 +42,7 @@ export abstract class BasePointStrategy implements IDetailsStrategy {
     protected onPin: ((sensor: SensorProperties) => void) | undefined;
     protected currentLang: SupportedLanguage = 'bg';
     protected cachedData: GeoFeature[] = [];
+    protected currentFilterGeometry: FilterGeometry | null = null;
 
     // Abstract hooks
 
@@ -132,7 +133,7 @@ export abstract class BasePointStrategy implements IDetailsStrategy {
         this.cachedData = Array.isArray(data) ? data : data.features || [];
 
         this.onLoadSuccess(data);
-        this.applyRegionFilter(null);
+        this.applyRegionFilter(this.currentFilterGeometry);
     }
 
     applyRegionFilter(filterGeometry: FilterGeometry | null): void {
@@ -140,6 +141,7 @@ export abstract class BasePointStrategy implements IDetailsStrategy {
             return;
         }
 
+        this.currentFilterGeometry = filterGeometry;
         this.layer.clearLayers();
 
         const filteredFeatures = this.cachedData.filter(feature => {

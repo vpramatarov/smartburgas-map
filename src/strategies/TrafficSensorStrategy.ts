@@ -58,7 +58,7 @@ export class TrafficSensorStrategy extends BasePointStrategy {
         const data = await res.json();
         Utils.tagDataWithStrategy(data, this.name);
         this.cachedData = Array.isArray(data) ? data : data.features || [];
-        this.applyRegionFilter(null);
+        this.applyRegionFilter(this.currentFilterGeometry);
     }
 
     // Card
