@@ -2,6 +2,9 @@ import {FilterGeometry, GeoJSONInput, Position, SensorProperties} from "./Types.
 
 export class Utils {
 
+    private static bboxCache = new WeakMap<FilterGeometry, [number, number, number, number]>();
+    private static ringBBoxCache = new WeakMap<Position[], [number, number, number, number]>();
+
     public static updateTimestampUI(elementId: string, dateOrMsg: Date | string) {
         const el = document.getElementById(elementId);
         if (el) {
@@ -65,6 +68,7 @@ export class Utils {
     /**
      * Standard Ray-Casting algorithm to check if a point is inside a polygon.
      * Supports GeoJSON Polygon and MultiPolygon.
+     * Uses bounding-box pre-checks to skip expensive ray-casting for distant points.
      */
     public static isPointInPolygon(point: Position, geometry: FilterGeometry|null): boolean {
         if (!geometry) {
@@ -73,21 +77,54 @@ export class Utils {
 
         const x = point[0], y = point[1];
 
-        // Helper: Check single polygon ring
-        const insidePoly = (rings: Position[][]) => {
-            let inside = false;
-            // The first ring is the outer boundary
-            const coords = rings[0];
-            for (let i = 0, j = coords.length - 1; i < coords.length; j = i++) {
-                const xi = coords[i][0], yi = coords[i][1];
-                const xj = coords[j][0], yj = coords[j][1];
+        // Early exit: check overall bounding box
+        const [minX, minY, maxX, maxY] = this.computeBBox(geometry);
+        if (x < minX || x > maxX || y < minY || y > maxY) {
+            return false;
+        }
 
-                const intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi); // magic
+        // Ray-cast a single ring (no bbox check)
+        const rayCast = (ring: Position[]) => {
+            let inside = false;
+            for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                const xi = ring[i][0], yi = ring[i][1];
+                const xj = ring[j][0], yj = ring[j][1];
+
+                const intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
                 if (intersect) {
                     inside = !inside;
                 }
             }
-            return inside; // We ignore holes (inner rings) for simplicity, or add generic logic if needed
+            return inside;
+        };
+
+        // Check a polygon (outer ring + holes)
+        const insidePoly = (rings: Position[][]) => {
+            const outerRing = rings[0];
+
+            // Per-ring bounding box check (useful for MultiPolygon with separated sub-polygons)
+            const [rMinX, rMinY, rMaxX, rMaxY] = Utils.computeRingBBox(outerRing);
+            if (x < rMinX || x > rMaxX || y < rMinY || y > rMaxY) {
+                return false;
+            }
+
+            if (!rayCast(outerRing)) {
+                return false;
+            }
+
+            // Check holes: if inside any hole, the point is outside the polygon
+            for (let h = 1; h < rings.length; h++) {
+                const hole = rings[h];
+                const [hMinX, hMinY, hMaxX, hMaxY] = Utils.computeRingBBox(hole);
+                if (x < hMinX || x > hMaxX || y < hMinY || y > hMaxY) {
+                    continue;
+                }
+                if (rayCast(hole)) {
+                    return false;
+                }
+            }
+
+            return true;
         };
 
         if (geometry.type === 'Polygon') {
@@ -95,7 +132,6 @@ export class Utils {
         }
 
         if (geometry.type === 'MultiPolygon') {
-            // Check if point is inside ANY of the polygons in the MultiPolygon
             for (const polyCoords of geometry.coordinates) {
                 if (insidePoly(polyCoords)) {
                     return true;
@@ -118,5 +154,86 @@ export class Utils {
         // 1. Strips spaces, quotes, and special characters to ensure a valid HTML5 ID
         // 2. Remove hyphens at the very beginning or end
         return `${prefix}-${name.replace(/[^a-z0-9а-яё]+/gi, '-').replace(/^-+|-+$/g, '')}`;
+    }
+
+    /**
+     * Compute and cache the overall axis-aligned bounding box for a FilterGeometry.
+     */
+    private static computeBBox(geometry: FilterGeometry): [number, number, number, number] {
+        const cached = this.bboxCache.get(geometry);
+        if (cached) {
+            return cached;
+        }
+
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+        const updateFromRing = (ring: Position[]) => {
+            for (let i = 0; i < ring.length; i++) {
+                const x = ring[i][0], y = ring[i][1];
+
+                if (x < minX) {
+                    minX = x;
+                }
+
+                if (y < minY) {
+                    minY = y;
+                }
+
+                if (x > maxX) {
+                    maxX = x;
+                }
+
+                if (y > maxY) {
+                    maxY = y;
+                }
+            }
+        };
+
+        if (geometry.type === 'Polygon') {
+            updateFromRing(geometry.coordinates[0]);
+        } else if (geometry.type === 'MultiPolygon') {
+            for (const poly of geometry.coordinates) {
+                updateFromRing(poly[0]);
+            }
+        }
+
+        const bbox: [number, number, number, number] = [minX, minY, maxX, maxY];
+        this.bboxCache.set(geometry, bbox);
+        return bbox;
+    }
+
+    /**
+     * Compute and cache the bounding box for a single coordinate ring.
+     */
+    private static computeRingBBox(ring: Position[]): [number, number, number, number] {
+        const cached = this.ringBBoxCache.get(ring);
+        if (cached) {
+            return cached;
+        }
+
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        for (let i = 0; i < ring.length; i++) {
+            const x = ring[i][0], y = ring[i][1];
+
+            if (x < minX) {
+                minX = x;
+            }
+
+            if (y < minY) {
+                minY = y;
+            }
+
+            if (x > maxX) {
+                maxX = x;
+            }
+
+            if (y > maxY) {
+                maxY = y;
+            }
+        }
+
+        const bbox: [number, number, number, number] = [minX, minY, maxX, maxY];
+        this.ringBBoxCache.set(ring, bbox);
+        return bbox;
     }
 }

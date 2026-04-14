@@ -40,6 +40,74 @@ describe('Utils.isPointInPolygon', () => {
         expect(Utils.isPointInPolygon([25, 25], mockMultiPolygon)).toBe(true);
         expect(Utils.isPointInPolygon([15, 15], mockMultiPolygon)).toBe(false);
     });
+
+    it('should reject a point outside the bounding box quickly', () => {
+        // Point far outside — would be caught by bbox pre-check
+        expect(Utils.isPointInPolygon([100, 100], mockPolygon)).toBe(false);
+        expect(Utils.isPointInPolygon([-50, -50], mockPolygon)).toBe(false);
+    });
+
+    it('should correctly handle a point near a polygon corner', () => {
+        // Just inside the corner region
+        expect(Utils.isPointInPolygon([0.1, 0.1], mockPolygon)).toBe(true);
+        // Just outside the corner region
+        expect(Utils.isPointInPolygon([-0.1, -0.1], mockPolygon)).toBe(false);
+    });
+
+    it('should return false for a point inside a polygon hole', () => {
+        const polygonWithHole: FilterGeometry = {
+            type: 'Polygon',
+            coordinates: [
+                // Outer ring: 0,0 -> 20,20
+                [[0, 0], [20, 0], [20, 20], [0, 20], [0, 0]],
+                // Hole: 5,5 -> 15,15
+                [[5, 5], [15, 5], [15, 15], [5, 15], [5, 5]]
+            ]
+        };
+        // Inside the hole → outside the polygon
+        expect(Utils.isPointInPolygon([10, 10], polygonWithHole)).toBe(false);
+        // Between the outer ring and the hole → inside the polygon
+        expect(Utils.isPointInPolygon([2, 2], polygonWithHole)).toBe(true);
+        expect(Utils.isPointInPolygon([18, 18], polygonWithHole)).toBe(true);
+        // Outside the outer ring entirely
+        expect(Utils.isPointInPolygon([25, 25], polygonWithHole)).toBe(false);
+    });
+
+    it('should handle MultiPolygon with holes correctly', () => {
+        const multiWithHoles: FilterGeometry = {
+            type: 'MultiPolygon',
+            coordinates: [
+                [
+                    // Sub-polygon 1 outer ring
+                    [[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]],
+                    // Sub-polygon 1 hole
+                    [[3, 3], [7, 3], [7, 7], [3, 7], [3, 3]]
+                ],
+                [
+                    // Sub-polygon 2 (no holes)
+                    [[20, 20], [30, 20], [30, 30], [20, 30], [20, 20]]
+                ]
+            ]
+        };
+        // Inside sub-polygon 1's hole → false
+        expect(Utils.isPointInPolygon([5, 5], multiWithHoles)).toBe(false);
+        // Inside sub-polygon 1, outside the hole → true
+        expect(Utils.isPointInPolygon([1, 1], multiWithHoles)).toBe(true);
+        // Inside sub-polygon 2 → true
+        expect(Utils.isPointInPolygon([25, 25], multiWithHoles)).toBe(true);
+    });
+
+    it('should reject a point inside overall MultiPolygon bbox but outside all sub-polygons', () => {
+        const separated: FilterGeometry = {
+            type: 'MultiPolygon',
+            coordinates: [
+                [[ [0, 0], [5, 0], [5, 5], [0, 5], [0, 0] ]],
+                [[ [50, 50], [55, 50], [55, 55], [50, 55], [50, 50] ]]
+            ]
+        };
+        // [25, 25] is in the center of the overall bbox but outside both sub-polygons
+        expect(Utils.isPointInPolygon([25, 25], separated)).toBe(false);
+    });
 });
 
 // ── getSensorId 
