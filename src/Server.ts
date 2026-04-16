@@ -2,7 +2,7 @@ import 'dotenv/config';
 import express, {NextFunction, Request, Response} from 'express';
 import { readFileSync } from 'fs';
 import path from 'path';
-import {Config, GeoFeature, GeoFeatureCollection, SupportedLanguage, Target, ZonePrice} from './Types.js'
+import {Config, GeoFeature, GeoFeatureCollection, SupportedLanguage, Target, ZoneInfo} from './Types.js'
 
 import {fileURLToPath} from 'url';
 import {Utils} from "./Utils.js";
@@ -107,7 +107,7 @@ function loadStaticJson(filename: string): object {
 
 const adminRegionsData = loadStaticJson('cau.json');
 const paidParkingZonesData = loadStaticJson('paid-parking-zones.json');
-const zonePriceCache: Record<'blue' | 'green', ZonePrice | null> = { blue: null, green: null };
+const zoneInfoCache: Record<'blue' | 'green', ZoneInfo | null> = { blue: null, green: null };
 
 const ZONE_PRICE_URLS: Record<'blue' | 'green', string> = {
     blue:  'https://www.transportburgas.bg/bg/правила-в-платени-зони-град-бургас',
@@ -115,7 +115,7 @@ const ZONE_PRICE_URLS: Record<'blue' | 'green', string> = {
 };
 
 
-async function scrapeZonePrice(zone: 'blue' | 'green'): Promise<void> {
+async function scrapeZoneInfo(zone: 'blue' | 'green'): Promise<void> {
     const url = ZONE_PRICE_URLS[zone];
     try {
         const response = await fetch(url);
@@ -141,18 +141,22 @@ async function scrapeZonePrice(zone: 'blue' | 'green'): Promise<void> {
 
         const price = `${priceMatch[1].replace(',', '.')} &euro; / ${priceMatch[2]}`;
 
-        zonePriceCache[zone] = { raw: price, fetchedAt: new Date().toISOString() };
-        console.log(`[ZonePriceScraper] ${zone} zone price: "${price}"`);
+        // Extract working hours & periods (if any)
+        const workingHours = Utils.extractFormattedPeriods(html);
+
+        zoneInfoCache[zone] = { price, workingHours, fetchedAt: new Date().toISOString() };
+        console.log(`[ZoneInfoScraper] ${zone} zone price: "${price}"`);
+        console.log(`[ZoneInfoScraper] ${zone} zone working hours: "${workingHours}"`);
 
     } catch (err: any) {
-        console.error(`[ZonePriceScraper] Failed to fetch ${zone} zone price:`, err.message);
+        console.error(`[ZonePriceScraper] Failed to fetch ${zone} zone price or working hours:`, err.message);
     }
 }
 
 async function scrapeAllZonePrices(): Promise<void> {
     await Promise.allSettled([
-        scrapeZonePrice('blue'),
-        scrapeZonePrice('green'),
+        scrapeZoneInfo('blue'),
+        scrapeZoneInfo('green'),
     ]);
 }
 
@@ -181,8 +185,11 @@ app.get('/api/paid-parking-zones', (_req, res) => {
             properties: {
                 ...feature.properties,
                 parsedPrice: feature.properties.ZoneType === 1
-                    ? zonePriceCache.green?.raw ?? null
-                    : zonePriceCache.blue?.raw ?? null,
+                    ? zoneInfoCache.green?.price ?? null
+                    : zoneInfoCache.blue?.price ?? null,
+                parsedWorkingHours: feature.properties.ZoneType === 1
+                    ? zoneInfoCache.green?.workingHours ?? null
+                    : zoneInfoCache.blue?.workingHours ?? null,
                 zoneInfoUrl: feature.properties.ZoneType === 1 ? ZONE_PRICE_URLS.green : ZONE_PRICE_URLS.blue
             }
         }))

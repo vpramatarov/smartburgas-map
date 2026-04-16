@@ -84,7 +84,8 @@ export interface ChartDataset {
     unit?: string;
 }
 
-export interface ZonePrice {
-    raw: string; // e.g. "1евро/ 1.96 лева"
+export interface ZoneInfo {
+    price: string; // e.g. "1евро/ 1.96 лева"
+    workingHours: string[] | null;
     fetchedAt: string; // ISO timestamp
 }

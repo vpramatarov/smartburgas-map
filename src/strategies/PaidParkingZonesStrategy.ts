@@ -244,17 +244,16 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
                     this.currentSelection.layer = path;
                 }
 
-                const formatTime = (timeStr: string): string => {
-                    if (!timeStr) {
-                        return '';
-                    }
-                    const match = timeStr.match(/\s(\d{2}:\d{2})/);
-                    return match ? match[1] : timeStr;
-                };
+                let workingHours = props.parsedWorkingHours || null;
 
-                const start = formatTime(props.StartTime);
-                const end = formatTime(props.EndTime);
-                const hoursStr = start && end ? `${start} - ${end}` : t('status_unknown', this.currentLang);
+                if (!workingHours) {
+                    const start = Utils.formatTime(props.StartTime);
+                    const end = Utils.formatTime(props.EndTime);
+                    workingHours = start && end ? [`${start} - ${end}`] : [t('status_unknown', this.currentLang)];
+                } else {
+                    workingHours = Utils.buildWorkingHoursUI(workingHours, this.currentLang);
+                }
+
                 const price =  props.parsedPrice || '1 &euro; / 1.96'; // ${props.PricePerHo} - 2
                 const zoneInfoUrl = props.zoneInfoUrl || null;
                 let zoneInfo = '';
@@ -268,7 +267,7 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
                         <h4 style="margin-bottom:8px; border-bottom:1px solid #ccc; padding-bottom:4px;">${name}</h4>
                         <p style="margin:4px 0;"><strong>${t('price_per_hour', this.currentLang)}:</strong> ${price} ${t('bgn', this.currentLang)}</p>
                         <p style="margin:4px 0;"><strong>${t('sms_number', this.currentLang)}:</strong> ${props.SmsNumber}</p>
-                        <p style="margin:4px 0;"><strong>${t('working_hours', this.currentLang)}:</strong> ${hoursStr}</p>
+                        <p style="margin:4px 0;"><strong>${t('working_hours', this.currentLang)}:</strong> ${workingHours.join('<br>')}</p>
                         ${zoneInfo}
                         <p style="margin:8px 0 0 0; font-size: 0.85em; color: #666; font-style: italic;">${t('click_to_filter', this.currentLang)}</p>
                     </div>
@@ -367,16 +366,16 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
                     const center = this.getFeatureCenter(feature);
                     this.closeActivePopup();
 
-                    const formatTime = (timeStr: string): string => {
-                        if (!timeStr) {
-                            return '';
-                        }
-                        const match = timeStr.match(/\s(\d{2}:\d{2})/);
-                        return match ? match[1] : timeStr;
-                    };
-                    const start = formatTime(feature.properties.StartTime);
-                    const end = formatTime(feature.properties.EndTime);
-                    const hoursStr = start && end ? `${start} - ${end}` : t('status_unknown', this.currentLang);
+                    let workingHours = feature.properties.parsedWorkingHours || null;
+
+                    if (!workingHours) {
+                        const start = Utils.formatTime(feature.properties.StartTime);
+                        const end = Utils.formatTime(feature.properties.EndTime);
+                        workingHours = start && end ? [`${start} - ${end}`] : [t('status_unknown', this.currentLang)];
+                    } else {
+                        workingHours = Utils.buildWorkingHoursUI(workingHours, this.currentLang);
+                    }
+
                     const price =  feature.properties.parsedPrice || '1 &euro; / 1.96';
                     const zoneInfoUrl = feature.properties.zoneInfoUrl || null;
                     let zoneInfo = '';
@@ -390,7 +389,7 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
                             <h4 style="margin-bottom:8px; border-bottom:1px solid #ccc; padding-bottom:4px;">${name}</h4>
                             <p style="margin:4px 0;"><strong>${t('price_per_hour', this.currentLang)}:</strong> ${price} ${t('bgn', this.currentLang)}</p>
                             <p style="margin:4px 0;"><strong>${t('sms_number', this.currentLang)}:</strong> ${feature.properties.SmsNumber}</p>
-                            <p style="margin:4px 0;"><strong>${t('working_hours', this.currentLang)}:</strong> ${hoursStr}</p>
+                            <p style="margin:4px 0;"><strong>${t('working_hours', this.currentLang)}:</strong> ${workingHours.join('<br>')}</p>
                             ${zoneInfo}
                             <p style="margin:8px 0 0 0; font-size: 0.85em; color: #666; font-style: italic;">${t('click_to_filter', this.currentLang)}</p>
                         </div>

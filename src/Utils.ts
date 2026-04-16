@@ -1,4 +1,4 @@
-import {FilterGeometry, GeoJSONInput, Position, SensorProperties} from "./Types.js";
+import {FilterGeometry, GeoJSONInput, Position, SensorProperties, SupportedLanguage} from "./Types.js";
 
 export class Utils {
 
@@ -103,7 +103,7 @@ export class Utils {
             const outerRing = rings[0];
 
             // Per-ring bounding box check (useful for MultiPolygon with separated sub-polygons)
-            const [rMinX, rMinY, rMaxX, rMaxY] = Utils.computeRingBBox(outerRing);
+            const [rMinX, rMinY, rMaxX, rMaxY] = this.computeRingBBox(outerRing);
             if (x < rMinX || x > rMaxX || y < rMinY || y > rMaxY) {
                 return false;
             }
@@ -115,7 +115,7 @@ export class Utils {
             // Check holes: if inside any hole, the point is outside the polygon
             for (let h = 1; h < rings.length; h++) {
                 const hole = rings[h];
-                const [hMinX, hMinY, hMaxX, hMaxY] = Utils.computeRingBBox(hole);
+                const [hMinX, hMinY, hMaxX, hMaxY] = this.computeRingBBox(hole);
                 if (x < hMinX || x > hMaxX || y < hMinY || y > hMaxY) {
                     continue;
                 }
@@ -154,6 +154,74 @@ export class Utils {
         // 1. Strips spaces, quotes, and special characters to ensure a valid HTML5 ID
         // 2. Remove hyphens at the very beginning or end
         return `${prefix}-${name.replace(/[^a-z0-9а-яё]+/gi, '-').replace(/^-+|-+$/g, '')}`;
+    }
+
+    public static formatTime(timeStr: string): string  {
+        if (!timeStr) {
+            return '';
+        }
+        const match = timeStr.match(/\s(\d{2}:\d{2})/);
+        return match ? match[1] : timeStr;
+    }
+
+    public static extractFormattedPeriods(rawHtml: string): string[] {
+        // normalize
+        const cleanText = rawHtml
+            // Remove physical line breaks from the raw HTML source
+            .replace(/\r?\n|\r/g, ' ')
+            // Insert logical line breaks ONLY at block-level HTML elements
+            .replace(/<\/?(p|div|br|tr|td|li)[^>]*>/gi, '\n')
+            // Strip out all remaining inline tags (<span>, <strong>)
+            .replace(/<[^>]+>/g, '')
+            // Convert HTML non-breaking spaces to standard spaces
+            .replace(/&nbsp;/gi, ' ')
+            // Collapse multiple spaces into one (leaving our \n intact)
+            .replace(/[ \t]+/g, ' ');
+
+        const regex = /от\s+(\d{2}:\d{2})\s+до\s+(\d{2}:\d{2})(?:[^\n]*?(\d{2}\.\d{2})\s+до\s+(\d{2}\.\d{2}))?/gi;
+
+        const results: string[] = [];
+
+        // Iterate over matches and format based on whether dates were found
+        for (const match of cleanText.matchAll(regex)) {
+            const startTime = match[1];
+            const endTime = match[2];
+            const startDate = match[3]; // Will be undefined if period is missing
+            const endDate = match[4];   // Will be undefined if period is missing
+
+            if (startDate && endDate) {
+                results.push(`${startDate} - ${endDate}: ${startTime} - ${endTime}`);
+            } else {
+                results.push(`${startTime} - ${endTime}`);
+            }
+        }
+
+        return results;
+    }
+
+    public static buildWorkingHoursUI(periodsArray: string[], locale: SupportedLanguage): string[] {
+        return periodsArray.map(item => {
+            // Check if there is a colon, which means dates are present
+            if (item.includes('.')) {
+                // Split the string into the date part and the time part
+                const [periodPart, timePart] = item.split(': ').map(str => str.trim());
+
+                if (!timePart) {
+                    return `${item.trim()}`;
+                }
+
+                // Split the date part into start and end dates
+                const [rawStartDate, rawEndDate] = periodPart.split('-').map(str => str.trim());
+
+                const startText = this.formatReadableDate(rawStartDate, locale);
+                const endText = this.formatReadableDate(rawEndDate, locale);
+
+                return `${startText} - ${endText}: ${timePart}`;
+            } else {
+                // No colon means it's just the time
+                return `${item.trim()}`;
+            }
+        });
     }
 
     /**
@@ -235,5 +303,39 @@ export class Utils {
         const bbox: [number, number, number, number] = [minX, minY, maxX, maxY];
         this.ringBBoxCache.set(ring, bbox);
         return bbox;
+    }
+
+    // Helper to convert "01.05" -> "01 Май" (BG) or "1 May" (EN) using Native Intl API
+    private static formatReadableDate(dateStr: string, lang: SupportedLanguage): string {
+        // SAFEGUARD: If the string is missing or doesn't have a period, return it as-is to prevent crashes
+        if (!dateStr || !dateStr.includes('.')) {
+            return dateStr || '';
+        }
+
+        const [dayStr, monthStr] = dateStr.split('.');
+
+        // Create a dummy date (Year doesn't matter, just the month index)
+        const monthIndex = parseInt(monthStr, 10) - 1;
+
+        // SAFEGUARD: If the month isn't a valid number somehow, return the raw string
+        if (isNaN(monthIndex) || monthIndex < 0 || monthIndex > 11) {
+            return dateStr;
+        }
+
+        const localizedMonths = {
+            bg: ["Яну", "Фев", "Мар", "Апр", "Май", "Юни", "Юли", "Авг", "Сеп", "Окт", "Ное", "Дек"],
+            en: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+        };
+
+        const monthName = localizedMonths[lang][monthIndex];
+
+        if (lang === 'en') {
+            // English format: Strip leading zero (01 -> 1)
+            const day = parseInt(dayStr, 10);
+            return `${day} ${monthName}`;
+        } else {
+            // Bulgarian format: Keep leading zero as requested (01)
+            return `${dayStr} ${monthName}`;
+        }
     }
 }
