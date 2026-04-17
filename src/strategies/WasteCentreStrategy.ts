@@ -42,7 +42,10 @@ export class WasteCentreStrategy extends BasePointStrategy {
         }
 
         if (sensor.additional_info.address) {
-            container.innerHTML += `<div class="data-row">${sensor.additional_info.address}</div>`;
+            const addrDiv = document.createElement('div') as HTMLDivElement;
+            addrDiv.className = 'data-row';
+            addrDiv.textContent = sensor.additional_info.address;
+            container.appendChild(addrDiv);
         }
 
         if (sensor.description) {
@@ -51,7 +54,7 @@ export class WasteCentreStrategy extends BasePointStrategy {
             desc.style.color = '#666';
             desc.style.marginBottom = '10px';
             if (sensor.description) {
-                desc.innerHTML = sensor.description;
+                desc.textContent = sensor.description;
             }
             container.appendChild(desc);
         }
@@ -82,18 +85,18 @@ export class WasteCentreStrategy extends BasePointStrategy {
                     const row = document.createElement('div') as HTMLDivElement;
                     row.className = 'data-row toggle-row';
                     row.innerHTML = `
-                        <div class="prop-label" style="border-left: 3px solid ${meta.color}; padding-left:5px; flex: 1;">
-                            ${meta.name}
+                        <div class="prop-label" style="border-left: 3px solid ${Utils.validateCssColor(meta.color)}; padding-left:5px; flex: 1;">
+                            ${Utils.escapeHtml(meta.name)}
                         </div>
-                        
+
                         <div class="prop-additional">
-                            <div>${meta.weight} ${meta.weight_unit}</div>
-                            <div><small>${meta.time}</small></div>
+                            <div>${Utils.escapeHtml(meta.weight)} ${Utils.escapeHtml(meta.weight_unit)}</div>
+                            <div><small>${Utils.escapeHtml(meta.time)}</small></div>
                         </div>
-                       
-                        <input type="checkbox" id="${uniqueId}" 
-                               data-property="${id}" 
-                               data-sensor-id="${sensorId}" 
+
+                        <input type="checkbox" id="${uniqueId}"
+                               data-property="${id}"
+                               data-sensor-id="${sensorId}"
                                class="chart-toggle-checkbox" />
                         <label for="${uniqueId}" class="chart-toggle-btn"><span class="icon-chart-bar"></span></label>
                     `;

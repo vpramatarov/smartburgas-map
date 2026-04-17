@@ -55,9 +55,9 @@ export class AirQualityTimeSensorStrategy extends BasePointStrategy {
             rowDiv.classList.add('data-row', 'toggle-row', 'flex');
 
             const textDiv = document.createElement('div') as HTMLDivElement;
-            let innerHtml = `<span><span class="prop-label">${p}:</span> <span class="prop-value">${value} ${unit}</span></span>`;
+            let innerHtml = `<span><span class="prop-label">${Utils.escapeHtml(p)}:</span> <span class="prop-value">${Utils.escapeHtml(String(value))} ${Utils.escapeHtml(unit)}</span></span>`;
             if (time) {
-                innerHtml += `<span class="prop-additional">${time}</span>`;
+                innerHtml += `<span class="prop-additional">${Utils.escapeHtml(time)}</span>`;
             }
             textDiv.innerHTML = innerHtml;
 
@@ -90,16 +90,21 @@ export class AirQualityTimeSensorStrategy extends BasePointStrategy {
             return null;
         }
 
-        const dataPoints = sensor.data.map(item => {
-            const val = parseFloat(item[property]);
-            const timestamp = this.parseDate(item['time']);
-            return {
-                timestamp,
-                isoTime: new Date(timestamp).toISOString(),
-                value: isNaN(val) ? 0 : val,
-                unit: item[property + '_unit']
-            };
-        });
+        const dataPoints = sensor.data
+            .map(item => {
+                const val = parseFloat(item[property]);
+                const timestamp = this.parseDate(item['time']);
+                if (isNaN(timestamp)) {
+                    return null;
+                }
+                return {
+                    timestamp,
+                    isoTime: new Date(timestamp).toISOString(),
+                    value: isNaN(val) ? 0 : val,
+                    unit: item[property + '_unit']
+                };
+            })
+            .filter((d): d is { timestamp: number; isoTime: string; value: number; unit: string } => d !== null);
 
         dataPoints.sort((a, b) => a.timestamp - b.timestamp);
 
@@ -113,7 +118,7 @@ export class AirQualityTimeSensorStrategy extends BasePointStrategy {
 
     private parseDate(raw: string): number {
         if (!raw) {
-            return 0;
+            return NaN;
         }
 
         const direct = new Date(raw).getTime();
@@ -122,6 +127,6 @@ export class AirQualityTimeSensorStrategy extends BasePointStrategy {
         }
 
         const cleaned = new Date(raw.replace(/_/g, ' ').replace(/\./g, '-')).getTime();
-        return isNaN(cleaned) ? 0 : cleaned;
+        return isNaN(cleaned) ? NaN : cleaned;
     }
 }

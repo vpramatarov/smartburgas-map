@@ -15,6 +15,8 @@ export default defineConfig({
             WASTE_URL: 'http://mock.api/waste',
             SMART_CAR_PARKS_TIME_URL: 'http://mock.api/parking',
             TAXI_RANKS_URL: 'http://mock.api/taxi',
+            // Keep upstream fetch timeout short during tests to avoid long hangs on simulated stalled upstreams
+            UPSTREAM_TIMEOUT_MS: '3000',
         },
         // Exclude the Playwright e2e directory and the compiled dist folder
         exclude: ['**/node_modules/**', '**/dist/**', '**/e2e/**'],

@@ -43,18 +43,18 @@ export class CsvExporter {
                 const timeRaw = item['time'];
                 const timestamp = this.parseDate(timeRaw);
 
-                if (rangeStartMs !== null && rangeEndMs !== null && timestamp > 0) {
+                if (rangeStartMs !== null && rangeEndMs !== null && !isNaN(timestamp)) {
                     if (timestamp < rangeStartMs || timestamp > rangeEndMs) {
                         return; // Skips to the next item in the loop
                     }
                 }
 
                 let dateStr = timeRaw;
-                if (timestamp > 0) {
+                if (!isNaN(timestamp)) {
                     dateStr = Utils.formatDateTimeToLocal(timestamp);
                 }
 
-                const timeStampStr = timestamp > 0 ? timestamp.toString() : "";
+                const timeStampStr = !isNaN(timestamp) ? timestamp.toString() : "";
 
                 Object.keys(item).forEach(key => {
                     // Skip Metadata keys
@@ -105,14 +105,13 @@ export class CsvExporter {
         if (str === null || str === undefined) {
             return "";
         }
-        // Convert to string in case of numbers, then escape double quotes
-        const stringVal = String(str);
+        const stringVal = String(str).replace(/\r\n|\r|\n/g, ' ');
         return `"${stringVal.replace(/"/g, '""')}"`;
     }
 
     private static parseDate(raw: string): number {
         if (!raw) {
-            return 0;
+            return NaN;
         }
 
         const time = new Date(raw).getTime();
@@ -134,6 +133,6 @@ export class CsvExporter {
             return new Date(year, month, day, hour, minute, second).getTime();
         }
 
-        return 0; // Invalid
+        return NaN;
     }
 }

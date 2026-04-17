@@ -113,7 +113,7 @@ export class CompositeDetailsStrategy {
                     filter.appendChild(icon);
                 }
 
-                filter.innerHTML += t(translation_key, lang);
+                filter.appendChild(document.createTextNode(t(translation_key, lang)));
             }
 
             const actions = document.createElement('div') as HTMLDivElement;

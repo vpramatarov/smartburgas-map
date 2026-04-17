@@ -249,3 +249,95 @@ describe('Utils.getSafeId', () => {
         expect(complexId).toBe('paid-zone-Green-Zone-2');
     });
 })
+
+// ── generateCustomId
+
+describe('Utils.generateCustomId', () => {
+    it('returns a non-empty string', () => {
+        expect(typeof Utils.generateCustomId()).toBe('string');
+        expect(Utils.generateCustomId().length).toBeGreaterThan(0);
+    });
+
+    it('returns values that are not trivially predictable (differ across calls)', () => {
+        const n = 20;
+        const set = new Set(Array.from({ length: n }, () => Utils.generateCustomId()));
+        expect(set.size).toBe(n);
+    });
+});
+
+// ── escapeHtml
+describe('Utils.escapeHtml', () => {
+    it('escapes the five HTML-significant characters', () => {
+        expect(Utils.escapeHtml(`<script>alert("xss")</script>`))
+            .toBe('&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;');
+    });
+
+    it('escapes ampersand first to avoid double-encoding', () => {
+        expect(Utils.escapeHtml('&amp;')).toBe('&amp;amp;');
+    });
+
+    it('escapes single quote to &#039;', () => {
+        expect(Utils.escapeHtml(`it's`)).toBe('it&#039;s');
+    });
+
+    it('coerces non-string input to string', () => {
+        expect(Utils.escapeHtml(42 as unknown as string)).toBe('42');
+        expect(Utils.escapeHtml(null as unknown as string)).toBe('null');
+        expect(Utils.escapeHtml(undefined as unknown as string)).toBe('undefined');
+    });
+
+    it('returns empty string unchanged', () => {
+        expect(Utils.escapeHtml('')).toBe('');
+    });
+
+    it('leaves plain ASCII untouched', () => {
+        expect(Utils.escapeHtml('hello world 123')).toBe('hello world 123');
+    });
+
+    it('defeats attribute-breakout attempts', () => {
+        const escaped = Utils.escapeHtml(`" onerror="alert(1)`);
+        expect(escaped).not.toContain('"');
+        expect(escaped).toContain('&quot;');
+    });
+});
+
+// ── validateCssColor
+describe('Utils.validateCssColor', () => {
+    it('accepts 3-digit hex', () => {
+        expect(Utils.validateCssColor('#abc')).toBe('#abc');
+    });
+
+    it('accepts 6-digit hex', () => {
+        expect(Utils.validateCssColor('#aabbcc')).toBe('#aabbcc');
+    });
+
+    it('accepts 8-digit hex (with alpha)', () => {
+        expect(Utils.validateCssColor('#aabbccdd')).toBe('#aabbccdd');
+    });
+
+    it('accepts named colors (alphabetic only)', () => {
+        expect(Utils.validateCssColor('red')).toBe('red');
+        expect(Utils.validateCssColor('rebeccapurple')).toBe('rebeccapurple');
+    });
+
+    it('rejects rgb() / rgba() functional notation with fallback', () => {
+        expect(Utils.validateCssColor('rgb(255,0,0)')).toBe('#888');
+        expect(Utils.validateCssColor('rgba(0,0,0,0.5)')).toBe('#888');
+    });
+
+    it('rejects CSS injection attempts with fallback', () => {
+        expect(Utils.validateCssColor('red;background:url(x)')).toBe('#888');
+        expect(Utils.validateCssColor('expression(alert(1))')).toBe('#888');
+        expect(Utils.validateCssColor('red !important')).toBe('#888');
+    });
+
+    it('rejects empty and whitespace strings with fallback', () => {
+        expect(Utils.validateCssColor('')).toBe('#888');
+        expect(Utils.validateCssColor('   ')).toBe('#888');
+    });
+
+    it('rejects hex with too few or too many digits', () => {
+        expect(Utils.validateCssColor('#ab')).toBe('#888');
+        expect(Utils.validateCssColor('#aabbccdde')).toBe('#888');
+    });
+});

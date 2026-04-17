@@ -242,6 +242,80 @@ describe('BasePointStrategy.buildMarkerHtml', () => {
     });
 });
 
+// ── loadData error handling
+
+describe('BasePointStrategy.loadData — error handling', () => {
+    let strategy: TestStrategy;
+    const mockTimestampEl: { innerText: string } = { innerText: '' };
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+        mockTimestampEl.innerText = '';
+        vi.stubGlobal('document', {
+            getElementById: vi.fn(() => mockTimestampEl),
+            createElement: vi.fn(() => ({})),
+        });
+        strategy = new TestStrategy();
+        strategy.initialize({} as any, vi.fn());
+    });
+
+    it('does not propagate fetch errors as unhandled rejections', async () => {
+        vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
+        await expect(strategy.loadData('bg')).resolves.toBeUndefined();
+    });
+
+    it('writes an error indicator to the timestamp UI when fetch fails', async () => {
+        vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
+        await strategy.loadData('bg');
+        expect(mockTimestampEl.innerText).toBe('Error');
+    });
+
+    it('writes an error indicator to the timestamp UI when upstream returns non-2xx', async () => {
+        vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+            ok: false, status: 500, headers: { get: () => null }, json: async () => ({}),
+        }));
+        await expect(strategy.loadData('bg')).resolves.toBeUndefined();
+        expect(mockTimestampEl.innerText).toBe('Error');
+    });
+});
+
+// ── bindPopup XSS hardening
+
+describe('BasePointStrategy.addGeoJsonToLayer — popup escaping', () => {
+    let strategy: TestStrategy;
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+        strategy = new TestStrategy();
+        strategy.initialize({} as any, vi.fn());
+    });
+
+    it('escapes the feature title in the bindPopup HTML', () => {
+        const maliciousTitle = '<script>alert(1)</script>';
+        const feature: GeoFeature = {
+            type: 'Feature',
+            geometry: { type: 'Point', coordinates: [5, 5] },
+            properties: { name: maliciousTitle, strategy: 'test_strategy', additional_info: {} },
+        };
+
+        (strategy as any).cachedData = [feature];
+        strategy.applyRegionFilter(null);
+
+        // Grab the options passed to L.geoJSON and manually invoke onEachFeature
+        const geoJsonCall = vi.mocked(L.geoJSON).mock.calls.at(-1)!;
+        const options = geoJsonCall[1] as any;
+        expect(options?.onEachFeature).toBeTypeOf('function');
+
+        const markerMock = { bindPopup: vi.fn().mockReturnThis(), on: vi.fn() };
+        options.onEachFeature(feature, markerMock);
+
+        expect(markerMock.bindPopup).toHaveBeenCalledOnce();
+        const popupHtml = markerMock.bindPopup.mock.calls[0][0];
+        expect(popupHtml).not.toContain('<script>alert(1)</script>');
+        expect(popupHtml).toContain('&lt;script&gt;');
+    });
+});
+
 // ── Clustering
 
 describe('BasePointStrategy.initialize — clustering', () => {

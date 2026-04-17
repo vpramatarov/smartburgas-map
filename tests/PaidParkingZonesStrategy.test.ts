@@ -193,6 +193,35 @@ describe('PaidParkingZonesStrategy — filter persistence', () => {
         expect(selection?.name).toBe('Blue zone 1');
     });
 
+    it('escapes malicious zone name, price, and SmsNumber in the rendered popup HTML', () => {
+        const maliciousName = '<script>alert(1)</script>';
+        const maliciousPrice = '<img src=x>';
+        const maliciousSms = '"onmouseover="alert(1)';
+
+        (strategy as any).cachedData = [{
+            type: 'Feature',
+            properties: {
+                Name: maliciousName,
+                parsedPrice: maliciousPrice,
+                SmsNumber: maliciousSms,
+                ZoneType: 0,
+                StartTime: '',
+                EndTime: '',
+            },
+            geometry: { type: 'Polygon', coordinates: [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]] },
+        }];
+
+        strategy.applyRegionFilter(null);
+
+        const popupHtml = (strategy as any).tooltipHtmlMap.get(maliciousName);
+        expect(popupHtml).toBeDefined();
+        expect(popupHtml).not.toContain('<script>alert(1)</script>');
+        expect(popupHtml).not.toContain('<img src=x>');
+        expect(popupHtml).toContain('&lt;script&gt;');
+        expect(popupHtml).toContain('&lt;img');
+        expect(popupHtml).toContain('&quot;');
+    });
+
     it('does not store self-geometry as the filter (guard preserves previous filter)', () => {
         const adminGeometry = { type: 'Polygon', coordinates: [[[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]] };
         const selfGeometry = { type: 'Polygon', coordinates: [[[5, 5], [6, 5], [6, 6], [5, 6], [5, 5]]] };

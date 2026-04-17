@@ -105,19 +105,39 @@ describe('TaxiRankStrategy.renderCardContent', () => {
         expect(img.style.display).toBe('none');
     });
 
-    it('appends description when present', () => {
+    it('appends description as text (not HTML) to prevent XSS', () => {
         const container = { innerHTML: '', appendChild: vi.fn() } as any;
-        strategy.renderCardContent(container, makeSensor({ description: 'Central taxi stand' }), '', vi.fn());
+        strategy.renderCardContent(container, makeSensor({ description: 'Central taxi stand' }));
         const desc = container.appendChild.mock.calls[0][0];
-        expect(desc.innerHTML).toBe('Central taxi stand');
+        expect(desc.textContent).toBe('Central taxi stand');
+        expect(desc.innerHTML).toBe('');
         expect(desc.style.fontWeight).toBe('bold');
     });
 
-    it('appends name as location when present', () => {
+    it('does not render malicious description as executable HTML', () => {
         const container = { innerHTML: '', appendChild: vi.fn() } as any;
-        strategy.renderCardContent(container, makeSensor({ name: 'Main Station' }), '', vi.fn());
+        const malicious = '<script>alert(1)</script>';
+        strategy.renderCardContent(container, makeSensor({ description: malicious }));
+        const desc = container.appendChild.mock.calls[0][0];
+        expect(desc.innerHTML).toBe('');
+        expect(desc.textContent).toBe(malicious);
+    });
+
+    it('appends name as location text (not HTML) to prevent XSS', () => {
+        const container = { innerHTML: '', appendChild: vi.fn() } as any;
+        strategy.renderCardContent(container, makeSensor({ name: 'Main Station' }));
         const loc = container.appendChild.mock.calls[0][0];
-        expect(loc.innerHTML).toBe('Main Station');
+        expect(loc.textContent).toBe('Main Station');
+        expect(loc.innerHTML).toBe('');
+    });
+
+    it('does not render malicious name as executable HTML', () => {
+        const container = { innerHTML: '', appendChild: vi.fn() } as any;
+        const malicious = '<img src=x onerror=alert(1)>';
+        strategy.renderCardContent(container, makeSensor({ name: malicious }));
+        const loc = container.appendChild.mock.calls[0][0];
+        expect(loc.innerHTML).toBe('');
+        expect(loc.textContent).toBe(malicious);
     });
 
     it('renders nothing for a sensor with no pic_url, description, or name', () => {

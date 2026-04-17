@@ -177,7 +177,7 @@ describe('TrafficSensorStrategy.parseTrafficDate', () => {
 
     const parse = (raw: string) => (strategy as any).parseTrafficDate(raw);
 
-    it('returns 0 for an empty string', () => { expect(parse('')).toBe(0); });
+    it('returns NaN for an empty string (was 0 — changed in audit 5.4)', () => { expect(parse('')).toBeNaN(); });
 
     it('parses a standard ISO string', () => {
         const result = parse('2025-03-15T10:30:00');
@@ -194,8 +194,45 @@ describe('TrafficSensorStrategy.parseTrafficDate', () => {
         expect(d.getDate()).toBe(15);
     });
 
-    it('returns 0 for a completely unparseable string', () => {
-        expect(parse('not a date at all')).toBe(0);
+    it('returns NaN for a completely unparseable string (was 0 — changed in audit 5.4)', () => {
+        expect(parse('not a date at all')).toBeNaN();
+    });
+});
+
+// ── renderCardContent (XSS hardening)
+
+describe('TrafficSensorStrategy.renderCardContent', () => {
+    let strategy: TrafficSensorStrategy;
+
+    beforeEach(() => { vi.clearAllMocks(); strategy = makeStrategy(); });
+
+    it('escapes car_count, car_speed, and time from upstream data', () => {
+        const container = { innerHTML: '', appendChild: vi.fn() } as any;
+        const sensor = {
+            name: 'S1', strategy: 'traffic_sensor', additional_info: {},
+            data: [{
+                time: '<script>alert(1)</script>',
+                car_count: '<img src=x>',
+                car_speed: '"onmouseover="alert(1)',
+            }],
+        };
+        strategy.renderCardContent(container, sensor, 'pfx', vi.fn());
+
+        expect(container.innerHTML).not.toContain('<script>alert(1)</script>');
+        expect(container.innerHTML).not.toContain('<img src=x>');
+        expect(container.innerHTML).toContain('&lt;script&gt;');
+        expect(container.innerHTML).toContain('&lt;img');
+        expect(container.innerHTML).toContain('&quot;');
+    });
+
+    it('still renders "no data" translation when car_speed is undefined', () => {
+        const container = { innerHTML: '', appendChild: vi.fn() } as any;
+        const sensor = {
+            name: 'S1', strategy: 'traffic_sensor', additional_info: {},
+            data: [{ time: '2025-01-01', car_count: '5' }], // no car_speed
+        };
+        strategy.renderCardContent(container, sensor, 'pfx', vi.fn());
+        expect(container.innerHTML).toContain('no_data');
     });
 });
 

@@ -37,7 +37,7 @@ export class EVChargingStrategy extends BasePointStrategy {
             const desc = document.createElement('div') as HTMLDivElement;
             desc.className = 'sensor-description';
             desc.style.color = '#555';
-            desc.innerHTML = sensor.description;
+            desc.textContent = sensor.description;
             container.appendChild(desc);
         }
     }

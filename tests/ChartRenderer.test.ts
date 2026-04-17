@@ -45,14 +45,17 @@ describe('ChartRenderer', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         localStorage.getItem.mockReturnValue('bg');
+        // Skip the lazy Plotly loader for the non-loader tests
+        (ChartRenderer as any).plotlyLoaded = true;
+        (ChartRenderer as any).plotlyLoading = null;
     });
 
-    it('should include a rangeslider and rangeselector in standard render layout', () => {
+    it('should include a rangeslider and rangeselector in standard render layout', async () => {
         // Arrange
         const mockDatasets = [{ label: 'Test Sensor', values: [10, 20], times: ['2025-01-01', '2025-01-02'] }];
 
         // Act
-        ChartRenderer.render('chart-container', [], mockDatasets);
+        await ChartRenderer.render('chart-container', [], mockDatasets);
 
         // Assert
         expect(mockPlotly.newPlot).toHaveBeenCalled();
@@ -74,11 +77,11 @@ describe('ChartRenderer', () => {
         );
     });
 
-    it('should include a rangeslider and rangeselector in full-screen render layout', () => {
+    it('should include a rangeslider and rangeselector in full-screen render layout', async () => {
 
         const mockDatasets = [{ label: 'Test Sensor', values: [15], times: ['2025-01-01'] }];
 
-        ChartRenderer.renderFull('full-chart-container', 'Test Title', [], mockDatasets);
+        await ChartRenderer.renderFull('full-chart-container', 'Test Title', [], mockDatasets);
 
         expect(mockPlotly.newPlot).toHaveBeenCalled();
         const layoutArg = mockPlotly.newPlot.mock.calls[0][2];
@@ -86,6 +89,62 @@ describe('ChartRenderer', () => {
         expect(layoutArg.xaxis).toHaveProperty('rangeslider');
         expect(layoutArg.xaxis.rangeslider.visible).toBe(true);
         expect(layoutArg.xaxis).toHaveProperty('rangeselector');
+    });
+
+    describe('ensurePlotly (lazy Plotly loader)', () => {
+        beforeEach(() => {
+            (ChartRenderer as any).plotlyLoaded = false;
+            (ChartRenderer as any).plotlyLoading = null;
+        });
+
+        it('appends exactly one <script> tag on first call', async () => {
+            const created: any[] = [];
+            const appended: any[] = [];
+            vi.stubGlobal('document', {
+                getElementById: vi.fn(() => mockElement),
+                createElement: vi.fn((tag) => {
+                    const el: any = { tag, src: '', onload: null, onerror: null };
+                    if (tag === 'script') created.push(el);
+                    return el;
+                }),
+                head: { appendChild: vi.fn((el) => appended.push(el)) },
+            });
+
+            const p = (ChartRenderer as any).ensurePlotly();
+            expect(created.length).toBe(1);
+            expect(created[0].src).toContain('plotly');
+            expect(appended.length).toBe(1);
+
+            created[0].onload();
+            await expect(p).resolves.toBeUndefined();
+        });
+
+        it('reuses the cached promise on subsequent calls', async () => {
+            const created: any[] = [];
+            const appended: any[] = [];
+            vi.stubGlobal('document', {
+                getElementById: vi.fn(() => mockElement),
+                createElement: vi.fn((tag) => {
+                    const el: any = { tag, src: '', onload: null, onerror: null };
+                    if (tag === 'script') created.push(el);
+                    return el;
+                }),
+                head: { appendChild: vi.fn((el) => appended.push(el)) },
+            });
+
+            const p1 = (ChartRenderer as any).ensurePlotly();
+            const p2 = (ChartRenderer as any).ensurePlotly();
+            expect(p1).toBe(p2);
+            expect(created.length).toBe(1);
+
+            created[0].onload();
+            await p1;
+
+            // After load, third call should resolve without re-injecting
+            const p3 = (ChartRenderer as any).ensurePlotly();
+            await expect(p3).resolves.toBeUndefined();
+            expect(created.length).toBe(1);
+        });
     });
 
     it('should inject From and To datepickers with correct min/max bounds based on the dataset', () => {

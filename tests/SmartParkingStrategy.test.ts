@@ -95,7 +95,41 @@ describe('SmartParkingStrategy.getChartData', () => {
     });
 });
 
-// ── getUsageColor (tested directly via private method) 
+// ── renderCardContent (XSS hardening)
+
+describe('SmartParkingStrategy.renderCardContent', () => {
+    let strategy: SmartParkingStrategy;
+
+    beforeEach(() => { vi.clearAllMocks(); strategy = new SmartParkingStrategy(); strategy.initialize({} as any, vi.fn()); });
+
+    it('escapes last_sync (sensor.data[0].time) inside the stats template', () => {
+        const container = { innerHTML: '', appendChild: vi.fn() } as any;
+        const malicious = '<script>alert(1)</script>';
+        const sensor = makeSensor({ data: [{ time: malicious, free_lots: '10' }] });
+        strategy.renderCardContent(container, sensor, 'prefix', vi.fn());
+
+        // stats element is the first div appended (no image in this sensor)
+        const stats = container.appendChild.mock.calls[0][0];
+        expect(stats.innerHTML).not.toContain('<script>alert(1)</script>');
+        expect(stats.innerHTML).toContain('&lt;script&gt;');
+    });
+
+    it('renders sensor.description as text, not HTML', () => {
+        const container = { innerHTML: '', appendChild: vi.fn() } as any;
+        const malicious = '<img src=x onerror="alert(1)">';
+        const sensor = makeSensor({ description: malicious });
+        strategy.renderCardContent(container, sensor, 'prefix', vi.fn());
+
+        // With data + description, description is appended after stats
+        const calls = container.appendChild.mock.calls;
+        const desc = calls.find((c: any[]) => c[0].className === 'sensor-description')?.[0];
+        expect(desc).toBeDefined();
+        expect(desc.innerHTML).toBe('');
+        expect(desc.textContent).toBe(malicious);
+    });
+});
+
+// ── getUsageColor (tested directly via private method)
 
 describe('SmartParkingStrategy.getUsageColor', () => {
     let strategy: SmartParkingStrategy;

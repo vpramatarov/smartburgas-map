@@ -118,22 +118,27 @@ export abstract class BasePointStrategy implements IDetailsStrategy {
         this.layer.clearLayers();
         Utils.updateTimestampUI(this.getTimestampElementId(), t('loading', this.currentLang));
 
-        const res = await fetch(this.getApiUrl(lang));
-        if (!res.ok) {
-            throw new Error(`${res.status}`);
+        try {
+            const res = await fetch(this.getApiUrl(lang));
+            if (!res.ok) {
+                throw new Error(`${res.status}`);
+            }
+
+            Utils.updateTimestampUI(
+                this.getTimestampElementId(),
+                new Date(res.headers.get('X-Last-Updated') || new Date())
+            );
+
+            const data = await res.json();
+            Utils.tagDataWithStrategy(data, this.name);
+            this.cachedData = Array.isArray(data) ? data : data.features || [];
+
+            this.onLoadSuccess(data);
+            this.applyRegionFilter(this.currentFilterGeometry);
+        } catch (err) {
+            console.error(`[${this.name}] loadData failed:`, err);
+            Utils.updateTimestampUI(this.getTimestampElementId(), 'Error');
         }
-
-        Utils.updateTimestampUI(
-            this.getTimestampElementId(),
-            new Date(res.headers.get('X-Last-Updated') || new Date())
-        );
-
-        const data = await res.json();
-        Utils.tagDataWithStrategy(data, this.name);
-        this.cachedData = Array.isArray(data) ? data : data.features || [];
-
-        this.onLoadSuccess(data);
-        this.applyRegionFilter(this.currentFilterGeometry);
     }
 
     applyRegionFilter(filterGeometry: FilterGeometry | null): void {
@@ -187,7 +192,7 @@ export abstract class BasePointStrategy implements IDetailsStrategy {
                 const title = String(props.name || props.publicname || this.name);
 
                 (layer as L.Marker).bindPopup(
-                    `<div class="marker-popup-hover"><h4>${title}</h4><p>${this.getPopupText(props)}</p></div>`,
+                    `<div class="marker-popup-hover"><h4>${Utils.escapeHtml(title)}</h4><p>${this.getPopupText(props)}</p></div>`,
                     { closeButton: false, offset: L.point(0, 0) }
                 );
 

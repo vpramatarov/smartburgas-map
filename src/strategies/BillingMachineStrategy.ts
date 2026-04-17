@@ -24,7 +24,7 @@ export class BillingMachineStrategy extends BasePointStrategy {
             const desc = document.createElement('div') as HTMLDivElement;
             desc.className = 'sensor-description';
             desc.style.color = '#555';
-            desc.innerHTML = sensor.description;
+            desc.textContent = sensor.description;
             container.appendChild(desc);
         } else {
             container.innerHTML += '<p>No description available.</p>';

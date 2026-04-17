@@ -83,18 +83,18 @@ export class TrafficSensorStrategy extends BasePointStrategy {
             container.innerHTML = `
                 <div class="data-row">
                     <span class="prop-label">${t('car_count', this.currentLang)}:</span>
-                    <span class="prop-value">${lastItem.car_count}</span>
+                    <span class="prop-value">${Utils.escapeHtml(String(lastItem.car_count))}</span>
                 </div>
                 <div class="data-row">
                     <span class="prop-label">${t('car_speed', this.currentLang)}:</span>
                     <span class="prop-value">${
                         typeof lastItem.car_speed === 'undefined'
                             ? t('no_data', this.currentLang)
-                            : lastItem.car_speed + ' ' + t('km_h', this.currentLang)
+                            : Utils.escapeHtml(String(lastItem.car_speed)) + ' ' + t('km_h', this.currentLang)
                     }</span>
                 </div>
                 <div class="data-row">
-                    <span class="timestamp">${lastItem.time}</span>
+                    <span class="timestamp">${Utils.escapeHtml(String(lastItem.time))}</span>
                 </div>
             `;
         }
@@ -135,6 +135,9 @@ export class TrafficSensorStrategy extends BasePointStrategy {
         const dataPoints = sensor.data
             .map(item => {
                 const timestamp = this.parseTrafficDate(item.time);
+                if (isNaN(timestamp)) {
+                    return null;
+                }
                 return {
                     timestamp,
                     isoTime: new Date(timestamp).toISOString(),
@@ -143,6 +146,7 @@ export class TrafficSensorStrategy extends BasePointStrategy {
                     )
                 };
             })
+            .filter((d): d is { timestamp: number; isoTime: string; value: number } => d !== null)
             .sort((a, b) => a.timestamp - b.timestamp);
 
         return {
@@ -192,7 +196,7 @@ export class TrafficSensorStrategy extends BasePointStrategy {
 
     private parseTrafficDate(raw: string): number {
         if (!raw) {
-            return 0;
+            return NaN;
         }
         const clean = raw.replace(/_/g, ' ').trim();
         const match = clean.match(
@@ -203,7 +207,7 @@ export class TrafficSensorStrategy extends BasePointStrategy {
             return new Date(+y, +m - 1, +d, +h, +min, s ? +s : 0).getTime();
         }
         const fallback = new Date(clean).getTime();
-        return isNaN(fallback) ? 0 : fallback;
+        return isNaN(fallback) ? NaN : fallback;
     }
 }
 

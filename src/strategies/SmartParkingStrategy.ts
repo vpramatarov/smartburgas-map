@@ -53,7 +53,7 @@ export class SmartParkingStrategy extends BasePointStrategy {
                         <span class="prop-label">${t('capacity', this.currentLang)}:</span>
                         <span class="prop-value">${free} ${t('free', this.currentLang)} / ${total} ${t('total', this.currentLang)}</span>
                     </span>
-                    <span class="prop-additional">${last_sync}</span>
+                    <span class="prop-additional">${Utils.escapeHtml(last_sync)}</span>
                 </div>
             </div>
             <div class="data-row smart-parking-progress">
@@ -69,7 +69,7 @@ export class SmartParkingStrategy extends BasePointStrategy {
             const desc = document.createElement('div') as HTMLDivElement;
             desc.className = 'sensor-description';
             desc.style.marginTop = '10px';
-            desc.innerHTML = sensor.description;
+            desc.textContent = sensor.description;
             container.appendChild(desc);
         }
 

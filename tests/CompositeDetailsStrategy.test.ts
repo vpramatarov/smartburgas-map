@@ -34,6 +34,11 @@ class MockStrategy implements IDetailsStrategy {
     }
 }
 
+class NamedMockStrategy extends MockStrategy {
+    override layerOptions = { color: 'blue', translate_name_key: 'layer_mock' } as any;
+    getIconClass = () => 'icon-mock';
+}
+
 describe('CompositeDetailsStrategy - Chart Updates', () => {
     // We will dynamically control what querySelectorAll returns using this array
     let mockCheckedBoxes: any[] = [];
@@ -63,6 +68,44 @@ describe('CompositeDetailsStrategy - Chart Updates', () => {
                 return [];
             })
         });
+    });
+
+    it('appends the translated name to the filter header via appendChild (preserves the icon child)', () => {
+        const mockStrategy = new NamedMockStrategy();
+        const composite = new CompositeDetailsStrategy([mockStrategy as any]);
+
+        const createdElements: any[] = [];
+        vi.stubGlobal('document', {
+            createElement: vi.fn((tag) => {
+                const el = {
+                    tagName: tag.toUpperCase(),
+                    id: '', className: '', innerText: '', innerHTML: '',
+                    style: {}, classList: { add: vi.fn(), remove: vi.fn() },
+                    appendChild: vi.fn(),
+                    onclick: null,
+                };
+                createdElements.push(el);
+                return el;
+            }),
+            createTextNode: vi.fn((text: string) => ({ nodeType: 3, textContent: text, __isTextNode: true })),
+            getElementById: vi.fn(() => ({ appendChild: vi.fn(), classList: { add: vi.fn(), remove: vi.fn() }, style: {} })),
+            querySelectorAll: vi.fn(() => []),
+        });
+
+        const container = document.createElement('div') as any;
+        const chartContainer = document.createElement('div') as any;
+        const sensor: SensorProperties = { id: 'S1', name: 'Sensor 1', strategy: 'mock_strategy', additional_info: {} };
+
+        composite.render(container, chartContainer, [sensor], [], vi.fn(), vi.fn(), 'bg');
+
+        // Find the h2 filter element
+        const filter = createdElements.find(e => e.tagName === 'H2');
+        expect(filter).toBeDefined();
+        // appendChild should have been called at least twice: once for the icon, once for the text node
+        expect(filter.appendChild.mock.calls.length).toBeGreaterThanOrEqual(2);
+        const lastArg = filter.appendChild.mock.calls.at(-1)[0];
+        expect(lastArg.__isTextNode).toBe(true);
+        expect(lastArg.textContent).toBe('layer_mock');
     });
 
     it('should retrieve sensor data based on a stable sensor ID, not array index', () => {

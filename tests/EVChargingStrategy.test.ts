@@ -52,12 +52,22 @@ describe('EVChargingStrategy', () => {
         expect(img.alt).toBe('Charger A');
     });
 
-    it('renderCardContent appends description when present', () => {
+    it('renderCardContent appends description as text (not HTML) to prevent XSS', () => {
         const container = { innerHTML: '', appendChild: vi.fn() } as any;
-        strategy.renderCardContent(container, makeSensor({ description: 'Fast charger' }), '', vi.fn());
+        strategy.renderCardContent(container, makeSensor({ description: 'Fast charger' }));
         const desc = container.appendChild.mock.calls[0][0];
         expect(desc.className).toBe('sensor-description');
-        expect(desc.innerHTML).toBe('Fast charger');
+        expect(desc.textContent).toBe('Fast charger');
+        expect(desc.innerHTML).toBe('');
+    });
+
+    it('does not render malicious description as executable HTML', () => {
+        const container = { innerHTML: '', appendChild: vi.fn() } as any;
+        const malicious = '<script>alert("xss")</script>';
+        strategy.renderCardContent(container, makeSensor({ description: malicious }));
+        const desc = container.appendChild.mock.calls[0][0];
+        expect(desc.innerHTML).toBe('');
+        expect(desc.textContent).toBe(malicious);
     });
 
     it('renderCardContent image onerror hides the image', () => {

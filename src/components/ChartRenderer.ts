@@ -19,6 +19,25 @@ export class ChartRenderer {
     ];
 
     private static currentExportRange: { start: Date; end: Date } | null = null;
+    private static plotlyLoaded = false;
+    private static plotlyLoading: Promise<void> | null = null;
+
+    public static ensurePlotly(): Promise<void> {
+        if (this.plotlyLoaded) {
+            return Promise.resolve();
+        }
+        if (this.plotlyLoading) {
+            return this.plotlyLoading;
+        }
+        this.plotlyLoading = new Promise<void>((resolve, reject) => {
+            const script = document.createElement('script') as HTMLScriptElement;
+            script.src = 'https://cdn.plot.ly/plotly-2.27.0.min.js';
+            script.onload = () => { this.plotlyLoaded = true; resolve(); };
+            script.onerror = () => reject(new Error('Failed to load Plotly'));
+            document.head.appendChild(script);
+        });
+        return this.plotlyLoading;
+    }
 
     public static getCurrentExportRange() {
         return ChartRenderer.currentExportRange;
@@ -34,10 +53,10 @@ export class ChartRenderer {
      * @param defaultLabels Fallback X-axis labels (can be empty if datasets have times)
      * @param datasets Data to render
      */
-    public static render(containerId: string, defaultLabels: string[], datasets: ChartDataset[]) {
+    public static render(containerId: string, defaultLabels: string[], datasets: ChartDataset[]): Promise<void> {
         const setup = this.setupChartContainer(containerId, datasets);
         if (!setup) {
-            return;
+            return Promise.resolve();
         }
 
         const { canvasId, fromInput, toInput, bounds } = setup;
@@ -75,7 +94,7 @@ export class ChartRenderer {
 
         const config = { responsive: true, displayModeBar: true };
 
-        Plotly.newPlot(canvasId, traces, layout, config).then((chartDiv: any) => {
+        return ChartRenderer.ensurePlotly().then(() => Plotly.newPlot(canvasId, traces, layout, config).then((chartDiv: any) => {
             chartDiv.removeAllListeners('plotly_relayout');
 
             chartDiv.on('plotly_relayout', (eventData: any) => {
@@ -118,16 +137,16 @@ export class ChartRenderer {
                     }
                 }
             });
-        });
+        }));
     }
 
     /**
      * Renders a full-screen version of the chart in the modal.
      */
-    public static renderFull(containerId: string, title: string, defaultLabels: string[], datasets: ChartDataset[]) {
+    public static renderFull(containerId: string, title: string, defaultLabels: string[], datasets: ChartDataset[]): Promise<void> {
         const setup = this.setupChartContainer(containerId, datasets);
         if (!setup) {
-            return;
+            return Promise.resolve();
         }
 
         const { canvasId, fromInput, toInput, bounds } = setup;
@@ -169,50 +188,50 @@ export class ChartRenderer {
 
         const config = { responsive: true, displayModeBar: true };
 
-        Plotly.newPlot(canvasId, traces, layout, config).then((chartDiv: any) => {
+        return ChartRenderer.ensurePlotly().then(() => Plotly.newPlot(canvasId, traces, layout, config).then((chartDiv: any) => {
             chartDiv.removeAllListeners('plotly_relayout');
 
             chartDiv.on('plotly_relayout', (eventData: any) => {
-                if (!eventData) {
-                    return;
-                }
-
-                let startStr = null;
-                let endStr = null;
-
-                if (eventData['xaxis.range[0]'] !== undefined && eventData['xaxis.range[1]'] !== undefined) {
-                    startStr = eventData['xaxis.range[0]'];
-                    endStr = eventData['xaxis.range[1]'];
-                } else if (Array.isArray(eventData['xaxis.range']) && eventData['xaxis.range'].length === 2) {
-                    startStr = eventData['xaxis.range'][0];
-                    endStr = eventData['xaxis.range'][1];
-                }
-
-                if (startStr && endStr) {
-                    const startD = new Date(startStr);
-                    const endD = new Date(endStr);
-                    ChartRenderer.currentExportRange = { start: startD, end: endD };
-
-                    // Sync Plotly -> Inputs
-                    if (fromInput) {
-                        fromInput.value = Utils.formatDateToLocal(startD);
-                    }
-                    if (toInput) {
-                        toInput.value = Utils.formatDateToLocal(endD);
+                    if (!eventData) {
+                        return;
                     }
 
-                } else if (eventData['xaxis.autorange'] === true) {
-                    ChartRenderer.resetExportRange();
-                    // Reset Plotly -> Inputs
-                    if (fromInput) {
-                        fromInput.value = bounds.minDate;
+                    let startStr = null;
+                    let endStr = null;
+
+                    if (eventData['xaxis.range[0]'] !== undefined && eventData['xaxis.range[1]'] !== undefined) {
+                        startStr = eventData['xaxis.range[0]'];
+                        endStr = eventData['xaxis.range[1]'];
+                    } else if (Array.isArray(eventData['xaxis.range']) && eventData['xaxis.range'].length === 2) {
+                        startStr = eventData['xaxis.range'][0];
+                        endStr = eventData['xaxis.range'][1];
                     }
-                    if (toInput) {
-                        toInput.value = bounds.maxDate;
+
+                    if (startStr && endStr) {
+                        const startD = new Date(startStr);
+                        const endD = new Date(endStr);
+                        ChartRenderer.currentExportRange = { start: startD, end: endD };
+
+                        // Sync Plotly -> Inputs
+                        if (fromInput) {
+                            fromInput.value = Utils.formatDateToLocal(startD);
+                        }
+                        if (toInput) {
+                            toInput.value = Utils.formatDateToLocal(endD);
+                        }
+
+                    } else if (eventData['xaxis.autorange'] === true) {
+                        ChartRenderer.resetExportRange();
+                        // Reset Plotly -> Inputs
+                        if (fromInput) {
+                            fromInput.value = bounds.minDate;
+                        }
+                        if (toInput) {
+                            toInput.value = bounds.maxDate;
+                        }
                     }
-                }
-            });
-        });
+                });
+        }));
     }
 
     public static clear(containerId: string) {
@@ -220,7 +239,7 @@ export class ChartRenderer {
         if (container) {
             // Target the actual sub-canvas we created for Plotly purge
             const canvas = document.getElementById(`${containerId}-canvas`) as HTMLElement;
-            if (canvas) {
+            if (canvas && typeof Plotly !== 'undefined') {
                 Plotly.purge(canvas);
             }
             container.innerHTML = '';
@@ -347,9 +366,11 @@ export class ChartRenderer {
             }
 
             // Tell Plotly to physically zoom the graph
-            Plotly.relayout(canvasId, {
-                'xaxis.range': [fromInput.value, toInput.value]
-            });
+            if (typeof Plotly !== 'undefined') {
+                Plotly.relayout(canvasId, {
+                    'xaxis.range': [fromInput.value, toInput.value]
+                });
+            }
         };
 
         fromInput?.addEventListener('change', syncChart);

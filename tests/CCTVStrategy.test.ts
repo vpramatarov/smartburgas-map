@@ -5,8 +5,10 @@ import { SensorProperties } from '../src/Types.js';
 
 // Mock Leaflet (CCTVStrategy extends BasePointStrategy which uses markerClusterGroup)
 vi.stubGlobal('L', {
-    layerGroup: vi.fn(() => ({ addTo: vi.fn(), clearLayers: vi.fn() })),
-    markerClusterGroup: vi.fn(() => ({ addTo: vi.fn(), clearLayers: vi.fn() })),
+    layerGroup: vi.fn(() => ({ addTo: vi.fn(), clearLayers: vi.fn(), addLayer: vi.fn() })),
+    markerClusterGroup: vi.fn(() => ({ addTo: vi.fn(), clearLayers: vi.fn(), addLayer: vi.fn() })),
+    geoJSON: vi.fn(() => ({ addTo: vi.fn() })),
+    marker: vi.fn(() => ({ bindPopup: vi.fn().mockReturnThis(), on: vi.fn() })),
     divIcon: vi.fn(() => ({})),
     point: vi.fn(() => ({})),
 });
@@ -103,6 +105,36 @@ describe('CCTVStrategy Video Player Garbage Collection', () => {
 
         // Assert: The map is empty
         expect(activePlayers.size).toBe(0);
+    });
+
+    it('escapes malicious sensor description in the card header', () => {
+        const malicious = '<script>alert(1)</script>';
+        const sensor: SensorProperties = { publicname: 'cam', description: malicious, video_url2: 'http://test/1.m3u8', additional_info: {} };
+        strategy.renderCardContent(mockContainer, sensor, 'p', vi.fn());
+        expect(mockContainer.innerHTML).not.toContain('<script>alert(1)</script>');
+        expect(mockContainer.innerHTML).toContain('&lt;script&gt;');
+    });
+
+    it('escapes malicious title in the marker popup HTML', () => {
+        const maliciousTitle = '<img src=x onerror=alert(1)>';
+        const feature = {
+            type: 'Feature' as const,
+            geometry: { type: 'Point' as const, coordinates: [5, 5] },
+            properties: { publicname: maliciousTitle, strategy: 'cctv', additional_info: {} },
+        };
+
+        strategy.initialize({ on: vi.fn(), getZoom: () => 15, getContainer: () => ({ style: { setProperty: vi.fn() }, classList: { add: vi.fn(), remove: vi.fn() } }) } as any, vi.fn());
+        (strategy as any).cachedData = [feature];
+        strategy.applyRegionFilter(null);
+
+        const geoJsonCall = vi.mocked(L.geoJSON).mock.calls.at(-1)!;
+        const options = geoJsonCall[1] as any;
+        const markerMock = { bindPopup: vi.fn().mockReturnThis(), on: vi.fn() };
+        options.onEachFeature(feature, markerMock);
+
+        const popupHtml = markerMock.bindPopup.mock.calls[0][0];
+        expect(popupHtml).not.toContain('<img src=x onerror=alert(1)>');
+        expect(popupHtml).toContain('&lt;img');
     });
 
     it('should destroy existing player if renderCardContent is called again for the same sensor', () => {

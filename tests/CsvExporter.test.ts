@@ -156,4 +156,17 @@ describe('CsvExporter CSV structure', () => {
         download([{ id: 'S1', name: 'S', strategy: 'st', additional_info: {}, data: [{ time: '2025-01-01T00:00:00Z', v: '1' }] }]);
         expect(getCsvContent().startsWith('\uFEFF')).toBe(true);
     });
+
+    it('collapses newlines inside field values to spaces (prevents row breaks)', () => {
+        download([{
+            id: 'S1', name: 'S', strategy: 'st', additional_info: {},
+            data: [{ time: '2025-01-01T00:00:00Z', note: 'first\nsecond\r\nthird\rlast' }],
+        }]);
+        const csv = getCsvContent();
+        // Header line + exactly one data line (newlines inside fields must not split rows)
+        const lines = csv.split('\n');
+        expect(lines).toHaveLength(2);
+        expect(csv).not.toContain('first\nsecond');
+        expect(csv).toContain('"first second third last"');
+    });
 });

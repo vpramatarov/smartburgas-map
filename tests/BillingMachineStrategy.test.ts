@@ -43,17 +43,27 @@ describe('BillingMachineStrategy', () => {
         expect(strategy.getChartData(makeSensor(), 'anything')).toBeNull();
     });
 
-    it('renderCardContent shows description when present', () => {
+    it('renderCardContent shows description as text (not HTML) to prevent XSS', () => {
         const container = { innerHTML: '', appendChild: vi.fn() } as any;
-        strategy.renderCardContent(container, makeSensor({ description: '<p>Test ATM</p>' }), '', vi.fn());
+        strategy.renderCardContent(container, makeSensor({ description: '<p>Test ATM</p>' }));
         const appended = container.appendChild.mock.calls[0][0];
         expect(appended.className).toBe('sensor-description');
-        expect(appended.innerHTML).toBe('<p>Test ATM</p>');
+        expect(appended.textContent).toBe('<p>Test ATM</p>');
+        expect(appended.innerHTML).toBe('');
+    });
+
+    it('does not render malicious description as executable HTML', () => {
+        const container = { innerHTML: '', appendChild: vi.fn() } as any;
+        const malicious = '<img src=x onerror="alert(1)">';
+        strategy.renderCardContent(container, makeSensor({ description: malicious }));
+        const appended = container.appendChild.mock.calls[0][0];
+        expect(appended.innerHTML).toBe('');
+        expect(appended.textContent).toBe(malicious);
     });
 
     it('renderCardContent shows fallback when no description', () => {
         const container = { innerHTML: '', appendChild: vi.fn() } as any;
-        strategy.renderCardContent(container, makeSensor(), '', vi.fn());
+        strategy.renderCardContent(container, makeSensor());
         expect(container.innerHTML).toContain('No description available');
     });
 });

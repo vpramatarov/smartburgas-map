@@ -101,6 +101,42 @@ describe('AirQualityTimeSensorStrategy.getChartData', () => {
     });
 });
 
+// ── renderCardContent (XSS hardening)
+
+describe('AirQualityTimeSensorStrategy.renderCardContent', () => {
+    let strategy: AirQualityTimeSensorStrategy;
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+        strategy = new AirQualityTimeSensorStrategy();
+        strategy.initialize({} as any, vi.fn());
+    });
+
+    it('escapes property name, value, unit, and time in the textDiv innerHTML', () => {
+        const container = { innerHTML: '', appendChild: vi.fn() } as any;
+        const maliciousKey = '<script>alert(1)</script>';
+        const data = [{
+            time: '<b>when</b>',
+            [maliciousKey]: '<img src=x>',
+            [maliciousKey + '_unit']: '"><svg',
+        }];
+        strategy.renderCardContent(container, makeSensor({ data }), 'pfx', vi.fn());
+
+        // container.appendChild[0] is toggleContainer; toggleContainer.appendChild[0] is rowDiv;
+        // rowDiv.appendChild[0] is textDiv.
+        const toggleContainer = container.appendChild.mock.calls[0][0];
+        const rowDiv = toggleContainer.appendChild.mock.calls[0][0];
+        const textDiv = rowDiv.appendChild.mock.calls[0][0];
+
+        expect(textDiv.innerHTML).not.toContain('<script>alert(1)</script>');
+        expect(textDiv.innerHTML).not.toContain('<img src=x>');
+        expect(textDiv.innerHTML).not.toContain('<b>when</b>');
+        expect(textDiv.innerHTML).toContain('&lt;script&gt;');
+        expect(textDiv.innerHTML).toContain('&lt;img');
+        expect(textDiv.innerHTML).toContain('&lt;b&gt;when&lt;/b&gt;');
+    });
+});
+
 // ── parseDate (via getChartData times output)
 
 describe('AirQualityTimeSensorStrategy.parseDate', () => {
@@ -124,20 +160,13 @@ describe('AirQualityTimeSensorStrategy.parseDate', () => {
         expect(new Date(ms).getFullYear()).toBe(2025);
     });
 
-    it('parses the underscore-as-time-separator upstream format (DD.MM.YYYY_HH:MM)', () => {
-        // Real upstream format: dots separate date parts, underscore before time
-        // e.g. "15.03.2025_10:30" → replace _ with space → "15.03.2025 10:30"
-        // → replace . with - → "15-03-2025 10:30" → still invalid in JS Date
-        // The parser falls back to 0 for this case; the test documents actual behaviour.
-        // To properly support this format, a custom regex parser would be needed.
-        const ms = getFirstTime('15.03.2025_10:30');
-        // Document actual behaviour: this format is not parsed by the current implementation
-        // (new Date('15-03-2025 10:30') is invalid). Returns epoch 0.
-        expect(typeof ms).toBe('number'); // at minimum it's a number, not an error
-    });
-
-    it('falls back to epoch 0 for completely unparseable strings', () => {
-        const ms = getFirstTime('garbage');
-        expect(new Date(ms).getFullYear()).toBe(1970);
+    it('filters out entries with unparseable time (returns NaN from parseDate — audit 5.4)', () => {
+        // After audit 5.4, invalid times yield NaN from parseDate, so the entry is filtered
+        // out of the dataset rather than surfacing as Jan 1 1970.
+        const sensor = makeSensor({ data: [{ time: 'garbage', v: '1' }] });
+        const result = strategy.getChartData(sensor, 'v');
+        expect(result).not.toBeNull();
+        expect(result!.times!.length).toBe(0);
+        expect(result!.values.length).toBe(0);
     });
 });

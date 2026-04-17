@@ -95,11 +95,19 @@ class SmartMap {
     }
 
     private initMap(): void {
-        this.map = L.map('map').setView([42.5048, 27.4626], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(this.map);
+        try {
+            this.map = L.map('map').setView([42.5048, 27.4626], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(this.map);
+        } catch (err) {
+            console.error('Map initialization failed:', err);
+            const el = document.getElementById('map');
+            if (el) {
+                el.textContent = 'Map failed to load.';
+            }
+        }
     }
 
     private setInitialToggle(id: string) {
@@ -287,6 +295,11 @@ class SmartMap {
                         });
                     } else {
                         this.map.removeLayer(layer);
+
+                        // Free HLS player resources when the CCTV layer is hidden
+                        if (strategyName === 'cctv') {
+                            CCTVStrategy.stopAll();
+                        }
 
                         // Mark any pinned/preview sensors from this strategy as hidden
                         // so the side panel can show a warning banner instead of disappearing
@@ -528,10 +541,12 @@ class SmartMap {
 
                 case 'SET_LAYER':
                     // payload expected: { layerId: 'toggle-traffic', visible: true }
-                    const checkbox = document.getElementById(msg.payload.layerId) as HTMLInputElement;
-                    if (checkbox && checkbox.checked !== msg.payload.visible) {
-                        checkbox.checked = msg.payload.visible;
-                        checkbox.dispatchEvent(new Event('change'));
+                    if (msg.payload && typeof msg.payload.layerId === 'string' && typeof msg.payload.visible === 'boolean') {
+                        const checkbox = document.getElementById(msg.payload.layerId) as HTMLInputElement;
+                        if (checkbox && checkbox.checked !== msg.payload.visible) {
+                            checkbox.checked = msg.payload.visible;
+                            checkbox.dispatchEvent(new Event('change'));
+                        }
                     }
                     break;
             }
@@ -687,7 +702,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         Sentry.replayIntegration()
                     ],
                     // Tracing
-                    tracesSampleRate: 1.0, //  Capture 100% of the transactions
+                    tracesSampleRate: 0.1, // Capture 10% of transactions
                     // Set 'tracePropagationTargets' to control for which URLs distributed tracing should be enabled
                     tracePropagationTargets: ["localhost", /^https:\/\/smartburgas\.eu\/general-map/],
                     // Session Replay
@@ -700,6 +715,7 @@ document.addEventListener('DOMContentLoaded', () => {
             new SmartMap(config);
         }).catch(err => {
             console.error('Failed to load configuration', err);
+            new SmartMap({ sentryDsn: null, allowFrameUrl: '*' });
         });
 });
 

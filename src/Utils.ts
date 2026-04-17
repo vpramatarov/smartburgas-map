@@ -62,7 +62,26 @@ export class Utils {
     }
 
     public static generateCustomId(): string {
-        return Math.random().toString(36).substring(2, 9);
+        return crypto.randomUUID().substring(0, 8);
+    }
+
+    public static escapeHtml(str: string): string {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    public static validateCssColor(color: string): string {
+        if (/^#[0-9a-fA-F]{3,8}$/.test(color)) {
+            return color;
+        }
+        if (/^[a-zA-Z]+$/.test(color)) {
+            return color;
+        }
+        return '#888';
     }
 
     /**

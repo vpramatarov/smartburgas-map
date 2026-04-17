@@ -3,7 +3,7 @@ import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
 import request from 'supertest';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
-import { app } from '../src/Server.js';
+import { app, globalErrorHandler, clearApiCache } from '../src/Server.js';
 
 import mockAirQualityData from './mocks/Air_quality_time.json';
 import mockTrafficData from './mocks/Cars_count.json';
@@ -29,7 +29,7 @@ const mswServer = setupServer(
 // Start MSW before tests run
 beforeAll(() => mswServer.listen({ onUnhandledRequest: 'bypass' }));
 // Reset any custom handlers after each test
-afterEach(() => mswServer.resetHandlers());
+afterEach(() => { mswServer.resetHandlers(); clearApiCache(); });
 // Close MSW after all tests
 afterAll(() => mswServer.close());
 
@@ -312,6 +312,49 @@ describe('Backend API Endpoints', () => {
             expect(capturedUrl).not.toContain('start_date');
             expect(capturedUrl).not.toContain('end_date');
         });
+
+        it('rejects (silently drops) malformed start_date', async () => {
+            let capturedUrl = '';
+            mswServer.use(
+                http.get(process.env.AIR_QUALITY_TIME_URL, ({ request }) => {
+                    capturedUrl = request.url;
+                    return HttpResponse.json(mockAirQualityData);
+                })
+            );
+
+            await request(app).get('/api/air-quality-time?lang=bg&start_date=not-a-date&end_date=2025-03-01');
+
+            expect(capturedUrl).not.toContain('start_date=not-a-date');
+            expect(capturedUrl).toContain('end_date=2025-03-01');
+        });
+
+        it('rejects injection attempts in start_date', async () => {
+            let capturedUrl = '';
+            mswServer.use(
+                http.get(process.env.AIR_QUALITY_TIME_URL, ({ request }) => {
+                    capturedUrl = request.url;
+                    return HttpResponse.json(mockAirQualityData);
+                })
+            );
+
+            await request(app).get('/api/air-quality-time?lang=bg&start_date=2025-01-01%26evil%3D1');
+
+            expect(capturedUrl).not.toContain('evil');
+        });
+
+        it('rejects non-ISO date formats', async () => {
+            let capturedUrl = '';
+            mswServer.use(
+                http.get(process.env.AIR_QUALITY_TIME_URL, ({ request }) => {
+                    capturedUrl = request.url;
+                    return HttpResponse.json(mockAirQualityData);
+                })
+            );
+
+            await request(app).get('/api/air-quality-time?lang=bg&start_date=01/02/2025');
+
+            expect(capturedUrl).not.toContain('start_date');
+        });
     });
 
     // ── Content-Security-Policy header ──
@@ -396,6 +439,125 @@ describe('Backend API Endpoints', () => {
             expect(response.status).toBe(500);
             // The error message should name the data source, not expose internals
             expect(response.body.error).toContain('billingMachines');
+        });
+    });
+
+    // ── Static asset cache headers ──
+
+    describe('Static asset cache headers', () => {
+        it('sets a Cache-Control header on static assets', async () => {
+            const res = await request(app).get('/index.html');
+            expect(res.status).toBe(200);
+            expect(res.headers['cache-control']).toBeDefined();
+        });
+    });
+
+    // ── Response compression ──
+
+    describe('Response compression', () => {
+        it('compresses large JSON responses when Accept-Encoding: gzip is requested', async () => {
+            // admin-regions returns ~620KB GeoJSON — well above the default threshold (1KB)
+            const res = await request(app)
+                .get('/api/admin-regions')
+                .set('Accept-Encoding', 'gzip');
+            expect(res.headers['content-encoding']).toBe('gzip');
+        });
+
+        it('does not compress if Accept-Encoding is identity', async () => {
+            const res = await request(app)
+                .get('/api/admin-regions')
+                .set('Accept-Encoding', 'identity');
+            expect(res.headers['content-encoding']).toBeUndefined();
+        });
+    });
+
+    // ── Upstream structural validation ──
+
+    describe('Upstream response validation (transform endpoints)', () => {
+        it('skips features missing geometry.coordinates instead of crashing', async () => {
+            mswServer.use(
+                http.get(process.env.AIR_QUALITY_TIME_URL, () => HttpResponse.json({
+                    features1: [
+                        { properties: { GlobalId: 'ok', name: 'ok', geometry: { coordinates: [27.5, 42.5] } } },
+                        { properties: { GlobalId: 'bad-nogeom', name: 'bad' } }, // missing geometry
+                        { properties: { GlobalId: 'bad-emptycoords', name: 'bad2', geometry: {} } }, // missing coordinates
+                    ]
+                }))
+            );
+
+            // Unique lang to bypass cache
+            const res = await request(app).get('/api/air-quality-time?lang=en');
+            expect(res.status).toBe(200);
+            expect(res.body.type).toBe('FeatureCollection');
+            expect(Array.isArray(res.body.features)).toBe(true);
+            // Only the valid feature should be included
+            expect(res.body.features).toHaveLength(1);
+        });
+    });
+
+    // ── Upstream fetch timeouts ──
+
+    describe('Upstream fetch timeout', () => {
+        it('aborts an upstream request that never responds within the timeout', async () => {
+            // MSW handler that never resolves — simulates an upstream hang.
+            mswServer.use(
+                http.get(process.env.AIR_QUALITY_TIME_URL, () => {
+                    return new Promise(() => {}); // never resolves
+                })
+            );
+
+            const start = Date.now();
+            // Use a unique lang to bypass any cache from earlier tests
+            const res = await request(app).get('/api/air-quality-time?lang=en');
+            const elapsed = Date.now() - start;
+
+            expect(res.status).toBe(500);
+            // vitest.config sets UPSTREAM_TIMEOUT_MS=3000 — request should abort in ~3s
+            expect(elapsed).toBeLessThan(8_000);
+        }, 15_000);
+    });
+
+    // ── Upstream response caching ──
+
+    describe('Upstream API cache', () => {
+        it('only hits the upstream once for two requests to the same URL within TTL', async () => {
+            let fetchCount = 0;
+            mswServer.use(
+                http.get(process.env.TAXI_RANKS_URL, () => {
+                    fetchCount++;
+                    return HttpResponse.json(mockTaxiRanksData);
+                })
+            );
+
+            // Unique lang forces a distinct cache key from any earlier suite usage
+            await request(app).get('/api/taxi-ranks?lang=en');
+            await request(app).get('/api/taxi-ranks?lang=en');
+            expect(fetchCount).toBe(1);
+        });
+    });
+
+    // ── Global error handler ──
+
+    describe('Global Express error handler', () => {
+        // Test routes are registered AFTER Server.ts's error handler was mounted, so we
+        // re-mount the same exported handler to cover these new routes.
+        beforeAll(() => {
+            app.get('/__test_throw_sync', () => { throw new Error('boom'); });
+            app.get('/__test_throw_async', async () => { throw new Error('async boom'); });
+            app.use(globalErrorHandler);
+        });
+
+        it('returns 500 JSON when a route handler throws synchronously', async () => {
+            const res = await request(app).get('/__test_throw_sync');
+            expect(res.status).toBe(500);
+            expect(res.headers['content-type']).toMatch(/json/);
+            expect(res.body).toEqual({ error: 'Internal server error' });
+        });
+
+        it('returns 500 JSON when a route handler rejects (async throw)', async () => {
+            const res = await request(app).get('/__test_throw_async');
+            expect(res.status).toBe(500);
+            expect(res.body).toEqual({ error: 'Internal server error' });
         });
     });
 });

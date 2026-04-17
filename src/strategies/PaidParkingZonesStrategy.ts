@@ -254,7 +254,7 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
                     workingHours = Utils.buildWorkingHoursUI(workingHours, this.currentLang);
                 }
 
-                const price =  props.parsedPrice || '1 &euro; / 1.96'; // ${props.PricePerHo} - 2
+                const price =  props.parsedPrice || '1 \u20AC / 1.96'; // ${props.PricePerHo} - 2
                 const zoneInfoUrl = props.zoneInfoUrl || null;
                 let zoneInfo = '';
 
@@ -264,9 +264,9 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
 
                 const popupHtml = `
                     <div class="marker-popup-hover" style="min-width: 160px;">
-                        <h4 style="margin-bottom:8px; border-bottom:1px solid #ccc; padding-bottom:4px;">${name}</h4>
-                        <p style="margin:4px 0;"><strong>${t('price_per_hour', this.currentLang)}:</strong> ${price} ${t('bgn', this.currentLang)}</p>
-                        <p style="margin:4px 0;"><strong>${t('sms_number', this.currentLang)}:</strong> ${props.SmsNumber}</p>
+                        <h4 style="margin-bottom:8px; border-bottom:1px solid #ccc; padding-bottom:4px;">${Utils.escapeHtml(name)}</h4>
+                        <p style="margin:4px 0;"><strong>${t('price_per_hour', this.currentLang)}:</strong> ${Utils.escapeHtml(price)} ${t('bgn', this.currentLang)}</p>
+                        <p style="margin:4px 0;"><strong>${t('sms_number', this.currentLang)}:</strong> ${Utils.escapeHtml(String(props.SmsNumber))}</p>
                         <p style="margin:4px 0;"><strong>${t('working_hours', this.currentLang)}:</strong> ${workingHours.join('<br>')}</p>
                         ${zoneInfo}
                         <p style="margin:8px 0 0 0; font-size: 0.85em; color: #666; font-style: italic;">${t('click_to_filter', this.currentLang)}</p>
@@ -376,7 +376,7 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
                         workingHours = Utils.buildWorkingHoursUI(workingHours, this.currentLang);
                     }
 
-                    const price =  feature.properties.parsedPrice || '1 &euro; / 1.96';
+                    const price =  feature.properties.parsedPrice || '1 \u20AC / 1.96';
                     const zoneInfoUrl = feature.properties.zoneInfoUrl || null;
                     let zoneInfo = '';
 
@@ -386,9 +386,9 @@ export class PaidParkingZonesStrategy implements ISpatialFilterStrategy {
 
                     const popupHtml = `
                         <div class="marker-popup-hover" style="min-width: 160px;">
-                            <h4 style="margin-bottom:8px; border-bottom:1px solid #ccc; padding-bottom:4px;">${name}</h4>
-                            <p style="margin:4px 0;"><strong>${t('price_per_hour', this.currentLang)}:</strong> ${price} ${t('bgn', this.currentLang)}</p>
-                            <p style="margin:4px 0;"><strong>${t('sms_number', this.currentLang)}:</strong> ${feature.properties.SmsNumber}</p>
+                            <h4 style="margin-bottom:8px; border-bottom:1px solid #ccc; padding-bottom:4px;">${Utils.escapeHtml(name)}</h4>
+                            <p style="margin:4px 0;"><strong>${t('price_per_hour', this.currentLang)}:</strong> ${Utils.escapeHtml(price)} ${t('bgn', this.currentLang)}</p>
+                            <p style="margin:4px 0;"><strong>${t('sms_number', this.currentLang)}:</strong> ${Utils.escapeHtml(String(feature.properties.SmsNumber))}</p>
                             <p style="margin:4px 0;"><strong>${t('working_hours', this.currentLang)}:</strong> ${workingHours.join('<br>')}</p>
                             ${zoneInfo}
                             <p style="margin:8px 0 0 0; font-size: 0.85em; color: #666; font-style: italic;">${t('click_to_filter', this.currentLang)}</p>

@@ -106,11 +106,83 @@ describe('WasteCentreStrategy.renderCardContent', () => {
         expect(img.src).toBe('http://img/waste.jpg');
     });
 
-    it('includes address in card when present', () => {
+    it('appends address as a data-row div with textContent (not HTML)', () => {
         const container = { innerHTML: '', appendChild: vi.fn() } as any;
         const sensor = makeSensor({ additional_info: { address: 'ул. Демокрация 1' } });
         strategy.renderCardContent(container, sensor, 'pfx', vi.fn());
-        expect(container.innerHTML).toContain('ул. Демокрация 1');
+
+        const addrDiv = container.appendChild.mock.calls.find((c: any[]) => c[0].className === 'data-row')?.[0];
+        expect(addrDiv).toBeDefined();
+        expect(addrDiv.textContent).toBe('ул. Демокрация 1');
+        expect(addrDiv.innerHTML).toBe('');
+    });
+
+    it('does not render malicious address as executable HTML', () => {
+        const container = { innerHTML: '', appendChild: vi.fn() } as any;
+        const malicious = '<img src=x onerror="alert(1)">';
+        const sensor = makeSensor({ additional_info: { address: malicious } });
+        strategy.renderCardContent(container, sensor, 'pfx', vi.fn());
+
+        const addrDiv = container.appendChild.mock.calls.find((c: any[]) => c[0].className === 'data-row')?.[0];
+        expect(addrDiv).toBeDefined();
+        expect(addrDiv.innerHTML).toBe('');
+        expect(addrDiv.textContent).toBe(malicious);
+        expect(container.innerHTML).not.toContain('<img');
+    });
+
+    it('does not render malicious description as executable HTML', () => {
+        const container = { innerHTML: '', appendChild: vi.fn() } as any;
+        const malicious = '<script>alert(1)</script>';
+        const sensor = makeSensor({ description: malicious });
+        strategy.renderCardContent(container, sensor, 'pfx', vi.fn());
+
+        const desc = container.appendChild.mock.calls.find((c: any[]) => c[0].className === 'sensor-description')?.[0];
+        expect(desc).toBeDefined();
+        expect(desc.innerHTML).toBe('');
+        expect(desc.textContent).toBe(malicious);
+    });
+
+    it('escapes meta.name, weight, weight_unit, and time in the garbage row template', () => {
+        const container = { innerHTML: '', appendChild: vi.fn() } as any;
+        // toggleDiv in the strategy uses appendChild; our mock returns a fresh object with appendChild on every createElement
+        const maliciousData = [{
+            Garbage_id: 'G1',
+            Garbage_name: '<script>alert(1)</script>',
+            Garbage_Colour: '#abc',
+            Garbage_Weight: '<img src=x>',
+            Garbage_Weight_type: '"onmouseover="alert(1)',
+            time: '<b>2025</b>',
+        }];
+        strategy.renderCardContent(container, makeSensor({ data: maliciousData }), 'pfx', vi.fn());
+
+        // container.appendChild[0] is the toggleDiv; toggleDiv.appendChild[0] is the row
+        const toggleDiv = container.appendChild.mock.calls.find((c: any[]) => c[0].className === 'property-toggles')?.[0];
+        expect(toggleDiv).toBeDefined();
+        const row = toggleDiv.appendChild.mock.calls[0][0];
+        expect(row.innerHTML).not.toContain('<script>alert(1)</script>');
+        expect(row.innerHTML).not.toContain('<img src=x>');
+        expect(row.innerHTML).toContain('&lt;script&gt;');
+        expect(row.innerHTML).toContain('&lt;img');
+        expect(row.innerHTML).toContain('&quot;');
+    });
+
+    it('sanitizes meta.color via validateCssColor (rejects CSS injection)', () => {
+        const container = { innerHTML: '', appendChild: vi.fn() } as any;
+        const maliciousData = [{
+            Garbage_id: 'G1',
+            Garbage_name: 'Paper',
+            Garbage_Colour: 'red;background:url(x)',
+            Garbage_Weight: '1',
+            Garbage_Weight_type: 'kg',
+            time: '2025-01-01',
+        }];
+        strategy.renderCardContent(container, makeSensor({ data: maliciousData }), 'pfx', vi.fn());
+
+        const toggleDiv = container.appendChild.mock.calls.find((c: any[]) => c[0].className === 'property-toggles')?.[0];
+        const row = toggleDiv.appendChild.mock.calls[0][0];
+        expect(row.innerHTML).not.toContain('background:url(x)');
+        // fallback color inserted instead
+        expect(row.innerHTML).toContain('border-left: 3px solid #888');
     });
 
     it('has correct identity fields', () => {

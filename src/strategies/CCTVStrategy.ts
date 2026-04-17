@@ -1,6 +1,7 @@
 // src/strategies/CCTVStrategy.ts
 import { BasePointStrategy } from './BasePointStrategy.js';
 import {ChartDataset, GeoFeature, GeoJSONInput, SensorProperties} from '../Types.js';
+import { Utils } from '../Utils.js';
 declare const L: typeof import('leaflet');
 import type * as GeoJSON from 'geojson'
 
@@ -32,8 +33,16 @@ export class CCTVStrategy extends BasePointStrategy {
 
     // ── Custom zoom-scale setup 
 
+    private static gcIntervalStarted = false;
+
     override initialize(map: L.Map, onPin: (sensor: SensorProperties) => void): void {
         super.initialize(map, onPin);
+
+        // Periodically reap HLS players whose video elements have been detached from the DOM
+        if (!CCTVStrategy.gcIntervalStarted) {
+            setInterval(() => CCTVStrategy.garbageCollect(), 30_000);
+            CCTVStrategy.gcIntervalStarted = true;
+        }
 
         const updateZoomScale = () => {
             const zoom = map.getZoom();
@@ -94,7 +103,7 @@ export class CCTVStrategy extends BasePointStrategy {
                 const title = props.publicname || props.name || 'Camera';
 
                 (layer as L.Marker).bindPopup(
-                    `<div class="marker-popup-hover"><h4>${title}</h4><p>${this.getPopupText(props)}</p></div>`,
+                    `<div class="marker-popup-hover"><h4>${Utils.escapeHtml(title)}</h4><p>${this.getPopupText(props)}</p></div>`,
                     { closeButton: false, offset: L.point(0, 0) }
                 );
                 layer.on('mouseover', (e: L.LeafletEvent) => {
@@ -133,7 +142,7 @@ export class CCTVStrategy extends BasePointStrategy {
 
         container.innerHTML = `
             <div class="data-row">
-                <strong>${sensor.description || sensor.publicname}</strong>
+                <strong>${Utils.escapeHtml(sensor.description || sensor.publicname || '')}</strong>
             </div>
         `;
 

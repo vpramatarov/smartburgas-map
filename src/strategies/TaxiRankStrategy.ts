@@ -45,7 +45,7 @@ export class TaxiRankStrategy extends BasePointStrategy {
             const desc = document.createElement('div') as HTMLDivElement;
             desc.className = 'sensor-description';
             desc.style.fontWeight = 'bold';
-            desc.innerHTML = sensor.description;
+            desc.textContent = sensor.description;
             container.appendChild(desc);
         }
 
@@ -54,7 +54,7 @@ export class TaxiRankStrategy extends BasePointStrategy {
             loc.style.fontSize = '1em';
             loc.style.color = '#666';
             loc.style.marginTop = '4px';
-            loc.innerHTML = sensor.name;
+            loc.textContent = sensor.name;
             container.appendChild(loc);
         }
     }

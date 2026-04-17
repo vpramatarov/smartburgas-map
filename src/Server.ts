@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import express, {NextFunction, Request, Response} from 'express';
+import compression from 'compression';
 import { readFileSync } from 'fs';
 import path from 'path';
 import {Config, GeoFeature, GeoFeatureCollection, SupportedLanguage, Target, ZoneInfo} from './Types.js'
@@ -10,6 +11,14 @@ import {Utils} from "./Utils.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+process.on('uncaughtException', (err) => {
+    console.error('[FATAL] Uncaught Exception:', err);
+    process.exit(1);
+});
+process.on('unhandledRejection', (reason) => {
+    console.error('[WARN] Unhandled Rejection:', reason);
+});
+
 // strict Environment Guard
 const requireEnv = (key: string, fallback?: string): string => {
     const value = process.env[key] || fallback;
@@ -19,8 +28,6 @@ const requireEnv = (key: string, fallback?: string): string => {
     }
     return value;
 };
-
-export const app = express();
 
 const config: Config = {
     appUrl: requireEnv('URL', 'http://localhost'),
@@ -37,6 +44,20 @@ const config: Config = {
 
 const ALLOW_FRAME_URL = requireEnv('ALLOW_FRAME_URL', '*');
 const FRONTEND_SENTRY_DSN = process.env.FRONTEND_SENTRY_DSN || null; // Optional
+const apiCache = new Map<string, { data: any; lastUpdated: number; expiresAt: number }>();
+const CACHE_TTL = 60_000; // 60 seconds
+export const clearApiCache = (): void => apiCache.clear();
+const UPSTREAM_TIMEOUT_MS = Number(process.env.UPSTREAM_TIMEOUT_MS) || 120_000;
+const adminRegionsData = loadStaticJson('cau.json');
+const paidParkingZonesData = loadStaticJson('paid-parking-zones.json');
+const zoneInfoCache: Record<'blue' | 'green', ZoneInfo | null> = { blue: null, green: null };
+const ZONE_PRICE_URLS: Record<'blue' | 'green', string> = {
+    blue:  'https://www.transportburgas.bg/bg/правила-в-платени-зони-град-бургас',
+    green: 'https://www.transportburgas.bg/bg/правила-в-зелена-зона-град-бургас',
+};
+// midnight scheduler for paid zones prices
+let midnightTimeoutId: ReturnType<typeof setTimeout> | undefined;
+let midnightIntervalId: ReturnType<typeof setInterval> | undefined;
 
 const targets: Target[] = Object.keys(config)
     .filter(prop => prop !== 'appUrl' && prop !== 'port')
@@ -49,10 +70,21 @@ for (let target of targets) {
     }
 }
 
+export const app = express();
+app.use(compression());
+// Global Express error handler
+export const globalErrorHandler = (err: Error, req: Request, res: Response, _next: NextFunction): void => {
+    console.error(`[ERROR] ${req.method} ${req.url}:`, err.message);
+    if (!res.headersSent) {
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+app.use(globalErrorHandler);
 // Middleware to serve static files (Frontend)
-app.use(express.static(path.join(__dirname, '../public')));
+const staticOpts = { maxAge: process.env.NODE_ENV === 'production' ? '7d' : 0 };
+app.use(express.static(path.join(__dirname, '../public'), staticOpts));
 // Serve compiled client JS
-app.use('/js', express.static(path.join(__dirname, '../dist')));
+app.use('/js', express.static(path.join(__dirname, '../dist'), staticOpts));
 
 // --- Middleware ---
 app.use((req: Request, res: Response, next: NextFunction) => {
@@ -84,11 +116,18 @@ const buildExtraQuery = (req: Partial<Request>) => {
     const query = req.query || {};
 
     params.append('lang', getValidatedLang(req));
+    const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
     if (query.start_date) {
-        params.append('start_date', query.start_date as string);
+        const sd = String(query.start_date);
+        if (ISO_DATE.test(sd) && !isNaN(new Date(sd).getTime())) {
+            params.append('start_date', sd);
+        }
     }
     if (query.end_date) {
-        params.append('end_date', query.end_date as string);
+        const ed = String(query.end_date);
+        if (ISO_DATE.test(ed) && !isNaN(new Date(ed).getTime())) {
+            params.append('end_date', ed);
+        }
     }
 
     return params.toString() ? `?${params.toString()}` : '';
@@ -104,16 +143,6 @@ function loadStaticJson(filename: string): object {
         process.exit(1);
     }
 }
-
-const adminRegionsData = loadStaticJson('cau.json');
-const paidParkingZonesData = loadStaticJson('paid-parking-zones.json');
-const zoneInfoCache: Record<'blue' | 'green', ZoneInfo | null> = { blue: null, green: null };
-
-const ZONE_PRICE_URLS: Record<'blue' | 'green', string> = {
-    blue:  'https://www.transportburgas.bg/bg/правила-в-платени-зони-град-бургас',
-    green: 'https://www.transportburgas.bg/bg/правила-в-зелена-зона-град-бургас',
-};
-
 
 async function scrapeZoneInfo(zone: 'blue' | 'green'): Promise<void> {
     const url = ZONE_PRICE_URLS[zone];
@@ -139,7 +168,7 @@ async function scrapeZoneInfo(zone: 'blue' | 'green'): Promise<void> {
             return;
         }
 
-        const price = `${priceMatch[1].replace(',', '.')} &euro; / ${priceMatch[2]}`;
+        const price = `${priceMatch[1].replace(',', '.')} \u20AC / ${priceMatch[2]}`;
 
         // Extract working hours & periods (if any)
         const workingHours = Utils.extractFormattedPeriods(html);
@@ -150,6 +179,10 @@ async function scrapeZoneInfo(zone: 'blue' | 'green'): Promise<void> {
 
     } catch (err: any) {
         console.error(`[ZonePriceScraper] Failed to fetch ${zone} zone price or working hours:`, err.message);
+        // Retry after 5 minutes if the cache is still empty
+        if (!zoneInfoCache[zone]) {
+            setTimeout(() => scrapeZoneInfo(zone), 5 * 60 * 1000);
+        }
     }
 }
 
@@ -175,7 +208,6 @@ app.get('/api/admin-regions', (_req, res) => {
 
 // --- Paid Parking Zones ---
 app.get('/api/paid-parking-zones', (_req, res) => {
-    // res.json(paidParkingZonesData);
     const data = paidParkingZonesData as GeoFeatureCollection;
 
     const paidZonesData = {
@@ -199,7 +231,6 @@ app.get('/api/paid-parking-zones', (_req, res) => {
 });
 
 // --- Dynamic API Proxy Router ---
-// This completely replaces the 8 hardcoded app.get() blocks
 const routeConfigs = [
     { path: '/api/air-quality-time', target: config.airQualityTime, transform: true, requiresFeatures1: true },
     { path: '/api/traffic', target: config.traffic, transform: true, requiresFeatures1: true },
@@ -236,15 +267,28 @@ routeConfigs.forEach(route => {
 
 async function getData(url: string, req: Partial<Request>) {
     const upstreamUrl = `${url}${buildExtraQuery(req)}`;
-    console.log(`[Proxy] Fetching ${upstreamUrl}`);
-    const response = await fetch(upstreamUrl);
-
-    if (!response.ok) {
-        throw new Error(`Upstream returned ${response.status}`);
+    const cached = apiCache.get(upstreamUrl);
+    if (cached && Date.now() < cached.expiresAt) {
+        return { data: cached.data, lastUpdated: cached.lastUpdated };
     }
 
-    const jsonData = await response.json();
-    return {data: jsonData, lastUpdated: Date.now()};
+    console.log(`[Proxy] Fetching ${upstreamUrl}`);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
+    try {
+        const response = await fetch(upstreamUrl, { signal: controller.signal });
+
+        if (!response.ok) {
+            throw new Error(`Upstream returned ${response.status}`);
+        }
+
+        const jsonData = await response.json();
+        const now = Date.now();
+        apiCache.set(upstreamUrl, { data: jsonData, lastUpdated: now, expiresAt: now + CACHE_TTL });
+        return { data: jsonData, lastUpdated: now };
+    } finally {
+        clearTimeout(timeoutId);
+    }
 }
 
 async function prefetchAll() {
@@ -275,6 +319,10 @@ function createFeaturesCollectionFromApiResult(result: { data: {features1: GeoFe
 
     for (let i = 0; i < result.data.features1.length; i++) {
         let feature = result.data.features1[i];
+        if (!feature?.properties?.geometry?.coordinates?.length) {
+            console.warn(`[${target_key}] Skipping feature ${i}: missing geometry`);
+            continue;
+        }
         let lat: number;
         let lng: number;
         let point = feature.properties.geometry.coordinates[0].toString();
@@ -333,7 +381,6 @@ function createFeaturesCollectionFromApiResult(result: { data: {features1: GeoFe
     };
 }
 
-// midnight scheduler for paid zones prices
 function scheduleMidnightJob(job: () => Promise<void>): void {
     const msUntilMidnight = (): number => {
         const now = new Date();
@@ -343,9 +390,9 @@ function scheduleMidnightJob(job: () => Promise<void>): void {
     };
 
     // Fire once at the next midnight, then every 24 h after that
-    setTimeout(() => {
+    midnightTimeoutId = setTimeout(() => {
         job();
-        setInterval(job, 24 * 60 * 60 * 1000);
+        midnightIntervalId = setInterval(job, 24 * 60 * 60 * 1000);
     }, msUntilMidnight());
 
     console.log(`[ZonePriceScraper] Next scrape in ${Math.round(msUntilMidnight() / 60000)} minutes`);
@@ -362,8 +409,24 @@ async function initialize(): Promise<void> {
 
 // Start Server
 if (process.env.NODE_ENV !== 'test') {
-    app.listen(config.port, async () => {
+    const server = app.listen(config.port, async () => {
         console.log(`\n🚀 Server running at ${config.appUrl}:${config.port}`);
         await initialize();
     });
+
+    const shutdown = (signal: string) => {
+        console.log(`${signal} received, shutting down gracefully...`);
+        if (midnightTimeoutId) {
+            clearTimeout(midnightTimeoutId);
+        }
+        if (midnightIntervalId) {
+            clearInterval(midnightIntervalId);
+        }
+        server.close(() => {
+            console.log('Server closed.');
+            process.exit(0);
+        });
+    };
+    process.on('SIGTERM', () => shutdown('SIGTERM'));
+    process.on('SIGINT', () => shutdown('SIGINT'));
 }
