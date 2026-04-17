@@ -164,7 +164,7 @@ async function scrapeZoneInfo(zone: 'blue' | 'green'): Promise<void> {
         const priceMatch = text.match(/([\d,\.]+)\s*евро\s*\/?[\s]*?([\d,\.]+)\s*лева/i);
 
         if (!priceMatch) {
-            console.warn(`[ZonePriceScraper] Could not find price for zone: ${zone}`);
+            console.warn(`[ZoneInfoScraper] Could not find price for zone: ${zone}`);
             return;
         }
 
@@ -178,7 +178,7 @@ async function scrapeZoneInfo(zone: 'blue' | 'green'): Promise<void> {
         console.log(`[ZoneInfoScraper] ${zone} zone working hours: "${workingHours}"`);
 
     } catch (err: any) {
-        console.error(`[ZonePriceScraper] Failed to fetch ${zone} zone price or working hours:`, err.message);
+        console.error(`[ZoneInfoScraper] Failed to fetch ${zone} zone price or working hours:`, err.message);
         // Retry after 5 minutes if the cache is still empty
         if (!zoneInfoCache[zone]) {
             setTimeout(() => scrapeZoneInfo(zone), 5 * 60 * 1000);
@@ -395,14 +395,14 @@ function scheduleMidnightJob(job: () => Promise<void>): void {
         midnightIntervalId = setInterval(job, 24 * 60 * 60 * 1000);
     }, msUntilMidnight());
 
-    console.log(`[ZonePriceScraper] Next scrape in ${Math.round(msUntilMidnight() / 60000)} minutes`);
+    console.log(`[ZoneInfoScraper] Next scrape in ${Math.round(msUntilMidnight() / 60000)} minutes`);
 }
 
 async function initialize(): Promise<void> {
     // Scrape zone prices immediately on startup, then every night at midnight
-    console.log('[ZonePriceScraper] Running initial scrape...');
+    console.log('[ZoneInfoScraper] Running initial scrape...');
     await scrapeAllZonePrices();
-    console.log('[ZonePriceScraper] Initial scrape done.');
+    console.log('[ZoneInfoScraper] Initial scrape done.');
     scheduleMidnightJob(scrapeAllZonePrices);
     await prefetchAll();
 }
