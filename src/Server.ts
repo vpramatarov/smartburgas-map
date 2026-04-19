@@ -45,7 +45,7 @@ const config: Config = {
 const ALLOW_FRAME_URL = requireEnv('ALLOW_FRAME_URL', '*');
 const FRONTEND_SENTRY_DSN = process.env.FRONTEND_SENTRY_DSN || null; // Optional
 const apiCache = new Map<string, { data: any; lastUpdated: number; expiresAt: number }>();
-const CACHE_TTL = 60_000; // 60 seconds
+const CACHE_TTL = Number(process.env.CACHE_TTL) || 60_000; // 60 seconds
 export const clearApiCache = (): void => apiCache.clear();
 const UPSTREAM_TIMEOUT_MS = Number(process.env.UPSTREAM_TIMEOUT_MS) || 120_000;
 const adminRegionsData = loadStaticJson('cau.json');
